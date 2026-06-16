@@ -4,11 +4,11 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://YOUR_BACKEND_URL/api/:path*"
+      "destination": "https://backend-production-bddd.up.railway.app/api/:path*"
     },
     {
       "source": "/storage/:path*",
-      "destination": "https://YOUR_BACKEND_URL/storage/:path*"
+      "destination": "https://backend-production-bddd.up.railway.app/storage/:path*"
     }
   ]
 }
