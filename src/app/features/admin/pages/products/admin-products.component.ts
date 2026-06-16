@@ -1,6 +1,7 @@
-import { Component, OnInit, inject, signal, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, inject, signal, computed, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { ProductService } from '../../../../core/services/product.service';
 import { HttpClient as HttpService } from '@angular/common/http';
 import { environment } from '../../../../../environments/environment';
@@ -9,7 +10,7 @@ import { environment } from '../../../../../environments/environment';
   selector: 'bb-admin-products',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, FormsModule],
   template: `
     <div class="card p-6 space-y-6 page-enter">
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b pb-4">
@@ -22,6 +23,48 @@ import { environment } from '../../../../../environments/environment';
         </a>
       </div>
 
+      <!-- Search and Filters bar -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-neutral-50/50 dark:bg-neutral-800/30 p-4 rounded-2xl border border-neutral-100 dark:border-neutral-800">
+        <!-- Search input -->
+        <div class="relative">
+          <input
+            type="text"
+            placeholder="Search by title, SKU..."
+            [ngModel]="searchTerm()"
+            (ngModelChange)="searchTerm.set($event)"
+            class="input-field py-2.5 pl-9 text-xs"
+          />
+          <svg class="w-4 h-4 absolute left-3 top-3.5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+          </svg>
+        </div>
+
+        <!-- Status Filter -->
+        <select
+          [ngModel]="statusFilter()"
+          (ngModelChange)="statusFilter.set($event)"
+          class="input-field py-2 text-xs cursor-pointer"
+          aria-label="Filter by status"
+        >
+          <option value="all">All Statuses</option>
+          <option value="published">Published Only</option>
+          <option value="draft">Drafts Only</option>
+        </select>
+
+        <!-- Category Filter -->
+        <select
+          [ngModel]="categoryFilter()"
+          (ngModelChange)="categoryFilter.set($event)"
+          class="input-field py-2 text-xs cursor-pointer"
+          aria-label="Filter by category"
+        >
+          <option value="all">All Categories</option>
+          @for (cat of categories(); track cat._id) {
+            <option [value]="cat._id">{{ cat.name }}</option>
+          }
+        </select>
+      </div>
+
       @if (loading()) {
         <div class="space-y-4">
           <div class="skeleton h-16 w-full rounded-2xl"></div>
@@ -30,6 +73,10 @@ import { environment } from '../../../../../environments/environment';
       } @else if (products().length === 0) {
         <div class="text-center py-12 text-neutral-400">
           No products in database. Add one to get started.
+        </div>
+      } @else if (filteredProducts().length === 0) {
+        <div class="text-center py-12 text-neutral-400 text-sm">
+          No products match your filters. Try clearing search or filters.
         </div>
       } @else {
         <div class="overflow-x-auto">
@@ -44,11 +91,11 @@ import { environment } from '../../../../../environments/environment';
               </tr>
             </thead>
             <tbody class="divide-y divide-neutral-100 dark:divide-neutral-800 text-neutral-700 dark:text-neutral-200">
-              @for (p of products(); track p._id) {
+              @for (p of filteredProducts(); track p._id) {
                 <tr class="hover:bg-neutral-50/50 dark:hover:bg-neutral-800/40 transition-colors">
                   <td class="py-3 px-4">
                     <div class="flex items-center gap-3">
-                      <img [src]="p.images?.[0] || '/assets/placeholder-product.jpg'" class="w-10 h-10 object-cover rounded-lg bg-neutral-50" />
+                      <img [src]="p.images?.[0] || '/assets/placeholder-product.jpg'" class="w-10 h-10 object-cover rounded-lg bg-neutral-50" [alt]="p.title" />
                       <div>
                         <span class="font-bold text-neutral-800 dark:text-white block">{{ p.title }}</span>
                         <span class="text-[10px] text-neutral-400 uppercase font-medium">{{ p.categoryId?.name }}</span>
@@ -63,6 +110,7 @@ import { environment } from '../../../../../environments/environment';
                       [class.bg-emerald-500]="p.isPublished"
                       [class.bg-neutral-300]="!p.isPublished"
                       class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none"
+                      [attr.aria-label]="p.isPublished ? 'Unpublish product' : 'Publish product'"
                     >
                       <span
                         [class.translate-x-5]="p.isPublished"
@@ -78,7 +126,7 @@ import { environment } from '../../../../../environments/environment';
                     <a [routerLink]="['/admin/products', p._id, 'edit']" class="text-xs font-semibold text-primary-500 hover:underline">
                       Edit
                     </a>
-                    <button (click)="deleteProduct(p._id)" class="text-xs font-semibold text-red-500 hover:underline">
+                    <button (click)="deleteProduct(p._id)" class="text-xs font-semibold text-red-500 hover:underline cursor-pointer">
                       Delete
                     </button>
                   </td>
@@ -97,10 +145,45 @@ export class AdminProductsComponent implements OnInit {
   private cdr = inject(ChangeDetectorRef);
 
   products = signal<any[]>([]);
+  categories = signal<any[]>([]);
   loading = signal<boolean>(true);
+
+  // Filter signals
+  searchTerm = signal<string>('');
+  statusFilter = signal<string>('all');
+  categoryFilter = signal<string>('all');
+
+  filteredProducts = computed(() => {
+    let list = this.products();
+    const search = this.searchTerm().toLowerCase().trim();
+    const status = this.statusFilter();
+    const category = this.categoryFilter();
+
+    if (search) {
+      list = list.filter(
+        (p) =>
+          p.title?.toLowerCase().includes(search) ||
+          p.sku?.toLowerCase().includes(search)
+      );
+    }
+
+    if (status !== 'all') {
+      const isPublished = status === 'published';
+      list = list.filter((p) => p.isPublished === isPublished);
+    }
+
+    if (category !== 'all') {
+      list = list.filter(
+        (p) => (p.categoryId?._id || p.categoryId) === category
+      );
+    }
+
+    return list;
+  });
 
   ngOnInit() {
     this.fetchProducts();
+    this.fetchCategories();
   }
 
   fetchProducts() {
@@ -115,6 +198,16 @@ export class AdminProductsComponent implements OnInit {
         this.loading.set(false);
         this.cdr.markForCheck();
       },
+    });
+  }
+
+  fetchCategories() {
+    this.http.get<any>(`${environment.apiUrl}/categories`).subscribe({
+      next: (res) => {
+        this.categories.set(res.data || []);
+        this.cdr.markForCheck();
+      },
+      error: () => {}
     });
   }
 

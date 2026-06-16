@@ -5,6 +5,7 @@ import { tap, catchError } from 'rxjs/operators';
 import { of } from 'rxjs';
 import { isPlatformBrowser } from '@angular/common';
 import { environment } from '../../environments/environment';
+import { HydrationService } from '../core/services/hydration.service';
 
 export interface User {
   id: string;
@@ -24,13 +25,8 @@ export class AuthStore {
   private readonly REFRESH_TOKEN_KEY = 'bb_refresh_token';
 
   // ── Hydration ─────────────────────────────────────────
-  // Tracks whether hydration is currently running to prevent concurrent hydration
-  private hydrating = false;
-
-  private hydrationResolve?: (value: boolean) => void;
-  readonly hydrationComplete = new Promise<boolean>((resolve) => {
-    this.hydrationResolve = resolve;
-  });
+  readonly isHydrating = this.hydrationService.isHydrating;
+  readonly hydrationComplete = this.hydrationService.hydrationComplete;
 
   // ── Signals ──────────────────────────────────────────
   readonly user    = signal<User | null>(null);
@@ -50,7 +46,9 @@ export class AuthStore {
     private readonly http: HttpClient,
     private readonly router: Router,
     @Inject(PLATFORM_ID) private readonly platformId: Object,
+    private readonly hydrationService: HydrationService,
   ) {
+    this.hydrationService.isHydrating.set(true);
     this.hydrate();
   }
 
@@ -72,6 +70,44 @@ export class AuthStore {
         catchError((err) => {
           this.loading.set(false);
           this.error.set(err.error?.message || 'Login failed');
+          return of(null);
+        }),
+      );
+  }
+
+  // ── Phone Login & WhatsApp OTP ─────────────────────────
+  sendPhoneOtp(phone: string) {
+    this.loading.set(true);
+    this.error.set(null);
+    return this.http
+      .post<{ success: boolean; data: { message: string; otp?: string } }>(`${environment.apiUrl}/auth/phone-login`, { phone })
+      .pipe(
+        tap(() => this.loading.set(false)),
+        catchError((err) => {
+          this.loading.set(false);
+          this.error.set(err.error?.message || 'Failed to send OTP');
+          return of(null);
+        }),
+      );
+  }
+
+  verifyPhoneOtp(phone: string, otp: string) {
+    this.loading.set(true);
+    this.error.set(null);
+    return this.http
+      .post<{ data: { accessToken: string; refreshToken: string; user: User } }>(
+        `${environment.apiUrl}/auth/phone-verify`,
+        { phone, otp },
+        { withCredentials: true },
+      )
+      .pipe(
+        tap((res) => {
+          this.setSession(res.data.accessToken, res.data.refreshToken, res.data.user);
+          this.loading.set(false);
+        }),
+        catchError((err) => {
+          this.loading.set(false);
+          this.error.set(err.error?.message || 'OTP verification failed');
           return of(null);
         }),
       );
@@ -131,10 +167,13 @@ export class AuthStore {
   }
 
   // ── Handle OAuth Callback ─────────────────────────────
-  handleOAuthCallback(token: string) {
+  handleOAuthCallback(token: string, refreshToken?: string) {
     this.token.set(token);
     if (isPlatformBrowser(this.platformId)) {
       localStorage.setItem(this.TOKEN_KEY, token);
+      if (refreshToken) {
+        localStorage.setItem(this.REFRESH_TOKEN_KEY, refreshToken);
+      }
     }
     return this.fetchProfile();
   }
@@ -202,40 +241,49 @@ export class AuthStore {
   private hydrate() {
     // Skip on SSR — browser APIs not available
     if (!isPlatformBrowser(this.platformId)) {
-      this.hydrationResolve?.(false);
+      console.log('[AuthStore] Hydration skipped (SSR server environment)');
+      this.hydrationService.complete(false);
       return;
     }
 
-    // Prevent concurrent hydration
-    if (this.hydrating) return;
-    this.hydrating = true;
-
     const accessToken = localStorage.getItem(this.TOKEN_KEY);
     const refreshToken = localStorage.getItem(this.REFRESH_TOKEN_KEY);
+    console.log('[AuthStore] Hydration started on browser. Tokens in localStorage:', {
+      hasAccess: !!accessToken,
+      hasRefresh: !!refreshToken,
+    });
 
-    if (refreshToken) {
-      // Prefer refresh token restoration when available so we can renew expired access tokens.
-      this.doRefreshAndProfile(refreshToken, accessToken ?? undefined);
-    } else if (accessToken) {
-      // No refresh token in storage. Still try cookie-based refresh if access token is invalid.
+    if (accessToken) {
+      // Try to use the access token first to avoid redundant refresh requests
       this.token.set(accessToken);
+      console.log('[AuthStore] Access token found, calling fetchProfile...');
       this.fetchProfile().subscribe({
-        next: () => {
-          this.hydrating = false;
-          this.hydrationResolve?.(true);
+        next: (res) => {
+          console.log('[AuthStore] fetchProfile succeeded during hydration:', res.data);
+          this.hydrationService.complete(true);
         },
-        error: () => {
-          this.doRefreshAndProfile(undefined, accessToken);
+        error: (err) => {
+          console.warn('[AuthStore] fetchProfile failed during hydration, triggering refresh:', err);
+          // Token is invalid/expired — trigger refresh
+          this.doRefreshAndProfile(refreshToken ?? undefined, accessToken);
         },
       });
+    } else if (refreshToken) {
+      console.log('[AuthStore] Only refresh token found, triggering refresh...');
+      // No access token in storage, but we have a refresh token
+      this.doRefreshAndProfile(refreshToken, undefined);
     } else {
+      console.log('[AuthStore] No tokens found in localStorage. Hydration complete (false).');
       // No tokens at all — user needs to log in.
-      this.hydrating = false;
-      this.hydrationResolve?.(false);
+      this.hydrationService.complete(false);
     }
   }
 
   private doRefreshAndProfile(refreshToken?: string, fallbackAccessToken?: string) {
+    console.log('[AuthStore] doRefreshAndProfile called with:', {
+      hasRefresh: !!refreshToken,
+      hasFallbackAccess: !!fallbackAccessToken,
+    });
     // Call refresh directly with the token in the body if available.
     // If no token is provided, the backend can still accept the HttpOnly cookie.
     const body = refreshToken ? { refreshToken } : {};
@@ -249,6 +297,7 @@ export class AuthStore {
       )
       .subscribe({
         next: (res) => {
+          console.log('[AuthStore] refresh request succeeded during hydration:', res);
           if (res?.data?.accessToken) {
             const newToken = res.data.accessToken;
             this.token.set(newToken);
@@ -259,57 +308,61 @@ export class AuthStore {
               }
             }
             // Fetch profile with the new token
+            console.log('[AuthStore] Fetching profile with refreshed token...');
             this.fetchProfile().subscribe({
-              next: () => {
-                this.hydrating = false;
-                this.hydrationResolve?.(true);
+              next: (profileRes) => {
+                console.log('[AuthStore] Refreshed profile succeeded:', profileRes.data);
+                this.hydrationService.complete(true);
               },
-              error: () => {
+              error: (err) => {
+                console.error('[AuthStore] Refreshed profile failed:', err);
                 this.clearSession();
-                this.hydrating = false;
-                this.hydrationResolve?.(false);
+                this.hydrationService.complete(false);
               },
             });
           } else if (fallbackAccessToken) {
+            console.log('[AuthStore] Refresh did not return new token but fallback token exists. Trying fallback...');
             // If refresh did not return a new token but we still have a valid old one,
             // try using it before signing the user out.
             this.token.set(fallbackAccessToken);
             this.fetchProfile().subscribe({
-              next: () => {
-                this.hydrating = false;
-                this.hydrationResolve?.(true);
+              next: (profileRes) => {
+                console.log('[AuthStore] Fallback profile succeeded:', profileRes.data);
+                this.hydrationService.complete(true);
               },
-              error: () => {
+              error: (err) => {
+                console.error('[AuthStore] Fallback profile failed:', err);
                 this.clearSession();
-                this.hydrating = false;
-                this.hydrationResolve?.(false);
+                this.hydrationService.complete(false);
               },
             });
           } else {
+            console.warn('[AuthStore] Refresh succeeded but returned no token, and no fallback. Logging out.');
             this.clearSession();
-            this.hydrating = false;
-            this.hydrationResolve?.(false);
+            this.hydrationService.complete(false);
           }
         },
-        error: () => {
+        error: (err) => {
+          console.warn('[AuthStore] Refresh request failed during hydration:', err);
           if (fallbackAccessToken) {
+            console.log('[AuthStore] Refresh failed. Trying fallback token...');
             this.token.set(fallbackAccessToken);
             this.fetchProfile().subscribe({
-              next: () => {
-                this.hydrating = false;
-                this.hydrationResolve?.(true);
+              next: (profileRes) => {
+                console.log('[AuthStore] Fallback profile succeeded after refresh fail:', profileRes.data);
+                this.hydrationService.complete(true);
               },
-              error: () => {
+              error: (err2) => {
+                console.error('[AuthStore] Fallback profile failed after refresh fail:', err2);
                 this.clearSession();
-                this.hydrating = false;
-                this.hydrationResolve?.(false);
+                this.hydrationService.complete(false);
               },
             });
           } else {
+            console.warn('[AuthStore] Refresh failed and no fallback token. Logging out.');
             // Refresh failed — session is truly expired
             this.clearSession();
-            this.hydrating = false;
-            this.hydrationResolve?.(false);
+            this.hydrationService.complete(false);
           }
         },
       });

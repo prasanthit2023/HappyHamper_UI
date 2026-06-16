@@ -48,7 +48,7 @@ import { environment } from '../../../../../environments/environment';
               </tr>
             </thead>
             <tbody class="divide-y divide-neutral-100 dark:divide-neutral-800 text-neutral-700 dark:text-neutral-200">
-              @for (order of orders(); track order._id) {
+              @for (order of orders(); track order.id || order._id) {
                 <tr class="hover:bg-neutral-50/50 dark:hover:bg-neutral-800/40 transition-colors">
                   <td class="py-4 px-4 font-semibold">
                     <span class="font-mono text-neutral-800 dark:text-white block font-bold">#{{ order.orderNumber }}</span>
@@ -65,8 +65,8 @@ import { environment } from '../../../../../environments/environment';
                       [class.text-amber-700]="['confirmed', 'processing'].includes(order.orderStatus)"
                       [class.bg-indigo-50]="order.orderStatus === 'shipped'"
                       [class.text-indigo-700]="order.orderStatus === 'shipped'"
-                      [class.bg-green-50]="order.orderStatus === 'delivered'"
-                      [class.text-green-700]="order.orderStatus === 'delivered'"
+                      [class.bg-primary-50]="order.orderStatus === 'delivered'"
+                      [class.text-primary-700]="order.orderStatus === 'delivered'"
                       [class.bg-red-50]="order.orderStatus === 'cancelled'"
                       [class.text-red-700]="order.orderStatus === 'cancelled'"
                       class="px-2.5 py-1 rounded-full text-xs font-bold capitalize"

@@ -17,7 +17,7 @@ import { AuthStore } from '../../../../state/auth.store';
       </div>
 
       @if (successMessage()) {
-        <div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-xl text-sm mb-4">
+        <div class="bg-primary-50 border border-primary-200 text-primary px-4 py-3 rounded-xl text-sm mb-4">
           {{ successMessage() }}
         </div>
       }

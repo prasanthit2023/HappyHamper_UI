@@ -39,11 +39,11 @@ import { environment } from '../../../../../environments/environment';
         </div>
       } @else {
         <div class="grid grid-cols-2 sm:grid-cols-3 gap-6">
-          @for (p of products(); track p._id) {
+          @for (p of products(); track p.id || p._id) {
             <div class="relative bg-white dark:bg-neutral-800 rounded-2xl border border-neutral-100 dark:border-neutral-700 overflow-hidden group shadow-sm hover:shadow-md transition-shadow">
               <!-- Delete/Remove button -->
               <button
-                (click)="removeFromWishlist(p._id)"
+                (click)="removeFromWishlist(p.id || p._id)"
                 class="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/90 backdrop-blur-xs flex items-center justify-center text-red-500 hover:scale-105 transition-transform shadow-xs z-10"
                 aria-label="Remove from wishlist"
               >
@@ -107,7 +107,7 @@ export class WishlistComponent implements OnInit {
 
   removeFromWishlist(productId: string) {
     this.wishlistStore.toggle(productId).subscribe(() => {
-      this.products.update((list) => list.filter((p) => p._id !== productId));
+      this.products.update((list) => list.filter((p) => (p.id || p._id) !== productId));
       this.cdr.markForCheck();
     });
   }
@@ -120,9 +120,9 @@ export class WishlistComponent implements OnInit {
     const defaultVariant = product.variants?.[0];
     const sku = defaultVariant ? defaultVariant.sku : product.sku;
 
-    this.cartStore.addItem(product._id || product.id, sku, 1).subscribe(() => {
+    this.cartStore.addItem(product.id || product._id, sku, 1).subscribe(() => {
       // Cleanly remove from wishlist on move to cart
-      this.removeFromWishlist(product._id);
+      this.removeFromWishlist(product.id || product._id);
     });
   }
 }

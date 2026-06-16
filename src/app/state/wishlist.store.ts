@@ -16,7 +16,7 @@ export class WishlistStore {
   loadWishlist() {
     return this.http.get<{ data: { products: any[] } }>(`${environment.apiUrl}/wishlist`).pipe(
       tap((res) => {
-        this.items.set(res.data.products.map((p) => p._id || p));
+        this.items.set(res.data.products.map((p) => p.id || p._id || p));
       }),
     );
   }

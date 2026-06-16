@@ -1,18 +1,21 @@
 import { HttpInterceptorFn, HttpErrorResponse } from '@angular/common/http';
-import { inject } from '@angular/core';
+import { inject, Injector } from '@angular/core';
 import { throwError, catchError, switchMap } from 'rxjs';
 import { AuthStore } from '../../state/auth.store';
 
 export const errorInterceptor: HttpInterceptorFn = (req, next) => {
-  const authStore = inject(AuthStore);
+  const injector = inject(Injector);
 
   return next(req).pipe(
     catchError((error: HttpErrorResponse) => {
+      const authStore = injector.get(AuthStore);
       // Only handle 401 errors for authenticated API calls
       // Do NOT intercept: login, register, OTP, refresh, forgot/reset-password, logout, google auth
       const isPublicAuthRoute =
         req.url.includes('/auth/login') ||
         req.url.includes('/auth/register') ||
+        req.url.includes('/auth/phone-login') ||
+        req.url.includes('/auth/phone-verify') ||
         req.url.includes('/auth/verify-otp') ||
         req.url.includes('/auth/resend-otp') ||
         req.url.includes('/auth/refresh') ||
@@ -22,7 +25,8 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
         req.url.includes('/auth/google');
 
       // 401 on a protected route — try silent token refresh
-      if (error.status === 401 && !isPublicAuthRoute) {
+      // 401 on a protected route — try silent token refresh (only if not currently hydrating)
+      if (error.status === 401 && !isPublicAuthRoute && !authStore.isHydrating()) {
         return authStore.refresh().pipe(
           switchMap(() => {
             // Retry original request with the new token from the store
@@ -33,9 +37,8 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
             return next(retried);
           }),
           catchError((refreshErr) => {
-            // Refresh failed — clear session but do NOT navigate
-            // Let the guard/component handle the redirect based on state
-            authStore.signOutSilent();
+            // Refresh failed — log out and redirect to login page
+            authStore.logout();
             return throwError(() => refreshErr);
           }),
         );

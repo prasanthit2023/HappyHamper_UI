@@ -117,7 +117,7 @@ import { environment } from '../../../../../environments/environment';
                 <span class="font-semibold text-neutral-800 dark:text-neutral-250">₹{{ o.subTotal | number:'1.0-0' }}</span>
               </div>
               @if (o.discountAmount > 0) {
-                <div class="flex justify-between text-emerald-600">
+                <div class="flex justify-between text-primary">
                   <span>Discount</span>
                   <span class="font-semibold">-₹{{ o.discountAmount | number:'1.0-0' }}</span>
                 </div>
@@ -170,7 +170,7 @@ import { environment } from '../../../../../environments/environment';
                 </form>
               </div>
             } @else if (returnRequested()) {
-              <div class="bg-emerald-50 dark:bg-emerald-950/20 text-emerald-800 dark:text-emerald-300 p-4 rounded-2xl text-xs font-semibold flex items-center gap-2">
+              <div class="bg-primary-50 dark:bg-primary-950/20 text-primary-800 dark:text-primary-300 p-4 rounded-2xl text-xs font-semibold flex items-center gap-2">
                 <i class="pi pi-check-circle"></i> Return Request Submitted. We are reviewing your case.
               </div>
             }

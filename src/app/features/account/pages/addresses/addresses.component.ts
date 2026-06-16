@@ -89,7 +89,7 @@ import { AuthStore } from '../../../../state/auth.store';
         </div>
       } @else {
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          @for (addr of addresses(); track addr._id) {
+          @for (addr of addresses(); track addr.id) {
             <div
               [class.border-primary-500]="addr.isDefault"
               [class.border-neutral-200]="!addr.isDefault"
@@ -116,10 +116,10 @@ import { AuthStore } from '../../../../state/auth.store';
 
               <div class="flex items-center gap-3 pt-3 border-t border-neutral-100 dark:border-neutral-700 text-xs">
                 @if (!addr.isDefault) {
-                  <button (click)="setDefault(addr._id)" class="text-primary-500 font-semibold hover:underline">Set Default</button>
+                  <button (click)="setDefault(addr.id)" class="text-primary-500 font-semibold hover:underline">Set Default</button>
                 }
                 <button (click)="editAddress(addr)" class="text-neutral-600 dark:text-neutral-400 font-semibold hover:underline">Edit</button>
-                <button (click)="deleteAddress(addr._id)" class="text-red-500 font-semibold hover:underline">Delete</button>
+                <button (click)="deleteAddress(addr.id)" class="text-red-500 font-semibold hover:underline">Delete</button>
               </div>
             </div>
           }
@@ -175,7 +175,7 @@ export class AddressesComponent implements OnInit {
   }
 
   editAddress(address: any) {
-    this.editAddressId.set(address._id);
+    this.editAddressId.set(address.id);
     this.form.patchValue({
       firstName: address.firstName || this.authStore.user()?.firstName || '',
       lastName: address.lastName || this.authStore.user()?.lastName || '',

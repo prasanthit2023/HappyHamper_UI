@@ -54,6 +54,7 @@ export class OAuthCallbackComponent implements OnInit {
 
   ngOnInit() {
     const token = this.route.snapshot.queryParamMap.get('token');
+    const refreshToken = this.route.snapshot.queryParamMap.get('refreshToken');
 
     if (!token) {
       this.showError('Google sign-in did not return a valid session.');
@@ -61,7 +62,7 @@ export class OAuthCallbackComponent implements OnInit {
     }
 
     this.authStore
-      .handleOAuthCallback(token)
+      .handleOAuthCallback(token, refreshToken ?? undefined)
       .pipe(
         take(1),
         catchError(() => {
@@ -76,8 +77,9 @@ export class OAuthCallbackComponent implements OnInit {
         this.title.set('Signed in');
         this.message.set('Redirecting you now...');
 
-        const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl') || '/';
-        this.router.navigateByUrl(returnUrl);
+        const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
+        const target = (!returnUrl || returnUrl === '/') ? '/products' : returnUrl;
+        this.router.navigateByUrl(target);
       });
   }
 

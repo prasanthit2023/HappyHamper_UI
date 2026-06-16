@@ -11,9 +11,8 @@ export const routes: Routes = [
     children: [
       {
         path: '',
-        title: 'Happy Hamper – Premium Baby & Kids Clothing',
-        loadComponent: () =>
-          import('./features/shop/pages/home/home.component').then((m) => m.HomeComponent),
+        pathMatch: 'full',
+        redirectTo: 'products',
       },
       {
         path: 'products',
@@ -69,6 +68,14 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/shop/pages/order-success/order-success.component').then(
             (m) => m.OrderSuccessComponent,
+          ),
+      },
+      {
+        path: 'contact',
+        title: 'Contact Us – Happy Hamper',
+        loadComponent: () =>
+          import('./features/shop/pages/contact/contact.component').then(
+            (m) => m.ContactComponent,
           ),
       },
     ],

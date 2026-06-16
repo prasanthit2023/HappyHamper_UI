@@ -64,7 +64,7 @@ import { CartStore } from '../../../../state/cart.store';
         </div>
       } @else {
         <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
-          @for (p of products(); track p._id) {
+          @for (p of products(); track p.id || p._id) {
             <bb-product-card [product]="p" (quickAdd)="onQuickAdd($event)" />
           }
         </div>

@@ -1,4 +1,4 @@
-import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -10,102 +10,215 @@ import { AuthStore } from '../../../../state/auth.store';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule, RouterModule, ReactiveFormsModule],
   template: `
-    <div class="animate-slide-up">
+    <div class="animate-slide-up max-w-md mx-auto bg-white p-8 rounded-2xl border border-neutral-100 shadow-sm">
       <div class="text-center mb-8">
-        <h1 class="font-display font-bold text-3xl text-neutral-900 dark:text-white mb-2">Welcome back!</h1>
-        <p class="text-neutral-500">Sign in to your Happy Hamper account</p>
+        <h1 class="font-display font-bold text-3xl text-neutral-900 mb-2">Welcome!</h1>
+        <p class="text-neutral-500 text-sm">Sign in to your Happy Hamper account</p>
       </div>
 
-      <!-- Google Sign-In -->
-      <button
-        (click)="authStore.loginWithGoogle()"
-        type="button"
-        class="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-xl border-2 border-neutral-200 dark:border-neutral-700 text-sm font-semibold text-neutral-700 dark:text-neutral-300 hover:border-neutral-300 dark:hover:border-neutral-600 hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-all duration-200 mb-6"
-        id="google-signin-btn"
-      >
-        <svg class="w-5 h-5" viewBox="0 0 24 24">
-          <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-          <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-          <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-          <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-        </svg>
-        Continue with Google
-      </button>
-
-      <!-- Divider -->
-      <div class="flex items-center gap-4 mb-6">
-        <div class="flex-1 h-px bg-neutral-200 dark:bg-neutral-700"></div>
-        <span class="text-xs text-neutral-400">or sign in with email</span>
-        <div class="flex-1 h-px bg-neutral-200 dark:bg-neutral-700"></div>
+      <!-- Tab Switcher -->
+      <div class="flex border border-neutral-200 mb-6 bg-neutral-50 p-1 rounded-xl">
+        <button
+          type="button"
+          (click)="loginMode.set('phone')"
+          class="flex-1 py-2.5 text-xs font-bold rounded-lg transition-all duration-200"
+          [class.bg-white]="loginMode() === 'phone'"
+          [class.shadow-sm]="loginMode() === 'phone'"
+          [class.text-primary-600]="loginMode() === 'phone'"
+          [class.text-neutral-500]="loginMode() !== 'phone'"
+          [class.hover:text-neutral-800]="loginMode() !== 'phone'"
+          id="tab-whatsapp"
+        >
+          WhatsApp OTP
+        </button>
+        <button
+          type="button"
+          (click)="loginMode.set('email')"
+          class="flex-1 py-2.5 text-xs font-bold rounded-lg transition-all duration-200"
+          [class.bg-white]="loginMode() === 'email'"
+          [class.shadow-sm]="loginMode() === 'email'"
+          [class.text-primary-600]="loginMode() === 'email'"
+          [class.text-neutral-500]="loginMode() !== 'email'"
+          [class.hover:text-neutral-800]="loginMode() !== 'email'"
+          id="tab-email"
+        >
+          Email + Password
+        </button>
       </div>
 
-      <!-- Login Form -->
-      <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-4">
-        <!-- Error -->
-        @if (authStore.error()) {
-          <div class="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 px-4 py-3 rounded-xl text-sm animate-fade-in" role="alert">
-            {{ authStore.error() }}
-          </div>
-        }
-
-        <div>
-          <label for="email" class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1.5">Email</label>
-          <input id="email" type="email" formControlName="email" placeholder="your@email.com"
-                 class="input-field" autocomplete="email"
-                 [class.border-red-400]="form.get('email')?.invalid && form.get('email')?.touched" />
-          @if (form.get('email')?.invalid && form.get('email')?.touched) {
-            <p class="text-red-500 text-xs mt-1">Please enter a valid email.</p>
-          }
+      <!-- Error alert -->
+      @if (authStore.error()) {
+        <div class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl text-sm mb-6 animate-fade-in" role="alert">
+          {{ authStore.error() }}
         </div>
+      }
 
-        <div>
-          <div class="flex items-center justify-between mb-1.5">
-            <label for="password" class="text-sm font-medium text-neutral-700 dark:text-neutral-300">Password</label>
-            <a routerLink="/auth/forgot-password" class="text-xs text-primary-500 hover:text-primary-600 font-medium">Forgot password?</a>
-          </div>
-          <div class="relative">
-            <input
-              id="password"
-              [type]="showPassword ? 'text' : 'password'"
-              formControlName="password"
-              placeholder="••••••••"
-              class="input-field pr-10"
-              autocomplete="current-password"
-              [class.border-red-400]="form.get('password')?.invalid && form.get('password')?.touched"
-            />
-            <button type="button" (click)="showPassword = !showPassword"
-                    class="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600">
-              @if (showPassword) {
-                <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>
+      @if (loginMode() === 'phone') {
+        <!-- Step 1: Enter Phone Number -->
+        @if (step() === 'phone') {
+          <form [formGroup]="phoneForm" (ngSubmit)="onSendOtp()" class="space-y-5">
+            <div>
+              <label for="phone" class="block text-xs font-bold text-neutral-500 mb-1.5 uppercase tracking-wider">Mobile Number</label>
+              <div class="relative">
+                <input
+                  id="phone"
+                  type="tel"
+                  formControlName="phone"
+                  placeholder="e.g. +919876543210"
+                  class="input-field"
+                  autocomplete="tel"
+                  [class.border-red-400]="phoneForm.get('phone')?.invalid && phoneForm.get('phone')?.touched"
+                />
+              </div>
+              @if (phoneForm.get('phone')?.invalid && phoneForm.get('phone')?.touched) {
+                <p class="text-red-500 text-xs mt-1">Please enter a valid phone number (e.g. +919876543210 or 9876543210).</p>
+              }
+            </div>
+
+            <button
+              type="submit"
+              class="btn-primary w-full py-3.5 text-base font-semibold"
+              [disabled]="phoneForm.invalid || authStore.loading()"
+              id="send-otp-btn"
+            >
+              @if (authStore.loading()) {
+                <svg class="animate-spin w-5 h-5 mr-2 inline" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
                 </svg>
+                Sending OTP...
               } @else {
-                <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                </svg>
+                Send OTP via WhatsApp
               }
             </button>
+          </form>
+        }
+
+        <!-- Step 2: Enter OTP -->
+        @if (step() === 'otp') {
+          <form [formGroup]="otpForm" (ngSubmit)="onVerifyOtp()" class="space-y-5">
+            <div class="bg-primary-50 border border-primary-200 text-primary-800 px-4 py-3.5 rounded-xl text-sm mb-2">
+              We have shared a 6-digit OTP code to <strong class="text-primary-950">{{ phoneForm.value.phone }}</strong> via WhatsApp.
+              @if (receivedDevOtp) {
+                <div class="mt-2 text-xs font-semibold text-neutral-600 bg-white p-2 rounded-lg border border-primary-100">
+                  [DEV TEST OTP]: <span class="text-primary font-mono text-sm font-bold">{{ receivedDevOtp }}</span>
+                </div>
+              }
+            </div>
+
+            <div>
+              <label for="otp" class="block text-xs font-bold text-neutral-500 mb-1.5 uppercase tracking-wider">Enter 6-Digit OTP</label>
+              <input
+                id="otp"
+                type="text"
+                formControlName="otp"
+                placeholder="123456"
+                maxlength="6"
+                class="input-field text-center font-mono tracking-widest text-lg"
+                [class.border-red-400]="otpForm.get('otp')?.invalid && otpForm.get('otp')?.touched"
+              />
+              @if (otpForm.get('otp')?.invalid && otpForm.get('otp')?.touched) {
+                <p class="text-red-500 text-xs mt-1">Please enter a valid 6-digit OTP code.</p>
+              }
+            </div>
+
+            <button
+              type="submit"
+              class="btn-primary w-full py-3.5 text-base font-semibold"
+              [disabled]="otpForm.invalid || authStore.loading()"
+              id="verify-otp-btn"
+            >
+              @if (authStore.loading()) {
+                <svg class="animate-spin w-5 h-5 mr-2 inline" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                </svg>
+                Verifying...
+              } @else {
+                Verify & Sign In
+              }
+            </button>
+
+            <div class="flex items-center justify-between text-xs mt-4">
+              <button
+                type="button"
+                (click)="step.set('phone')"
+                class="text-neutral-500 hover:text-neutral-800 font-semibold flex items-center gap-1 transition-colors"
+              >
+                ← Edit Phone Number
+              </button>
+              <button
+                type="button"
+                (click)="onSendOtp()"
+                class="text-primary-500 hover:text-primary-600 font-semibold transition-colors"
+                [disabled]="authStore.loading()"
+              >
+                Resend OTP
+              </button>
+            </div>
+          </form>
+        }
+      } @else if (loginMode() === 'email') {
+        <!-- Email + Password Form -->
+        <form [formGroup]="emailForm" (ngSubmit)="onEmailLogin()" class="space-y-5">
+          <div>
+            <label for="email" class="block text-xs font-bold text-neutral-500 mb-1.5 uppercase tracking-wider">Email Address</label>
+            <input
+              id="email"
+              type="email"
+              formControlName="email"
+              placeholder="e.g. john@example.com"
+              class="input-field"
+              autocomplete="email"
+              [class.border-red-400]="emailForm.get('email')?.invalid && emailForm.get('email')?.touched"
+            />
+            @if (emailForm.get('email')?.invalid && emailForm.get('email')?.touched) {
+              <p class="text-red-500 text-xs mt-1">Please enter a valid email address.</p>
+            }
           </div>
-        </div>
 
-        <button type="submit" class="btn-primary w-full py-3.5 text-base" [disabled]="form.invalid || authStore.loading()" id="login-submit-btn">
-          @if (authStore.loading()) {
-            <svg class="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
-            </svg>
-            Signing in...
-          } @else {
-            Sign In
-          }
-        </button>
-      </form>
+          <div>
+            <div class="flex items-center justify-between mb-1.5">
+              <label for="password" class="block text-xs font-bold text-neutral-500 uppercase tracking-wider">Password</label>
+              <a routerLink="/auth/forgot-password" class="text-xs font-semibold text-primary-500 hover:text-primary-600 transition-colors">Forgot Password?</a>
+            </div>
+            <input
+              id="password"
+              type="password"
+              formControlName="password"
+              placeholder="••••••••"
+              class="input-field"
+              autocomplete="current-password"
+              [class.border-red-400]="emailForm.get('password')?.invalid && emailForm.get('password')?.touched"
+            />
+            @if (emailForm.get('password')?.invalid && emailForm.get('password')?.touched) {
+              <p class="text-red-500 text-xs mt-1">Password is required.</p>
+            }
+          </div>
 
-      <p class="text-center text-sm text-neutral-500 mt-6">
+          <button
+            type="submit"
+            class="btn-primary w-full py-3.5 text-base font-semibold"
+            [disabled]="emailForm.invalid || authStore.loading()"
+            id="email-login-btn"
+          >
+            @if (authStore.loading()) {
+              <svg class="animate-spin w-5 h-5 mr-2 inline" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+              </svg>
+              Signing In...
+            } @else {
+              Sign In
+            }
+          </button>
+        </form>
+      }
+
+      <div class="mt-6 text-center text-sm text-neutral-500">
         Don't have an account?
-        <a routerLink="/auth/register" class="text-primary-500 font-semibold hover:text-primary-600">Create one free →</a>
-      </p>
+        <a routerLink="/auth/register" class="text-primary-500 font-semibold hover:text-primary-600 transition-colors">Register here</a>
+      </div>
     </div>
   `,
 })
@@ -114,20 +227,67 @@ export class LoginComponent {
   private fb         = inject(FormBuilder);
   private router     = inject(Router);
 
-  showPassword = false;
+  loginMode = signal<'phone' | 'email'>('phone');
+  step = signal<'phone' | 'otp'>('phone');
+  receivedDevOtp: string | null = null;
 
-  form = this.fb.group({
-    email:    ['', [Validators.required, Validators.email]],
-    password: ['', [Validators.required, Validators.minLength(6)]],
+  phoneForm = this.fb.group({
+    phone: ['', [Validators.required, Validators.pattern(/^\+?[1-9]\d{6,14}$/)]],
   });
 
-  onSubmit() {
-    if (this.form.invalid) { this.form.markAllAsTouched(); return; }
-    const { email, password } = this.form.value;
-    this.authStore.login(email!, password!).subscribe((res) => {
+  otpForm = this.fb.group({
+    otp: ['', [Validators.required, Validators.pattern(/^\d{6}$/)]],
+  });
+
+  emailForm = this.fb.group({
+    email: ['', [Validators.required, Validators.email]],
+    password: ['', [Validators.required]],
+  });
+
+  onSendOtp() {
+    if (this.phoneForm.invalid) {
+      this.phoneForm.markAllAsTouched();
+      return;
+    }
+    const phone = this.phoneForm.value.phone!;
+    this.authStore.sendPhoneOtp(phone).subscribe((res: any) => {
       if (res) {
-        const returnUrl = new URLSearchParams(window.location.search).get('returnUrl') || '/';
-        this.router.navigateByUrl(returnUrl);
+        this.step.set('otp');
+        if (res.data?.otp) {
+          this.receivedDevOtp = res.data.otp;
+        }
+      }
+    });
+  }
+
+  onVerifyOtp() {
+    if (this.otpForm.invalid) {
+      this.otpForm.markAllAsTouched();
+      return;
+    }
+    const phone = this.phoneForm.value.phone!;
+    const otp = this.otpForm.value.otp!;
+    this.authStore.verifyPhoneOtp(phone, otp).subscribe((res) => {
+      if (res) {
+        const returnUrl = new URLSearchParams(window.location.search).get('returnUrl');
+        const target = (!returnUrl || returnUrl === '/') ? '/products' : returnUrl;
+        this.router.navigateByUrl(target);
+      }
+    });
+  }
+
+  onEmailLogin() {
+    if (this.emailForm.invalid) {
+      this.emailForm.markAllAsTouched();
+      return;
+    }
+    const email = this.emailForm.value.email!;
+    const password = this.emailForm.value.password!;
+    this.authStore.login(email, password).subscribe((res) => {
+      if (res) {
+        const returnUrl = new URLSearchParams(window.location.search).get('returnUrl');
+        const target = (!returnUrl || returnUrl === '/') ? '/products' : returnUrl;
+        this.router.navigateByUrl(target);
       }
     });
   }

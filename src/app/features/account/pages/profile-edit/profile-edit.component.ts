@@ -16,7 +16,7 @@ import { AuthStore } from '../../../../state/auth.store';
       </div>
 
       @if (successMessage()) {
-        <div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-xl text-sm mb-4">
+        <div class="bg-primary-50 border border-primary-200 text-primary-700 px-4 py-3 rounded-xl text-sm mb-4">
           {{ successMessage() }}
         </div>
       }
@@ -97,8 +97,8 @@ export class ProfileEditComponent implements OnInit {
 
   successMessage = signal<string>('');
 
-  avatars = ['#4F46E5', '#3B82F6', '#0D9488', '#10B981', '#F59E0B', '#EF4444'];
-  selectedAvatar = signal<string>('#4F46E5');
+  avatars = ['#7C83C3', '#A0958B', '#4F46E5', '#3B82F6', '#F59E0B', '#EF4444'];
+  selectedAvatar = signal<string>('#7C83C3');
 
   form = this.fb.group({
     firstName: ['', [Validators.required, Validators.maxLength(50)]],

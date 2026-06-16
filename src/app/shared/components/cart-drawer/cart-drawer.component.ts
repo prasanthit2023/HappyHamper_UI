@@ -65,8 +65,8 @@ import { CartStore } from '../../../state/cart.store';
               <span>Add <strong style="color: var(--color-primary-dark);">₹{{ cartStore.remainingForFreeShipping() | number:'1.0-0' }}</strong> more for FREE shipping!</span>
             </div>
           } @else {
-            <div class="text-xs text-green-600 font-semibold mb-1.5 flex items-center gap-1.5">
-              <svg class="w-4 h-4 text-green-600 inline-block animate-bounce-soft" fill="currentColor" viewBox="0 0 20 20">
+            <div class="text-xs text-primary font-semibold mb-1.5 flex items-center gap-1.5">
+              <svg class="w-4 h-4 text-primary inline-block animate-bounce-soft" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
               </svg>
               <span>You've unlocked FREE shipping!</span>
@@ -183,13 +183,13 @@ import { CartStore } from '../../../state/cart.store';
             </div>
             @if (cartStore.cart().discountAmount > 0) {
               <div class="flex justify-between text-sm">
-                <span class="text-green-600">Discount ({{ cartStore.cart().couponCode }})</span>
-                <span class="text-green-600 font-medium">-₹{{ cartStore.cart().discountAmount | number:'1.0-0' }}</span>
+                <span class="text-primary">Discount ({{ cartStore.cart().couponCode }})</span>
+                <span class="text-primary font-medium">-₹{{ cartStore.cart().discountAmount | number:'1.0-0' }}</span>
               </div>
             }
             <div class="flex justify-between text-sm">
               <span class="text-neutral-500">Shipping</span>
-              <span class="font-medium" [style.color]="cartStore.subTotal() >= 499 ? 'var(--color-green)' : 'var(--color-text)'">
+              <span class="font-medium" [style.color]="cartStore.subTotal() >= 499 ? 'var(--color-primary)' : 'var(--color-text)'">
                 {{ cartStore.subTotal() >= 499 ? 'FREE' : '₹49' }}
               </span>
             </div>

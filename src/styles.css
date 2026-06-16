@@ -9,34 +9,33 @@
 ───────────────────────────────────────────────── */
 :root {
   /* Brand Theme Colors */
-  --color-teal:          #2EAFB0; /* Teal Blue */
-  --color-green:         #48BB78; /* Fresh Green */
-  --color-orange:        #ED8936; /* Warm Orange */
-  --color-pink:          #ED64A6; /* Soft Pink */
-  --color-purple:        #805AD5; /* Purple */
+  --color-bluebell:      #7C83C3; /* Bluebell Periwinkle */
+  --color-sandal:        #A0958B; /* Warm Sandal / Taupe */
+  --color-cream:         #FDFBF7; /* Soft Cream Background */
+  --color-lavender:      #9B9FD2; /* Soft Lavender Blue */
+  --color-dusty-rose:    #D5A0A0; /* Soft Dusty Rose */
 
   /* Design System Tokens */
-  --color-primary:       var(--color-teal);
-  --color-primary-dark:  #1E7576;
-  --color-primary-light: #EAF7F7; /* Soft pastel teal */
-  --color-accent:        var(--color-orange);
-  --color-accent-light:  #FFF0E6; /* Soft pastel orange */
+  --color-primary:       var(--color-bluebell);
+  --color-primary-dark:  #5B61A1;
+  --color-primary-light: #F0F1FA; /* Soft pastel periwinkle */
+  --color-accent:        var(--color-sandal);
+  --color-accent-light:  #F4F2F0; /* Soft pastel sandal */
 
-  --color-bg:            #FCFDFD; /* Clean white background */
-  --color-bg-subtle:     #F3F9F9; /* Very soft pastel background */
+  --color-bg:            var(--color-cream);
+  --color-bg-subtle:     #FAF6EE; /* Very soft warm cream background */
   --color-surface:       #FFFFFF;
-  --color-sandal:        #D7EFEF; /* Replaced sandal helper with soft teal border tone */
-  --color-text:          #1E293B; /* Slate 800 */
-  --color-text-muted:    #64748B; /* Slate 500 */
-  --color-border:        #E2E8F0; /* Slate 200 */
+  --color-text:          #3E3935; /* Charcoal Warm Brown */
+  --color-text-muted:    #7D756F; /* Muted warm grey-brown */
+  --color-border:        #EBE6DF; /* Soft warm beige-grey border */
   
-  --color-success:       var(--color-green);
-  --color-warning:       var(--color-orange);
-  --color-error:         var(--color-pink);
+  --color-success:       #7C83C3; /* Match brand theme blue */
+  --color-warning:       var(--color-sandal);
+  --color-error:         var(--color-dusty-rose);
 
-  --gradient-primary:    linear-gradient(135deg, var(--color-teal), var(--color-green));
-  --gradient-accent:     linear-gradient(135deg, var(--color-orange), var(--color-pink));
-  --gradient-pastel:     linear-gradient(135deg, #FAF5FF 0%, #EAF7F7 50%, #FFF0E6 100%);
+  --gradient-primary:    linear-gradient(135deg, var(--color-bluebell), var(--color-lavender));
+  --gradient-accent:     linear-gradient(135deg, var(--color-sandal), #C2B8B0);
+  --gradient-pastel:     linear-gradient(135deg, var(--color-cream) 0%, var(--color-primary-light) 50%, var(--color-accent-light) 100%);
 
   --radius-sm:  8px;
   --radius-md:  12px;
@@ -44,11 +43,11 @@
   --radius-xl:  20px;
   --radius-2xl: 28px;
 
-  --shadow-sm:   0 1px 3px rgba(0,0,0,0.05);
-  --shadow-md:   0 4px 12px rgba(0,0,0,0.05);
-  --shadow-lg:   0 12px 30px rgba(0,0,0,0.06);
-  --shadow-warm: 0 4px 16px rgba(46,175,176,0.12); /* Soft teal shadow */
-  --shadow-accent: 0 4px 16px rgba(237,137,54,0.12); /* Soft orange shadow */
+  --shadow-sm:   0 1px 3px rgba(0,0,0,0.03);
+  --shadow-md:   0 4px 12px rgba(62,57,53,0.04);
+  --shadow-lg:   0 12px 30px rgba(62,57,53,0.05);
+  --shadow-warm: 0 4px 16px rgba(124,131,195,0.12); /* Soft bluebell shadow */
+  --shadow-accent: 0 4px 16px rgba(160,149,139,0.12); /* Soft sandal shadow */
   --transition:  all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -170,7 +169,9 @@ body {
   }
 
   .badge-success {
-    @apply badge bg-green-100 text-green-700;
+    @apply badge;
+    background-color: var(--color-primary-light);
+    color: var(--color-primary-dark);
   }
 
   .badge-warning {
@@ -236,7 +237,7 @@ body {
   }
 
   .price-discount {
-    @apply text-sm font-semibold text-green-600;
+    @apply text-sm font-semibold text-primary-500;
   }
 
   /* ── Rating stars ── */
@@ -507,3 +508,112 @@ body {
   font-size: 0.75rem;
   color: var(--color-primary);
 }
+
+/* ─────────────────────────────────────────────────
+   BREADCRUMB
+───────────────────────────────────────────────── */
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+.breadcrumb a {
+  color: var(--color-text-muted);
+  transition: color 0.15s;
+}
+.breadcrumb a:hover { color: var(--color-primary); }
+.breadcrumb-separator { color: var(--color-border); font-weight: 700; }
+
+/* ─────────────────────────────────────────────────
+   HOVER LIFT
+───────────────────────────────────────────────── */
+.hover-lift {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.hover-lift:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-warm);
+}
+
+/* ─────────────────────────────────────────────────
+   SHADOW-WARM CLASS (utility)
+───────────────────────────────────────────────── */
+.shadow-warm-md {
+  box-shadow: 0 6px 24px rgba(124,131,195,0.18);
+}
+
+/* ─────────────────────────────────────────────────
+   PRODUCT IMAGE ZOOM
+───────────────────────────────────────────────── */
+.img-zoom-wrap {
+  overflow: hidden;
+  cursor: zoom-in;
+}
+.img-zoom-wrap img {
+  transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+.img-zoom-wrap:hover img {
+  transform: scale(1.08);
+}
+
+/* ─────────────────────────────────────────────────
+   STICKY ADD-TO-CART BAR
+───────────────────────────────────────────────── */
+.sticky-atc-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 40;
+  padding: 0.875rem 1.5rem;
+  background: white;
+  border-top: 1px solid var(--color-border);
+  box-shadow: 0 -4px 20px rgba(0,0,0,0.06);
+  transform: translateY(100%);
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.sticky-atc-bar.visible {
+  transform: translateY(0);
+}
+
+/* ─────────────────────────────────────────────────
+   FREE SHIPPING PROGRESS BAR
+───────────────────────────────────────────────── */
+.shipping-progress-track {
+  height: 6px;
+  border-radius: 9999px;
+  background: var(--color-border);
+  overflow: hidden;
+}
+.shipping-progress-fill {
+  height: 100%;
+  border-radius: 9999px;
+  background: var(--gradient-primary);
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ─────────────────────────────────────────────────
+   ANIMATE SLIDE-UP (toast & cards)
+───────────────────────────────────────────────── */
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-slide-up {
+  animation: slideUp 0.35s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+/* ─────────────────────────────────────────────────
+   ORDER TIMELINE CONNECTOR FIX
+───────────────────────────────────────────────── */
+.order-step-line {
+  flex: 1;
+  height: 2px;
+  background: var(--color-border);
+  margin-top: 1rem;
+  margin-bottom: auto;
+}
+.order-step-line.active { background: var(--gradient-primary); }
+

@@ -1,8 +1,10 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { signal, computed } from '@angular/core';
-import { tap } from 'rxjs/operators';
+import { tap, catchError } from 'rxjs/operators';
+import { throwError } from 'rxjs';
 import { environment } from '../../environments/environment';
+import { ToastService } from '../core/services/toast.service';
 
 export interface CartItem {
   productId: string;
@@ -40,6 +42,8 @@ export class CartStore {
     Math.max(0, this.freeShippingThreshold - this.subTotal()),
   );
 
+  private readonly toastService = inject(ToastService);
+
   constructor(private http: HttpClient) {}
 
   // ── Fetch Cart ───────────────────────────────────
@@ -63,6 +67,7 @@ export class CartStore {
           this.cart.set(res.data);
           this.loading.set(false);
           this.openDrawer();
+          this.toastService.success('Added to cart!');
         }),
       );
   }
@@ -82,6 +87,7 @@ export class CartStore {
   // ── Remove Item ───────────────────────────────────
   removeItem(variantSku: string) {
     this.cart.update((c) => ({ ...c, items: c.items.filter((i) => i.variantSku !== variantSku) }));
+    this.toastService.info('Item removed from cart');
     return this.http
       .delete<{ data: Cart }>(`${environment.apiUrl}/cart/items/${variantSku}`)
       .pipe(tap((res) => this.cart.set(res.data)));
@@ -99,6 +105,12 @@ export class CartStore {
             discountAmount: res.discountAmount,
             totalAmount: c.subTotal - res.discountAmount,
           }));
+          this.toastService.success('Coupon applied successfully!');
+        }),
+        catchError((err) => {
+          const msg = err?.error?.message || 'Invalid or expired coupon code';
+          this.toastService.error(msg);
+          return throwError(() => err);
         }),
       );
   }

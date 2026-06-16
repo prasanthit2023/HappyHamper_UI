@@ -23,7 +23,7 @@ import { environment } from '../../../../../environments/environment';
       </div>
 
       @if (successMessage()) {
-        <div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-xl text-sm mb-6">
+        <div class="bg-primary-50 border border-primary-200 text-primary px-4 py-3 rounded-xl text-sm mb-6">
           {{ successMessage() }}
         </div>
       }
