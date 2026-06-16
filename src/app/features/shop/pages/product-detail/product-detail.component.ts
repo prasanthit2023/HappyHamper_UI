@@ -702,7 +702,7 @@ import { environment } from '../../../../../environments/environment';
                 @for (rel of relatedProducts(); track rel.id || rel._id) {
                   <div class="related-card" (click)="navigateToProduct(rel.slug)"
                        role="button" [attr.aria-label]="'View ' + rel.title">
-                    <img [src]="rel.images?.[0] || '/assets/placeholder-product.jpg'"
+                    <img [src]="rel.images[0] || '/assets/placeholder-product.jpg'"
                          [alt]="rel.title" loading="lazy"/>
                     <div class="related-card-body">
                       <p class="text-xs font-bold leading-tight mb-1"
@@ -741,7 +741,7 @@ import { environment } from '../../../../../environments/environment';
                 @for (item of recentlyViewedItems(); track item._id) {
                   <div class="related-card" (click)="navigateToProduct(item.slug)"
                        role="button" [attr.aria-label]="'View ' + item.title">
-                    <img [src]="item.images?.[0] || '/assets/placeholder-product.jpg'"
+                    <img [src]="item.images[0] || '/assets/placeholder-product.jpg'"
                          [alt]="item.title" loading="lazy"/>
                     <div class="related-card-body">
                       <p class="text-xs font-bold leading-tight mb-1"

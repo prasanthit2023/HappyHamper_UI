@@ -1,5 +1,6 @@
 {
   "cleanUrls": true,
+  "outputDirectory": "dist/babybliss-frontend/browser",
   "rewrites": [
     {
       "source": "/api/:path*",
