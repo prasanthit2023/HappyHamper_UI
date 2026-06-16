@@ -7,13 +7,16 @@ import {
   ChangeDetectorRef,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 import { Meta, Title } from '@angular/platform-browser';
 import { HttpClient } from '@angular/common/http';
 import { forkJoin } from 'rxjs';
 import { ProductCardComponent } from '../../../../shared/components/product-card/product-card.component';
 import { ProductService } from '../../../../core/services/product.service';
 import { CartStore } from '../../../../state/cart.store';
+import { WishlistStore } from '../../../../state/wishlist.store';
+import { AuthStore } from '../../../../state/auth.store';
+import { ToastService } from '../../../../core/services/toast.service';
 import { RecentlyViewedService } from '../../../../core/services/recently-viewed.service';
 import { environment } from '../../../../../environments/environment';
 
@@ -211,7 +214,7 @@ import { environment } from '../../../../../environments/environment';
          PROMOTIONS / BANNER STRIP
     ══════════════════════════════════════════════════════ -->
     @if (middleBanners().length > 0) {
-      <section class="py-8" style="background: var(--color-bg);">
+      <section class="py-4" style="background: var(--color-bg);">
         <div class="bb-container">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             @for (promo of middleBanners(); track promo._id) {
@@ -311,12 +314,14 @@ import { environment } from '../../../../../environments/environment';
               <div class="card p-5 bg-white flex flex-col justify-between hover-lift relative overflow-hidden group">
                 <span class="absolute top-4 right-4 bg-primary text-white text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider z-10">Best Value</span>
                 
-                <div class="aspect-[4/3] rounded-xl overflow-hidden bg-neutral-50 mb-5 relative">
+                <a [routerLink]="['/products', p.slug]" class="block aspect-[4/3] rounded-xl overflow-hidden bg-neutral-50 mb-5 relative">
                   <img [src]="p.images?.[0]" [alt]="p.title" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                </div>
+                </a>
 
                 <div class="space-y-2">
-                  <h3 class="font-display font-bold text-lg text-neutral-900 group-hover:text-primary transition-colors">{{ p.title }}</h3>
+                  <a [routerLink]="['/products', p.slug]" class="block">
+                    <h3 class="font-display font-bold text-lg text-neutral-900 group-hover:text-primary transition-colors">{{ p.title }}</h3>
+                  </a>
                   <p class="text-xs text-neutral-500 line-clamp-2 leading-relaxed">{{ p.shortDescription || p.description }}</p>
                   
                   <div class="flex items-center justify-between pt-4 border-t border-neutral-100">
@@ -327,15 +332,27 @@ import { environment } from '../../../../../environments/environment';
                       }
                     </div>
                     
-                    <button
-                      (click)="onQuickAdd(p)"
-                      class="btn-primary px-4 py-2.5 text-xs rounded-lg flex items-center gap-1.5 active:scale-95"
-                    >
-                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
-                      </svg>
-                      Add to Cart
-                    </button>
+                    <div class="flex items-center gap-2">
+                      <!-- Wishlist Button -->
+                      <button
+                        (click)="onToggleWishlist($event, p)"
+                        class="w-9 h-9 rounded-full border border-neutral-200 flex items-center justify-center transition-all duration-200 hover:scale-110 active:scale-95"
+                        [style.color]="isWishlisted(p) ? 'var(--color-pink)' : '#9CA3AF'"
+                        [style.background]="isWishlisted(p) ? '#FDF2F8' : 'white'"
+                        [attr.aria-label]="isWishlisted(p) ? 'Remove from wishlist' : 'Add to wishlist'"
+                        [attr.id]="'wishlist-' + (p._id || p.id)"
+                      >
+                        <i [class]="isWishlisted(p) ? 'pi pi-heart-fill text-xs' : 'pi pi-heart text-xs'"></i>
+                      </button>
+
+                      <button
+                        (click)="onQuickAdd(p)"
+                        class="btn-primary px-4 py-2.5 text-xs rounded-lg flex items-center gap-1.5 active:scale-95"
+                      >
+                        <i class="pi pi-plus text-xs"></i>
+                        Add to Cart
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -531,37 +548,41 @@ import { environment } from '../../../../../environments/environment';
 })
 export class HomeComponent implements OnInit {
   private productService = inject(ProductService);
-  private cartStore      = inject(CartStore);
-  private meta           = inject(Meta);
-  private titleService   = inject(Title);
-  private cdr            = inject(ChangeDetectorRef);
-  private http           = inject(HttpClient);
+  private cartStore = inject(CartStore);
+  private wishlistStore = inject(WishlistStore);
+  private authStore = inject(AuthStore);
+  private toastService = inject(ToastService);
+  private router = inject(Router);
+  private meta = inject(Meta);
+  private titleService = inject(Title);
+  private cdr = inject(ChangeDetectorRef);
+  private http = inject(HttpClient);
   readonly recentlyViewedService = inject(RecentlyViewedService);
 
-  readonly newArrivals        = signal<any[]>([]);
-  readonly bestSellers        = signal<any[]>([]);
+  readonly newArrivals = signal<any[]>([]);
+  readonly bestSellers = signal<any[]>([]);
   readonly loadingNewArrivals = signal(true);
   readonly loadingBestSellers = signal(true);
 
-  readonly categories         = signal<any[]>([]);
-  readonly activeHero         = signal<any | null>(null);
-  readonly middleBanners      = signal<any[]>([]);
+  readonly categories = signal<any[]>([]);
+  readonly activeHero = signal<any | null>(null);
+  readonly middleBanners = signal<any[]>([]);
 
   // Showcase Signals
   readonly activeShowcaseCategoryId = signal<string>('');
-  readonly showcaseProducts         = signal<any[]>([]);
-  readonly loadingShowcase          = signal<boolean>(true);
-  readonly comboProducts            = signal<any[]>([]);
+  readonly showcaseProducts = signal<any[]>([]);
+  readonly loadingShowcase = signal<boolean>(true);
+  readonly comboProducts = signal<any[]>([]);
 
   readonly skeletons = Array(5).fill(0);
 
   // Category Icon & Color Mapping
   categoryStyleMap: Record<string, { color: string, iconColor: string, svgPath: string }> = {
-    'jablas':            { color: 'linear-gradient(135deg, #F0F1FA, #EAEBFA)', iconColor: 'var(--color-primary)', svgPath: 'M9 4L4 7v3h3v10h10V10h3V7l-5-3-3 2-3-2z' },
-    'nappies-diapers':   { color: 'linear-gradient(135deg, #FAF8F5, #F5EEE6)', iconColor: 'var(--color-accent)', svgPath: 'M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707' },
+    'jablas': { color: 'linear-gradient(135deg, #F0F1FA, #EAEBFA)', iconColor: 'var(--color-primary)', svgPath: 'M9 4L4 7v3h3v10h10V10h3V7l-5-3-3 2-3-2z' },
+    'nappies-diapers': { color: 'linear-gradient(135deg, #FAF8F5, #F5EEE6)', iconColor: 'var(--color-accent)', svgPath: 'M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707' },
     'swaddles-blankets': { color: 'linear-gradient(135deg, #FDFBF7, #FAF6EE)', iconColor: 'var(--color-primary)', svgPath: 'M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z' },
-    'accessories':       { color: 'linear-gradient(135deg, #F5F6FC, #EAEBFA)', iconColor: 'var(--color-primary)', svgPath: 'M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z' },
-    'combos':            { color: 'linear-gradient(135deg, #F4F2F0, #EDE0D0)', iconColor: 'var(--color-accent)', svgPath: 'M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10' },
+    'accessories': { color: 'linear-gradient(135deg, #F5F6FC, #EAEBFA)', iconColor: 'var(--color-primary)', svgPath: 'M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z' },
+    'combos': { color: 'linear-gradient(135deg, #F4F2F0, #EDE0D0)', iconColor: 'var(--color-accent)', svgPath: 'M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10' },
   };
 
   defaultStyle = {
@@ -571,26 +592,26 @@ export class HomeComponent implements OnInit {
   };
 
   trustBadges = [
-    { label: '100% Organic',   sub: 'Certified cotton', color: 'var(--color-primary)', svgPath: 'M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707M14 12a2 2 0 11-4 0 2 2 0 014 0z' },
-    { label: 'Free Shipping',  sub: 'Orders ₹499+', color: 'var(--color-accent)', svgPath: 'M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0zM13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17h5m4 0h5' },
-    { label: 'Easy Returns',   sub: '7-day hassle-free', color: 'var(--color-accent)', svgPath: 'M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15' },
+    { label: '100% Organic', sub: 'Certified cotton', color: 'var(--color-primary)', svgPath: 'M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707M14 12a2 2 0 11-4 0 2 2 0 014 0z' },
+    { label: 'Free Shipping', sub: 'Orders ₹499+', color: 'var(--color-accent)', svgPath: 'M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0zM13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17h5m4 0h5' },
+    { label: 'Easy Returns', sub: '7-day hassle-free', color: 'var(--color-accent)', svgPath: 'M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15' },
     { label: 'Secure Payments', sub: 'SSL encrypted', color: 'var(--color-primary)', svgPath: 'M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z' },
   ];
 
   testimonials = [
-    { name: 'Priya Sharma',  location: 'Mumbai, MH', text: 'The quality is absolutely amazing! My baby loves the Jablas and the fabric is so soft. Will definitely order again!' },
-    { name: 'Ravi Kumar',    location: 'Bengaluru, KA', text: 'Fast delivery and perfect packaging. The cotton swaddles are exactly as shown. Happy Hamper is my go-to for all baby clothing!' },
-    { name: 'Anita Verma',   location: 'Delhi, DL', text: 'Ordered the Newborn Starter Gift Box for my daughter — it looked stunning! The quality justifies every rupee spent.' },
-    { name: 'Sunita Patel',  location: 'Ahmedabad, GJ', text: 'Great range of sizes and styles. Love that they have organic cotton options. My newborn\'s skin is happy too!' },
-    { name: 'Deepak Nair',   location: 'Chennai, TN', text: 'Prompt customer service helped me with sizing. The 5-layer nappy fits perfectly. Really impressed with the overall experience.' },
-    { name: 'Meera Joshi',   location: 'Pune, MH', text: 'This is my 5th order! Every time the clothes are fresh, nicely packaged and super cute. My kids adore their Happy Hamper outfits!' },
+    { name: 'Priya Sharma', location: 'Mumbai, MH', text: 'The quality is absolutely amazing! My baby loves the Jablas and the fabric is so soft. Will definitely order again!' },
+    { name: 'Ravi Kumar', location: 'Bengaluru, KA', text: 'Fast delivery and perfect packaging. The cotton swaddles are exactly as shown. Happy Hamper is my go-to for all baby clothing!' },
+    { name: 'Anita Verma', location: 'Delhi, DL', text: 'Ordered the Newborn Starter Gift Box for my daughter — it looked stunning! The quality justifies every rupee spent.' },
+    { name: 'Sunita Patel', location: 'Ahmedabad, GJ', text: 'Great range of sizes and styles. Love that they have organic cotton options. My newborn\'s skin is happy too!' },
+    { name: 'Deepak Nair', location: 'Chennai, TN', text: 'Prompt customer service helped me with sizing. The 5-layer nappy fits perfectly. Really impressed with the overall experience.' },
+    { name: 'Meera Joshi', location: 'Pune, MH', text: 'This is my 5th order! Every time the clothes are fresh, nicely packaged and super cute. My kids adore their Happy Hamper outfits!' },
   ];
 
   features = [
-    { title: 'Organic Cotton',  desc: 'Soft, breathable, and certified safe for sensitive baby skin.', svgPath: 'M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707M14 12a2 2 0 11-4 0 2 2 0 014 0z' },
-    { title: 'Trendy Designs',  desc: 'Curated styles inspired by global fashion trends for kids.', svgPath: 'M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01' },
-    { title: 'Safety Tested',   desc: 'All products tested for harmful substances, fully compliant.', svgPath: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z' },
-    { title: 'Eco-Friendly',    desc: 'Reusable diapers and sustainable packaging options.', svgPath: 'M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3' },
+    { title: 'Organic Cotton', desc: 'Soft, breathable, and certified safe for sensitive baby skin.', svgPath: 'M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707M14 12a2 2 0 11-4 0 2 2 0 014 0z' },
+    { title: 'Trendy Designs', desc: 'Curated styles inspired by global fashion trends for kids.', svgPath: 'M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01' },
+    { title: 'Safety Tested', desc: 'All products tested for harmful substances, fully compliant.', svgPath: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z' },
+    { title: 'Eco-Friendly', desc: 'Reusable diapers and sustainable packaging options.', svgPath: 'M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3' },
   ];
 
   ngOnInit() {
@@ -701,8 +722,8 @@ export class HomeComponent implements OnInit {
 
   private loadProducts() {
     forkJoin({
-      newArrivals:  this.productService.getNewArrivals(10),
-      bestSellers:  this.productService.getBestSellers(10),
+      newArrivals: this.productService.getNewArrivals(10),
+      bestSellers: this.productService.getBestSellers(10),
     }).subscribe({
       next: (res: any) => {
         this.newArrivals.set(res.newArrivals?.data || []);
@@ -720,11 +741,30 @@ export class HomeComponent implements OnInit {
   }
 
   onQuickAdd(product: any) {
-    if (product.variants?.length > 1) return;
-    const defaultVariant = product.variants?.[0];
-    if (defaultVariant) {
-      this.cartStore.addItem(product._id, defaultVariant.sku, 1).subscribe();
+    if (product.variants?.length > 1) {
+      this.router.navigate(['/products', product.slug]);
+      return;
     }
+    const defaultVariant = product.variants?.[0];
+    const sku = defaultVariant ? defaultVariant.sku : product.sku;
+    if (sku) {
+      this.cartStore.addItem(product._id || product.id, sku, 1).subscribe();
+    }
+  }
+
+  isWishlisted(product: any): boolean {
+    return this.wishlistStore.isInWishlist(product._id || product.id);
+  }
+
+  onToggleWishlist(event: Event, product: any) {
+    event.preventDefault();
+    event.stopPropagation();
+    if (!this.authStore.isLoggedIn()) {
+      this.toastService.warning('Please log in to add items to your wishlist.');
+      this.router.navigate(['/auth/login']);
+      return;
+    }
+    this.wishlistStore.toggle(product._id || product.id).subscribe();
   }
 
   getRoutePath(linkString: string | null | undefined): string {
@@ -736,7 +776,7 @@ export class HomeComponent implements OnInit {
     if (!linkString) return defaultParams;
     const parts = linkString.split('?');
     if (parts.length < 2) return defaultParams;
-    
+
     const params: Record<string, any> = {};
     const searchParams = new URLSearchParams(parts[1]);
     searchParams.forEach((value, key) => {

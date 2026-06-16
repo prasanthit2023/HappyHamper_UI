@@ -18,7 +18,7 @@ import { environment } from '../../../../../environments/environment';
     <div class="page-enter" style="background: var(--color-bg); min-height: 100vh;">
 
       <!-- Page Header Band -->
-      <div class="py-8" style="background: var(--gradient-pastel); border-bottom: 1px solid var(--color-border);">
+      <div class="py-4" style="background: var(--gradient-pastel); border-bottom: 1px solid var(--color-border);">
         <div class="bb-container">
           <!-- Breadcrumb -->
           <nav class="breadcrumb mb-3" aria-label="Breadcrumb">
@@ -158,7 +158,7 @@ import { environment } from '../../../../../environments/environment';
       </div>
 
       <!-- Main Content -->
-      <div class="bb-container py-8">
+      <div class="bb-container py-4">
         <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
 
           <!-- Sidebar Filters (Desktop) -->
@@ -500,57 +500,57 @@ import { environment } from '../../../../../environments/environment';
   `]
 })
 export class ProductListingComponent implements OnInit, OnDestroy {
-  private route     = inject(ActivatedRoute);
-  private router    = inject(Router);
-  private http      = inject(HttpClient);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private http = inject(HttpClient);
   private productService = inject(ProductService);
   private cartStore = inject(CartStore);
-  private cdr       = inject(ChangeDetectorRef);
+  private cdr = inject(ChangeDetectorRef);
 
   private routeSub!: Subscription;
 
-  title              = signal<string>('All Products');
-  categories         = signal<any[]>([]);
-  products           = signal<any[]>([]);
-  pagination         = signal<any>({ page: 1, total: 0, totalPages: 1, hasPrevPage: false, hasNextPage: false });
-  loading            = signal<boolean>(true);
-  showMobileFilters  = signal<boolean>(false);
+  title = signal<string>('All Products');
+  categories = signal<any[]>([]);
+  products = signal<any[]>([]);
+  pagination = signal<any>({ page: 1, total: 0, totalPages: 1, hasPrevPage: false, hasNextPage: false });
+  loading = signal<boolean>(true);
+  showMobileFilters = signal<boolean>(false);
   activeCategorySlug = signal<string | null>(null);
-  viewMode           = signal<'grid' | 'list'>('grid');
+  viewMode = signal<'grid' | 'list'>('grid');
 
   // Filter state
-  selectedSort   = '-createdAt';
+  selectedSort = '-createdAt';
   minPrice: number | null = null;
   maxPrice: number | null = null;
   bestSellerOnly = false;
   newArrivalOnly = false;
-  featuredOnly   = false;
-  currentPage    = 1;
+  featuredOnly = false;
+  currentPage = 1;
 
   // For template binding with ngModel
   filterValues: Record<string, boolean> = {
     bestSeller: false,
     newArrival: false,
-    featured:   false,
+    featured: false,
   };
 
   priceBuckets = [
-    { label: 'Under ₹299',  min: null,  max: 299  },
-    { label: '₹299–₹599',   min: 299,   max: 599  },
-    { label: '₹599–₹999',   min: 599,   max: 999  },
-    { label: '₹999+',       min: 999,   max: null },
+    { label: 'Under ₹299', min: null, max: 299 },
+    { label: '₹299–₹599', min: 299, max: 599 },
+    { label: '₹599–₹999', min: 599, max: 999 },
+    { label: '₹999+', min: 999, max: null },
   ];
 
   specialFilters = [
-    { key: 'bestSeller', label: 'Best Sellers',  badge: '🔥 Hot',  badgeStyle: 'background: #FEF3C7; color: #B45309;' },
-    { key: 'newArrival', label: 'New Arrivals',  badge: 'New ✨',   badgeStyle: 'background: var(--color-primary-light); color: var(--color-primary);' },
-    { key: 'featured',   label: 'Featured Picks', badge: '⭐ Pick', badgeStyle: 'background: #F5F3FF; color: #7C3AED;' },
+    { key: 'bestSeller', label: 'Best Sellers', badge: '🔥 Hot', badgeStyle: 'background: #FEF3C7; color: #B45309;' },
+    { key: 'newArrival', label: 'New Arrivals', badge: 'New ✨', badgeStyle: 'background: var(--color-primary-light); color: var(--color-primary);' },
+    { key: 'featured', label: 'Featured Picks', badge: '⭐ Pick', badgeStyle: 'background: #F5F3FF; color: #7C3AED;' },
   ];
 
   ageGroups = [
-    { label: '0–3 Months',   tag: '0-3months' },
-    { label: '3–6 Months',   tag: '3-6months' },
-    { label: '6–12 Months',  tag: '6-12months' },
+    { label: '0–3 Months', tag: '0-3months' },
+    { label: '3–6 Months', tag: '3-6months' },
+    { label: '6–12 Months', tag: '6-12months' },
     { label: '12–24 Months', tag: '12-24months' },
   ];
 
@@ -564,23 +564,23 @@ export class ProductListingComponent implements OnInit, OnDestroy {
         this.activeCategorySlug.set(slug || null);
 
         // Reset filters on route change
-        this.bestSellerOnly      = false;
-        this.newArrivalOnly      = false;
-        this.featuredOnly        = false;
-        this.filterValues        = { bestSeller: false, newArrival: false, featured: false };
-        this.minPrice            = null;
-        this.maxPrice            = null;
+        this.bestSellerOnly = false;
+        this.newArrivalOnly = false;
+        this.featuredOnly = false;
+        this.filterValues = { bestSeller: false, newArrival: false, featured: false };
+        this.minPrice = null;
+        this.maxPrice = null;
 
         if (queryParams['bestSeller']) { this.bestSellerOnly = true; this.filterValues['bestSeller'] = true; }
         if (queryParams['newArrival']) { this.newArrivalOnly = true; this.filterValues['newArrival'] = true; }
-        if (queryParams['featured'])   { this.featuredOnly = true;   this.filterValues['featured'] = true; }
+        if (queryParams['featured']) { this.featuredOnly = true; this.filterValues['featured'] = true; }
 
         // Title
         if (slug) {
           this.title.set(
             slug.split('-')
-                .map((w: string) => w.charAt(0).toUpperCase() + w.slice(1))
-                .join(' ')
+              .map((w: string) => w.charAt(0).toUpperCase() + w.slice(1))
+              .join(' ')
           );
         } else {
           this.title.set('All Products');
@@ -614,7 +614,7 @@ export class ProductListingComponent implements OnInit, OnDestroy {
     if (slug) {
       this.http.get<any>(`${environment.apiUrl}/categories/${slug}`).subscribe({
         next: (res) => this.loadProductsWithFilters(res.data?._id || res.data?.id),
-        error:  ()  => this.loadProductsWithFilters(),
+        error: () => this.loadProductsWithFilters(),
       });
     } else {
       this.loadProductsWithFilters();
@@ -623,17 +623,17 @@ export class ProductListingComponent implements OnInit, OnDestroy {
 
   private loadProductsWithFilters(categoryId?: string) {
     const params: any = {
-      page:  this.currentPage,
+      page: this.currentPage,
       limit: 12,
-      sort:  this.selectedSort,
+      sort: this.selectedSort,
     };
 
-    if (categoryId)         params.category   = categoryId;
-    if (this.minPrice)      params.minPrice   = this.minPrice;
-    if (this.maxPrice)      params.maxPrice   = this.maxPrice;
+    if (categoryId) params.category = categoryId;
+    if (this.minPrice) params.minPrice = this.minPrice;
+    if (this.maxPrice) params.maxPrice = this.maxPrice;
     if (this.bestSellerOnly || this.filterValues['bestSeller']) params.bestSeller = true;
     if (this.newArrivalOnly || this.filterValues['newArrival']) params.newArrival = true;
-    if (this.featuredOnly   || this.filterValues['featured'])   params.featured   = true;
+    if (this.featuredOnly || this.filterValues['featured']) params.featured = true;
 
     const searchQuery = this.route.snapshot.queryParams['q'];
     if (searchQuery) params.search = searchQuery;
@@ -662,7 +662,7 @@ export class ProductListingComponent implements OnInit, OnDestroy {
   onSpecialFilterChange() {
     this.bestSellerOnly = this.filterValues['bestSeller'];
     this.newArrivalOnly = this.filterValues['newArrival'];
-    this.featuredOnly   = this.filterValues['featured'];
+    this.featuredOnly = this.filterValues['featured'];
     this.onFilterChange();
   }
 
@@ -673,14 +673,14 @@ export class ProductListingComponent implements OnInit, OnDestroy {
   }
 
   resetFilters() {
-    this.minPrice            = null;
-    this.maxPrice            = null;
-    this.bestSellerOnly      = false;
-    this.newArrivalOnly      = false;
-    this.featuredOnly        = false;
-    this.filterValues        = { bestSeller: false, newArrival: false, featured: false };
-    this.selectedSort        = '-createdAt';
-    this.currentPage         = 1;
+    this.minPrice = null;
+    this.maxPrice = null;
+    this.bestSellerOnly = false;
+    this.newArrivalOnly = false;
+    this.featuredOnly = false;
+    this.filterValues = { bestSeller: false, newArrival: false, featured: false };
+    this.selectedSort = '-createdAt';
+    this.currentPage = 1;
     this.activeFilterCount.set(0);
     this.fetchProducts();
   }
@@ -709,8 +709,8 @@ export class ProductListingComponent implements OnInit, OnDestroy {
     let count = 0;
     if (this.bestSellerOnly || this.filterValues['bestSeller']) count++;
     if (this.newArrivalOnly || this.filterValues['newArrival']) count++;
-    if (this.featuredOnly   || this.filterValues['featured'])   count++;
-    if (this.minPrice !== null || this.maxPrice !== null)       count++;
+    if (this.featuredOnly || this.filterValues['featured']) count++;
+    if (this.minPrice !== null || this.maxPrice !== null) count++;
     this.activeFilterCount.set(count);
   }
 
@@ -720,8 +720,9 @@ export class ProductListingComponent implements OnInit, OnDestroy {
       return;
     }
     const defaultVariant = product.variants?.[0];
-    if (defaultVariant) {
-      this.cartStore.addItem(product._id || product.id, defaultVariant.sku, 1).subscribe();
+    const sku = defaultVariant ? defaultVariant.sku : product.sku;
+    if (sku) {
+      this.cartStore.addItem(product._id || product.id, sku, 1).subscribe();
     }
   }
 }

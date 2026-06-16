@@ -24,17 +24,7 @@ import { CartStore } from '../../../../state/cart.store';
         </p>
       </div>
 
-      <!-- Search Input retry -->
-      <div class="max-w-md mb-8 flex gap-2">
-        <input
-          type="text"
-          [(ngModel)]="searchBox"
-          (keyup.enter)="onSearchBoxChange()"
-          placeholder="Search for clothes, sizes, brands..."
-          class="input-field py-2.5"
-        />
-        <button (click)="onSearchBoxChange()" class="btn-primary px-5 py-2.5 text-xs">Search</button>
-      </div>
+
 
       <!-- Products Grid -->
       @if (loading()) {
@@ -82,7 +72,7 @@ export class SearchResultsComponent implements OnInit, OnDestroy {
   private querySub!: Subscription;
 
   query = signal<string>('');
-  searchBox = '';
+
   products = signal<any[]>([]);
   loading = signal<boolean>(true);
 
@@ -90,7 +80,7 @@ export class SearchResultsComponent implements OnInit, OnDestroy {
     this.querySub = this.route.queryParams.subscribe((queryParams) => {
       const q = queryParams['q'] || '';
       this.query.set(q);
-      this.searchBox = q;
+
       this.executeSearch(q);
     });
   }
@@ -124,11 +114,7 @@ export class SearchResultsComponent implements OnInit, OnDestroy {
     });
   }
 
-  onSearchBoxChange() {
-    if (this.searchBox.trim()) {
-      this.router.navigate(['/search'], { queryParams: { q: this.searchBox.trim() } });
-    }
-  }
+
 
   onQuickAdd(product: any) {
     if (product.variants?.length > 1) {
@@ -136,8 +122,9 @@ export class SearchResultsComponent implements OnInit, OnDestroy {
       return;
     }
     const defaultVariant = product.variants?.[0];
-    if (defaultVariant) {
-      this.cartStore.addItem(product._id || product.id, defaultVariant.sku, 1).subscribe();
+    const sku = defaultVariant ? defaultVariant.sku : product.sku;
+    if (sku) {
+      this.cartStore.addItem(product._id || product.id, sku, 1).subscribe();
     }
   }
 }

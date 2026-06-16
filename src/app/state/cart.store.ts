@@ -2,9 +2,11 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { signal, computed } from '@angular/core';
 import { tap, catchError } from 'rxjs/operators';
-import { throwError } from 'rxjs';
+import { throwError, EMPTY } from 'rxjs';
+import { Router } from '@angular/router';
 import { environment } from '../../environments/environment';
 import { ToastService } from '../core/services/toast.service';
+import { AuthStore } from './auth.store';
 
 export interface CartItem {
   productId: string;
@@ -43,6 +45,8 @@ export class CartStore {
   );
 
   private readonly toastService = inject(ToastService);
+  private readonly authStore    = inject(AuthStore);
+  private readonly router       = inject(Router);
 
   constructor(private http: HttpClient) {}
 
@@ -59,6 +63,11 @@ export class CartStore {
 
   // ── Add Item ─────────────────────────────────────
   addItem(productId: string, variantSku: string, quantity = 1) {
+    if (!this.authStore.isLoggedIn()) {
+      this.toastService.warning('Please log in to add items to your cart.');
+      this.router.navigate(['/auth/login']);
+      return EMPTY;
+    }
     this.loading.set(true);
     return this.http
       .post<{ data: Cart }>(`${environment.apiUrl}/cart/items`, { productId, variantSku, quantity })

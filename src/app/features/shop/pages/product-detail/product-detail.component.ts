@@ -13,6 +13,7 @@ import { CartStore } from '../../../../state/cart.store';
 import { WishlistStore } from '../../../../state/wishlist.store';
 import { AuthStore } from '../../../../state/auth.store';
 import { RecentlyViewedService } from '../../../../core/services/recently-viewed.service';
+import { ToastService } from '../../../../core/services/toast.service';
 import { environment } from '../../../../../environments/environment';
 
 @Component({
@@ -422,23 +423,17 @@ import { environment } from '../../../../../environments/environment';
                       @else { 🛒 Add to Cart }
                     </button>
 
-                    @if (authStore.isLoggedIn()) {
-                      <button
-                        (click)="toggleWishlist()"
-                        class="btn-icon transition-all duration-200"
-                        [style.color]="isWishlisted() ? '#ef4444' : 'var(--color-text-muted)'"
-                        [style.background]="isWishlisted() ? '#fef2f2' : 'white'"
-                        [style.border-color]="isWishlisted() ? '#fecaca' : 'var(--color-border)'"
-                        [attr.aria-label]="isWishlisted() ? 'Remove from wishlist' : 'Add to wishlist'"
-                        [attr.aria-pressed]="isWishlisted()"
-                      >
-                        <svg class="w-5 h-5" [attr.fill]="isWishlisted() ? 'currentColor' : 'none'"
-                             stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
-                        </svg>
-                      </button>
-                    }
+                    <button
+                      (click)="toggleWishlist()"
+                      class="btn-icon transition-all duration-200 flex items-center justify-center"
+                      [style.color]="isWishlisted() ? '#ef4444' : 'var(--color-text-muted)'"
+                      [style.background]="isWishlisted() ? '#fef2f2' : 'white'"
+                      [style.border-color]="isWishlisted() ? '#fecaca' : 'var(--color-border)'"
+                      [attr.aria-label]="isWishlisted() ? 'Remove from wishlist' : 'Add to wishlist'"
+                      [attr.aria-pressed]="isWishlisted()"
+                    >
+                      <i [class]="isWishlisted() ? 'pi pi-heart-fill text-base' : 'pi pi-heart text-base'"></i>
+                    </button>
                   </div>
                 </div>
               </div>
@@ -808,6 +803,7 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
   private cartStore = inject(CartStore);
   private wishlistStore = inject(WishlistStore);
   readonly authStore = inject(AuthStore);
+  private toastService = inject(ToastService);
   private cdr = inject(ChangeDetectorRef);
   private document = inject(DOCUMENT);
   private platformId = inject(PLATFORM_ID);
@@ -1057,6 +1053,11 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
   toggleWishlist() {
     const prod = this.product();
     if (!prod) return;
+    if (!this.authStore.isLoggedIn()) {
+      this.toastService.warning('Please log in to add items to your wishlist.');
+      this.router.navigate(['/auth/login']);
+      return;
+    }
     this.wishlistStore.toggle(prod._id || prod.id).subscribe();
   }
 

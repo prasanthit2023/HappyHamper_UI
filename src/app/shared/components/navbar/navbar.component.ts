@@ -3,13 +3,16 @@ import {
   signal,
   inject,
   HostListener,
+  OnDestroy,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule, Router } from '@angular/router';
+import { RouterModule, Router, NavigationEnd } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AuthStore } from '../../../state/auth.store';
 import { CartStore } from '../../../state/cart.store';
 import { WishlistStore } from '../../../state/wishlist.store';
+import { filter } from 'rxjs/operators';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'bb-navbar',
@@ -52,7 +55,7 @@ import { WishlistStore } from '../../../state/wishlist.store';
             <div class="relative w-full">
               <i class="pi pi-search absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-400"></i>
               <input
-                type="text"
+                type="search"
                 placeholder="Search products..."
                 [(ngModel)]="searchQuery"
                 (keyup.enter)="onSearch()"
@@ -178,10 +181,11 @@ import { WishlistStore } from '../../../state/wishlist.store';
           <div class="bb-container py-4 space-y-1">
             <div class="flex gap-2 mb-4">
               <input
-                type="text"
+                type="search"
                 placeholder="Search..."
                 [(ngModel)]="searchQuery"
                 (keyup.enter)="onSearch()"
+                (input)="onSearchInput()"
                 class="input-field flex-1"
               />
               <button (click)="onSearch()" class="btn-primary px-4 py-2">Search</button>
@@ -237,7 +241,7 @@ import { WishlistStore } from '../../../state/wishlist.store';
     }
   `]
 })
-export class NavbarComponent {
+export class NavbarComponent implements OnDestroy {
   readonly authStore = inject(AuthStore);
   readonly cartStore = inject(CartStore);
   readonly wishlistStore = inject(WishlistStore);
@@ -246,6 +250,22 @@ export class NavbarComponent {
   readonly isScrolled = signal(false);
   readonly mobileMenuOpen = signal(false);
   searchQuery = '';
+  private routerSubscription?: Subscription;
+
+  constructor() {
+    this.routerSubscription = this.router.events.pipe(
+      filter((event): event is NavigationEnd => event instanceof NavigationEnd)
+    ).subscribe(() => {
+      const urlTree = this.router.parseUrl(this.router.url);
+      this.searchQuery = urlTree.queryParams['q'] || '';
+    });
+  }
+
+  ngOnDestroy() {
+    if (this.routerSubscription) {
+      this.routerSubscription.unsubscribe();
+    }
+  }
 
   categoryBar = [
     { label: 'New Arrivals', path: '/products', query: { newArrival: true } },
@@ -270,13 +290,19 @@ export class NavbarComponent {
   }
 
   onSearch() {
-    if (this.searchQuery.trim()) {
-      this.router.navigate(['/search'], { queryParams: { q: this.searchQuery.trim() } });
-      this.mobileMenuOpen.set(false);
+    const query = this.searchQuery.trim();
+    if (query) {
+      this.router.navigate(['/search'], { queryParams: { q: query } });
+    } else {
+      this.router.navigate(['/products']);
     }
+    this.mobileMenuOpen.set(false);
   }
 
   onSearchInput() {
-    // Autocomplete handled separately
+    if (!this.searchQuery.trim()) {
+      this.router.navigate(['/products']);
+      this.mobileMenuOpen.set(false);
+    }
   }
 }
