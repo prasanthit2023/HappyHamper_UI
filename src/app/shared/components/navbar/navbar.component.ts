@@ -26,6 +26,7 @@ import { Subscription } from 'rxjs';
       <span>Free Shipping on orders above ₹499 &nbsp;|&nbsp; Use code <strong>FIRST10</strong> for 10% off!</span>
     </div>
 
+    
     <!-- Main Navbar -->
     <header
       class="sticky top-0 z-50 bg-white transition-all duration-300"
