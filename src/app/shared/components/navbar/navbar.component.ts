@@ -116,7 +116,7 @@ import { Subscription } from 'rxjs';
                      style="border-color: var(--color-border);">
                   <div class="px-4 py-3" style="border-bottom: 1px solid var(--color-border);">
                     <div class="font-semibold text-sm text-neutral-900">{{ authStore.fullName() }}</div>
-                    <div class="text-xs text-neutral-400">{{ authStore.user()?.email }}</div>
+                    <div class="text-xs text-neutral-400">{{ authStore.user()?.phone }}</div>
                   </div>
                   <div class="py-2">
                     <a routerLink="/account/dashboard" class="flex items-center gap-3 px-4 py-2 text-sm text-neutral-700 transition-colors dropdown-item">

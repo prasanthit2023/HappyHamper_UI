@@ -12,8 +12,8 @@ import { AuthStore } from '../../../../state/auth.store';
   template: `
     <div class="animate-slide-up">
       <div class="text-center mb-8">
-        <h1 class="font-display font-bold text-3xl text-neutral-900 dark:text-white mb-2">Verify email</h1>
-        <p class="text-neutral-500">Enter the 6-digit OTP sent to your email.</p>
+        <h1 class="font-display font-bold text-3xl text-neutral-900 dark:text-white mb-2">Verify mobile number</h1>
+        <p class="text-neutral-500">Enter the 6-digit OTP sent to your mobile via WhatsApp.</p>
       </div>
 
       @if (successMessage()) {
@@ -30,10 +30,10 @@ import { AuthStore } from '../../../../state/auth.store';
         }
 
         <div>
-          <label for="email" class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1.5">Email</label>
-          <input id="email" type="email" formControlName="email" class="input-field" autocomplete="email" />
-          @if (isInvalid('email')) {
-            <p class="text-red-500 text-xs mt-1">Enter a valid email.</p>
+          <label for="phone" class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1.5">Mobile Number</label>
+          <input id="phone" type="tel" formControlName="phone" class="input-field" autocomplete="tel" />
+          @if (isInvalid('phone')) {
+            <p class="text-red-500 text-xs mt-1">Enter a valid mobile number.</p>
           }
         </div>
 
@@ -47,18 +47,18 @@ import { AuthStore } from '../../../../state/auth.store';
 
         <button type="submit" class="btn-primary w-full py-3.5 text-base" [disabled]="form.invalid || authStore.loading()">
           @if (authStore.loading()) {
-            <svg class="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
+            <svg class="animate-spin w-5 h-5 mr-2 inline" fill="none" viewBox="0 0 24 24">
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
               <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
             </svg>
             Verifying...
           } @else {
-            Verify Email
+            Verify Mobile Number
           }
         </button>
       </form>
 
-      <button type="button" class="btn-ghost w-full mt-4" [disabled]="!form.value.email || authStore.loading()" (click)="resendOtp()">
+      <button type="button" class="btn-ghost w-full mt-4" [disabled]="!form.value.phone || authStore.loading()" (click)="resendOtp()">
         Resend OTP
       </button>
 
@@ -78,7 +78,7 @@ export class VerifyOtpComponent {
   readonly successMessage = signal('');
 
   form = this.fb.group({
-    email: [this.route.snapshot.queryParamMap.get('email') || '', [Validators.required, Validators.email]],
+    phone: [this.route.snapshot.queryParamMap.get('phone') || '', [Validators.required, Validators.pattern(/^\+?[1-9]\d{6,14}$/)]],
     otp: ['', [Validators.required, Validators.pattern(/^\d{6}$/)]],
   });
 
@@ -93,23 +93,23 @@ export class VerifyOtpComponent {
       return;
     }
 
-    const email = this.form.value.email!.trim().toLowerCase();
+    const phone = this.form.value.phone!.trim();
     const otp = this.form.value.otp!.trim();
 
-    this.authStore.verifyOtp(email, otp).subscribe((result) => {
+    this.authStore.verifyOtp(phone, otp).subscribe((result) => {
       if (!result) return;
-      this.successMessage.set('Email verified. Redirecting to sign in...');
+      this.successMessage.set('Mobile number verified. Redirecting to sign in...');
       setTimeout(() => this.router.navigate(['/auth/login']), 800);
     });
   }
 
   resendOtp() {
-    const email = this.form.value.email?.trim().toLowerCase();
-    if (!email) return;
+    const phone = this.form.value.phone?.trim();
+    if (!phone) return;
 
-    this.authStore.resendOtp(email).subscribe((result) => {
+    this.authStore.resendOtp(phone).subscribe((result) => {
       if (!result) return;
-      this.successMessage.set('A fresh OTP has been sent.');
+      this.successMessage.set('A fresh OTP has been sent via WhatsApp.');
     });
   }
 }

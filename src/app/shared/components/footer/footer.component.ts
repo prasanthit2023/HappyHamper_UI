@@ -68,16 +68,16 @@ import { FormsModule } from '@angular/forms';
             </ul>
           </div>
 
-          <!-- Newsletter -->
+          <!-- WhatsApp Alerts -->
           <div>
-            <h4 class="font-semibold mb-5 text-sm uppercase tracking-wider" style="color: var(--color-text);">Newsletter</h4>
-            <p class="text-sm mb-4" style="color: var(--color-text-muted);">Get exclusive offers and new arrivals straight to your inbox.</p>
+            <h4 class="font-semibold mb-5 text-sm uppercase tracking-wider" style="color: var(--color-text);">WhatsApp Alerts</h4>
+            <p class="text-sm mb-4" style="color: var(--color-text-muted);">Get exclusive offers and new arrivals straight to your WhatsApp.</p>
             <form (ngSubmit)="onSubscribe()" class="space-y-3">
               <input
-                type="email"
-                [(ngModel)]="email"
-                name="email"
-                placeholder="your@email.com"
+                type="tel"
+                [(ngModel)]="phone"
+                name="phone"
+                placeholder="e.g. +919876543210"
                 class="newsletter-input w-full px-4 py-2.5 rounded-xl text-sm outline-none transition-all duration-200"
               />
               <button type="submit" class="w-full btn-primary text-sm py-2.5">
@@ -161,7 +161,7 @@ import { FormsModule } from '@angular/forms';
   `]
 })
 export class FooterComponent {
-  email = '';
+  phone = '';
   subscribed = false;
   currentYear = new Date().getFullYear();
 
@@ -197,9 +197,9 @@ export class FooterComponent {
   paymentMethods = ['Visa', 'Mastercard', 'UPI', 'Razorpay', 'Net Banking', 'Cash on Delivery'];
 
   onSubscribe() {
-    if (this.email.trim()) {
+    if (this.phone.trim()) {
       this.subscribed = true;
-      this.email = '';
+      this.phone = '';
       setTimeout(() => (this.subscribed = false), 5000);
     }
   }

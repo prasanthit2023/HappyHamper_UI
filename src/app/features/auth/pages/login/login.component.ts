@@ -33,16 +33,16 @@ import { AuthStore } from '../../../../state/auth.store';
         </button>
         <button
           type="button"
-          (click)="loginMode.set('email')"
+          (click)="loginMode.set('password')"
           class="flex-1 py-2.5 text-xs font-bold rounded-lg transition-all duration-200"
-          [class.bg-white]="loginMode() === 'email'"
-          [class.shadow-sm]="loginMode() === 'email'"
-          [class.text-primary-600]="loginMode() === 'email'"
-          [class.text-neutral-500]="loginMode() !== 'email'"
-          [class.hover:text-neutral-800]="loginMode() !== 'email'"
-          id="tab-email"
+          [class.bg-white]="loginMode() === 'password'"
+          [class.shadow-sm]="loginMode() === 'password'"
+          [class.text-primary-600]="loginMode() === 'password'"
+          [class.text-neutral-500]="loginMode() !== 'password'"
+          [class.hover:text-neutral-800]="loginMode() !== 'password'"
+          id="tab-password"
         >
-          Email + Password
+          Mobile + Password
         </button>
       </div>
 
@@ -158,22 +158,22 @@ import { AuthStore } from '../../../../state/auth.store';
             </div>
           </form>
         }
-      } @else if (loginMode() === 'email') {
-        <!-- Email + Password Form -->
-        <form [formGroup]="emailForm" (ngSubmit)="onEmailLogin()" class="space-y-5">
+      } @else if (loginMode() === 'password') {
+        <!-- Mobile Number + Password Form -->
+        <form [formGroup]="phonePasswordForm" (ngSubmit)="onPhonePasswordLogin()" class="space-y-5">
           <div>
-            <label for="email" class="block text-xs font-bold text-neutral-500 mb-1.5 uppercase tracking-wider">Email Address</label>
+            <label for="phone-login" class="block text-xs font-bold text-neutral-500 mb-1.5 uppercase tracking-wider">Mobile Number</label>
             <input
-              id="email"
-              type="email"
-              formControlName="email"
-              placeholder="e.g. john@example.com"
+              id="phone-login"
+              type="tel"
+              formControlName="phone"
+              placeholder="e.g. +919876543210"
               class="input-field"
-              autocomplete="email"
-              [class.border-red-400]="emailForm.get('email')?.invalid && emailForm.get('email')?.touched"
+              autocomplete="tel"
+              [class.border-red-400]="phonePasswordForm.get('phone')?.invalid && phonePasswordForm.get('phone')?.touched"
             />
-            @if (emailForm.get('email')?.invalid && emailForm.get('email')?.touched) {
-              <p class="text-red-500 text-xs mt-1">Please enter a valid email address.</p>
+            @if (phonePasswordForm.get('phone')?.invalid && phonePasswordForm.get('phone')?.touched) {
+              <p class="text-red-500 text-xs mt-1">Please enter a valid phone number (e.g. +919876543210 or 9876543210).</p>
             }
           </div>
 
@@ -189,9 +189,9 @@ import { AuthStore } from '../../../../state/auth.store';
               placeholder="••••••••"
               class="input-field"
               autocomplete="current-password"
-              [class.border-red-400]="emailForm.get('password')?.invalid && emailForm.get('password')?.touched"
+              [class.border-red-400]="phonePasswordForm.get('password')?.invalid && phonePasswordForm.get('password')?.touched"
             />
-            @if (emailForm.get('password')?.invalid && emailForm.get('password')?.touched) {
+            @if (phonePasswordForm.get('password')?.invalid && phonePasswordForm.get('password')?.touched) {
               <p class="text-red-500 text-xs mt-1">Password is required.</p>
             }
           </div>
@@ -199,8 +199,8 @@ import { AuthStore } from '../../../../state/auth.store';
           <button
             type="submit"
             class="btn-primary w-full py-3.5 text-base font-semibold"
-            [disabled]="emailForm.invalid || authStore.loading()"
-            id="email-login-btn"
+            [disabled]="phonePasswordForm.invalid || authStore.loading()"
+            id="password-login-btn"
           >
             @if (authStore.loading()) {
               <svg class="animate-spin w-5 h-5 mr-2 inline" fill="none" viewBox="0 0 24 24">
@@ -227,7 +227,7 @@ export class LoginComponent {
   private fb         = inject(FormBuilder);
   private router     = inject(Router);
 
-  loginMode = signal<'phone' | 'email'>('phone');
+  loginMode = signal<'phone' | 'password'>('phone');
   step = signal<'phone' | 'otp'>('phone');
   receivedDevOtp: string | null = null;
 
@@ -239,8 +239,8 @@ export class LoginComponent {
     otp: ['', [Validators.required, Validators.pattern(/^\d{6}$/)]],
   });
 
-  emailForm = this.fb.group({
-    email: ['', [Validators.required, Validators.email]],
+  phonePasswordForm = this.fb.group({
+    phone: ['', [Validators.required, Validators.pattern(/^\+?[1-9]\d{6,14}$/)]],
     password: ['', [Validators.required]],
   });
 
@@ -253,8 +253,9 @@ export class LoginComponent {
     this.authStore.sendPhoneOtp(phone).subscribe((res: any) => {
       if (res) {
         this.step.set('otp');
-        if (res.data?.otp) {
-          this.receivedDevOtp = res.data.otp;
+        const otpVal = res?.otp || res?.data?.otp;
+        if (otpVal) {
+          this.receivedDevOtp = otpVal;
         }
       }
     });
@@ -276,14 +277,14 @@ export class LoginComponent {
     });
   }
 
-  onEmailLogin() {
-    if (this.emailForm.invalid) {
-      this.emailForm.markAllAsTouched();
+  onPhonePasswordLogin() {
+    if (this.phonePasswordForm.invalid) {
+      this.phonePasswordForm.markAllAsTouched();
       return;
     }
-    const email = this.emailForm.value.email!;
-    const password = this.emailForm.value.password!;
-    this.authStore.login(email, password).subscribe((res) => {
+    const phone = this.phonePasswordForm.value.phone!;
+    const password = this.phonePasswordForm.value.password!;
+    this.authStore.login(phone, password).subscribe((res) => {
       if (res) {
         const returnUrl = new URLSearchParams(window.location.search).get('returnUrl');
         const target = (!returnUrl || returnUrl === '/') ? '/products' : returnUrl;

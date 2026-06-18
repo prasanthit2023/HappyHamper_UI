@@ -105,7 +105,7 @@ export const routes: Routes = [
       },
       {
         path: 'verify-otp',
-        title: 'Verify Email – Happy Hamper',
+        title: 'Verify Mobile Number – Happy Hamper',
         loadComponent: () =>
           import('./features/auth/pages/verify-otp/verify-otp.component').then(
             (m) => m.VerifyOtpComponent,

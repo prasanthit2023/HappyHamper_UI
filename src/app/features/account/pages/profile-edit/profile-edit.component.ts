@@ -67,14 +67,11 @@ import { AuthStore } from '../../../../state/auth.store';
         </div>
 
         <div>
-          <label class="block text-xs font-semibold text-neutral-400 mb-1.5">Email Address</label>
-          <input type="email" [value]="authStore.user()?.email" disabled class="input-field py-2 bg-neutral-50 dark:bg-neutral-800 cursor-not-allowed text-neutral-400" />
-          <p class="text-[10px] text-neutral-400 mt-1">Contact support to change your account email.</p>
-        </div>
-
-        <div>
           <label class="block text-xs font-semibold text-neutral-400 mb-1.5">Phone Number</label>
           <input type="tel" formControlName="phone" class="input-field py-2" placeholder="+919876543210" />
+          @if (form.get('phone')?.invalid && form.get('phone')?.touched) {
+            <p class="text-red-500 text-[10px] mt-1">Please enter a valid mobile number (e.g. +919876543210).</p>
+          }
         </div>
 
         <div class="pt-4 border-t border-neutral-100 dark:border-neutral-700 flex justify-end">
@@ -103,7 +100,7 @@ export class ProfileEditComponent implements OnInit {
   form = this.fb.group({
     firstName: ['', [Validators.required, Validators.maxLength(50)]],
     lastName: ['', [Validators.required, Validators.maxLength(50)]],
-    phone: [''],
+    phone: ['', [Validators.required, Validators.pattern(/^\+?[1-9]\d{6,14}$/)]],
   });
 
   ngOnInit() {
@@ -131,7 +128,7 @@ export class ProfileEditComponent implements OnInit {
     const payload = {
       firstName: this.form.value.firstName!.trim(),
       lastName: this.form.value.lastName!.trim(),
-      phone: this.form.value.phone?.trim() || '',
+      phone: this.form.value.phone!.trim(),
       avatar: this.selectedAvatar(),
     };
 

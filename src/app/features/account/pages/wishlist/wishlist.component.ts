@@ -113,16 +113,18 @@ export class WishlistComponent implements OnInit {
   }
 
   moveToCart(product: any) {
-    if (product.variants?.length > 1) {
+    if (!product.variants || product.variants.length === 0 || product.variants.length > 1) {
       this.router.navigate(['/products', product.slug]);
       return;
     }
-    const defaultVariant = product.variants?.[0];
-    const sku = defaultVariant ? defaultVariant.sku : product.sku;
-
-    this.cartStore.addItem(product.id || product._id, sku, 1).subscribe(() => {
-      // Cleanly remove from wishlist on move to cart
-      this.removeFromWishlist(product.id || product._id);
-    });
+    const defaultVariant = product.variants[0];
+    if (defaultVariant && defaultVariant.sku) {
+      this.cartStore.addItem(product.id || product._id, defaultVariant.sku, 1).subscribe(() => {
+        // Cleanly remove from wishlist on move to cart
+        this.removeFromWishlist(product.id || product._id);
+      });
+    } else {
+      this.router.navigate(['/products', product.slug]);
+    }
   }
 }

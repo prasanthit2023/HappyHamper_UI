@@ -20,7 +20,7 @@ import { AuthStore } from '../../../state/auth.store';
             </div>
             <div>
               <h2 class="font-bold text-lg text-neutral-900 dark:text-white">{{ authStore.fullName() }}</h2>
-              <p class="text-xs text-neutral-400 mt-0.5">{{ authStore.user()?.email }}</p>
+              <p class="text-xs text-neutral-400 mt-0.5">{{ authStore.user()?.phone }}</p>
             </div>
             <div class="badge-primary px-3 py-1 rounded-full text-xs font-bold inline-block capitalize">
               Role: {{ authStore.user()?.role || 'Customer' }}

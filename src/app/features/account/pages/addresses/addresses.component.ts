@@ -30,13 +30,9 @@ import { AuthStore } from '../../../../state/auth.store';
             {{ editAddressId() ? 'Edit Address' : 'Add New Address' }}
           </h3>
 
-          <div>
-            <label class="block text-xs font-semibold text-neutral-400 mb-1.5">First Name</label>
-            <input type="text" formControlName="firstName" class="input-field py-2" />
-          </div>
-          <div>
-            <label class="block text-xs font-semibold text-neutral-400 mb-1.5">Last Name</label>
-            <input type="text" formControlName="lastName" class="input-field py-2" />
+          <div class="sm:col-span-2">
+            <label class="block text-xs font-semibold text-neutral-400 mb-1.5">Full Name</label>
+            <input type="text" formControlName="fullName" class="input-field py-2" />
           </div>
           <div class="sm:col-span-2">
             <label class="block text-xs font-semibold text-neutral-400 mb-1.5">Street Address</label>
@@ -106,7 +102,7 @@ import { AuthStore } from '../../../../state/auth.store';
 
               <div class="text-sm">
                 <p class="font-bold text-neutral-800 dark:text-neutral-100">
-                  {{ addr.firstName || authStore.user()?.firstName }} {{ addr.lastName || authStore.user()?.lastName }}
+                  {{ addr.fullName || authStore.fullName() }}
                 </p>
                 <p class="text-neutral-500 mt-1 leading-relaxed">
                   {{ addr.street }}, {{ addr.city }}, {{ addr.state }}, {{ addr.country }} - {{ addr.zipCode }}
@@ -138,8 +134,7 @@ export class AddressesComponent implements OnInit {
   editAddressId = signal<string | null>(null);
 
   form = this.fb.group({
-    firstName: ['', [Validators.required]],
-    lastName: ['', [Validators.required]],
+    fullName: ['', [Validators.required]],
     street: ['', [Validators.required]],
     city: ['', [Validators.required]],
     state: ['', [Validators.required]],
@@ -165,8 +160,7 @@ export class AddressesComponent implements OnInit {
   openAddForm() {
     this.editAddressId.set(null);
     this.form.reset({
-      firstName: this.authStore.user()?.firstName || '',
-      lastName: this.authStore.user()?.lastName || '',
+      fullName: this.authStore.fullName() || '',
       country: 'India',
       label: 'Home',
       isDefault: false,
@@ -177,8 +171,7 @@ export class AddressesComponent implements OnInit {
   editAddress(address: any) {
     this.editAddressId.set(address.id);
     this.form.patchValue({
-      firstName: address.firstName || this.authStore.user()?.firstName || '',
-      lastName: address.lastName || this.authStore.user()?.lastName || '',
+      fullName: address.fullName || this.authStore.fullName() || '',
       street: address.street,
       city: address.city,
       state: address.state,

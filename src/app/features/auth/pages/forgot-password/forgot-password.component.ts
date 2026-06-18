@@ -38,16 +38,16 @@ import { environment } from '../../../../../environments/environment';
         <!-- Step 1: Request OTP -->
         <form [formGroup]="requestForm" (ngSubmit)="onRequestOtp()" class="space-y-4">
           <div>
-            <label for="email" class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1.5">Email Address</label>
-            <input id="email" type="email" formControlName="email" placeholder="your@email.com" class="input-field" autocomplete="email" />
-            @if (requestForm.get('email')?.invalid && requestForm.get('email')?.touched) {
-              <p class="text-red-500 text-xs mt-1">Please enter a valid email address.</p>
+            <label for="phone" class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1.5">Mobile Number</label>
+            <input id="phone" type="tel" formControlName="phone" placeholder="e.g. +919876543210" class="input-field" autocomplete="tel" />
+            @if (requestForm.get('phone')?.invalid && requestForm.get('phone')?.touched) {
+              <p class="text-red-500 text-xs mt-1">Please enter a valid mobile number (e.g. +919876543210).</p>
             }
           </div>
 
           <button type="submit" class="btn-primary w-full py-3.5 text-base" [disabled]="requestForm.invalid || loading()">
             @if (loading()) {
-              <svg class="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
+              <svg class="animate-spin w-5 h-5 mr-2 inline" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
               </svg>
@@ -61,8 +61,8 @@ import { environment } from '../../../../../environments/environment';
         <!-- Step 2: Reset Password -->
         <form [formGroup]="resetForm" (ngSubmit)="onResetPassword()" class="space-y-4">
           <div>
-            <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1.5">Email Address</label>
-            <input type="email" [value]="requestForm.value.email" disabled class="input-field bg-neutral-50 cursor-not-allowed" />
+            <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1.5">Mobile Number</label>
+            <input type="tel" [value]="requestForm.value.phone" disabled class="input-field bg-neutral-50 cursor-not-allowed" />
           </div>
 
           <div>
@@ -83,7 +83,7 @@ import { environment } from '../../../../../environments/environment';
 
           <button type="submit" class="btn-primary w-full py-3.5 text-base" [disabled]="resetForm.invalid || loading()">
             @if (loading()) {
-              <svg class="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
+              <svg class="animate-spin w-5 h-5 mr-2 inline" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
               </svg>
@@ -113,7 +113,7 @@ export class ForgotPasswordComponent {
   errorMessage = signal<string>('');
 
   requestForm = this.fb.group({
-    email: ['', [Validators.required, Validators.email]],
+    phone: ['', [Validators.required, Validators.pattern(/^\+?[1-9]\d{6,14}$/)]],
   });
 
   resetForm = this.fb.group({
@@ -127,12 +127,12 @@ export class ForgotPasswordComponent {
     this.errorMessage.set('');
     this.successMessage.set('');
 
-    const email = this.requestForm.value.email!.trim();
+    const phone = this.requestForm.value.phone!.trim();
 
-    this.http.post<any>(`${environment.apiUrl}/auth/forgot-password`, { email }).subscribe({
+    this.http.post<any>(`${environment.apiUrl}/auth/forgot-password`, { phone }).subscribe({
       next: (res) => {
         this.loading.set(false);
-        this.successMessage.set('A reset code has been sent to your email.');
+        this.successMessage.set('A reset code has been sent via WhatsApp.');
         this.step.set(2);
       },
       error: (err) => {
@@ -148,11 +148,11 @@ export class ForgotPasswordComponent {
     this.errorMessage.set('');
     this.successMessage.set('');
 
-    const email = this.requestForm.value.email!.trim();
+    const phone = this.requestForm.value.phone!.trim();
     const otp = this.resetForm.value.otp!.trim();
     const newPassword = this.resetForm.value.newPassword!;
 
-    this.http.post<any>(`${environment.apiUrl}/auth/reset-password`, { email, otp, newPassword }).subscribe({
+    this.http.post<any>(`${environment.apiUrl}/auth/reset-password`, { phone, otp, newPassword }).subscribe({
       next: (res) => {
         this.loading.set(false);
         this.successMessage.set('Password reset successful. Redirecting to sign in...');

@@ -149,7 +149,7 @@ import { environment } from '../../../../../environments/environment';
                           <span class="text-[10px] font-bold text-[var(--color-primary)]">DEFAULT</span>
                         }
                       </div>
-                      <p class="text-sm font-semibold text-[var(--color-text)]">{{ authStore.fullName() }}</p>
+                      <p class="text-sm font-semibold text-[var(--color-text)]">{{ addr.fullName || authStore.fullName() }}</p>
                       <p class="text-xs text-[var(--color-text-muted)] mt-1 leading-relaxed">
                         {{ addr.street }}, {{ addr.city }}, {{ addr.state }}, {{ addr.country }} - {{ addr.zipCode }}
                       </p>
@@ -184,52 +184,27 @@ import { environment } from '../../../../../environments/environment';
               @if (showNewAddressForm() || savedAddresses().length === 0) {
                 <form [formGroup]="addressForm" class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 animate-slide-up" novalidate>
 
-                  <!-- First Name -->
-                  <div>
-                    <label class="block text-xs font-semibold text-[var(--color-text-muted)] mb-1.5" for="firstName">First Name *</label>
+                  <!-- Full Name -->
+                  <div class="sm:col-span-2">
+                    <label class="block text-xs font-semibold text-[var(--color-text-muted)] mb-1.5" for="fullName">Full Name *</label>
                     <input
-                      id="firstName"
+                      id="fullName"
                       type="text"
-                      formControlName="firstName"
+                      formControlName="fullName"
                       class="input-field py-2"
-                      [class.border-red-400]="isInvalid('firstName')"
-                      [class.ring-1]="isInvalid('firstName')"
-                      [class.ring-red-300]="isInvalid('firstName')"
-                      placeholder="e.g. Priya"
+                      [class.border-red-400]="isInvalid('fullName')"
+                      [class.ring-1]="isInvalid('fullName')"
+                      [class.ring-red-300]="isInvalid('fullName')"
+                      placeholder="e.g. Priya Sharma"
                       aria-required="true"
-                      [attr.aria-invalid]="isInvalid('firstName')"
+                      [attr.aria-invalid]="isInvalid('fullName')"
                     />
-                    @if (isInvalid('firstName')) {
+                    @if (isInvalid('fullName')) {
                       <p class="text-red-500 text-xs mt-1 flex items-center gap-1" role="alert">
                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
-                        First name is required
-                      </p>
-                    }
-                  </div>
-
-                  <!-- Last Name -->
-                  <div>
-                    <label class="block text-xs font-semibold text-[var(--color-text-muted)] mb-1.5" for="lastName">Last Name *</label>
-                    <input
-                      id="lastName"
-                      type="text"
-                      formControlName="lastName"
-                      class="input-field py-2"
-                      [class.border-red-400]="isInvalid('lastName')"
-                      [class.ring-1]="isInvalid('lastName')"
-                      [class.ring-red-300]="isInvalid('lastName')"
-                      placeholder="e.g. Sharma"
-                      aria-required="true"
-                      [attr.aria-invalid]="isInvalid('lastName')"
-                    />
-                    @if (isInvalid('lastName')) {
-                      <p class="text-red-500 text-xs mt-1 flex items-center gap-1" role="alert">
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
-                        Last name is required
+                        Full name is required
                       </p>
                     }
                   </div>
@@ -417,39 +392,7 @@ import { environment } from '../../../../../environments/environment';
                 Payment Method
               </h2>
 
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4" role="radiogroup" aria-label="Payment methods">
-                <!-- COD option -->
-                <div
-                  (click)="selectedPayment.set('cod')"
-                  (keydown.enter)="selectedPayment.set('cod')"
-                  (keydown.space)="selectedPayment.set('cod')"
-                  class="border-2 rounded-2xl p-4 cursor-pointer transition-all hover:shadow-md"
-                  [class]="selectedPayment() === 'cod'
-                    ? 'border-2 rounded-2xl p-4 cursor-pointer border-[var(--color-primary)] bg-[var(--color-bg-subtle)]'
-                    : 'border-2 rounded-2xl p-4 cursor-pointer border-[var(--color-border)] hover:border-[var(--color-sandal)]'"
-                  role="radio"
-                  [attr.aria-checked]="selectedPayment() === 'cod'"
-                  tabindex="0"
-                  aria-label="Cash on Delivery payment option"
-                >
-                  <div class="flex items-center gap-3 mb-2">
-                    <!-- COD Icon -->
-                    <div class="w-10 h-10 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center flex-shrink-0">
-                      <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
-                      </svg>
-                    </div>
-                    @if (selectedPayment() === 'cod') {
-                      <div class="ml-auto w-5 h-5 rounded-full flex items-center justify-center text-white flex-shrink-0" style="background: var(--color-primary)">
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
-                        </svg>
-                      </div>
-                    }
-                  </div>
-                  <p class="font-bold text-sm text-[var(--color-text)]">Cash on Delivery</p>
-                  <p class="text-xs text-[var(--color-text-muted)] mt-0.5">Pay with cash when your order arrives</p>
-                </div>
+              <div class="grid grid-cols-1 gap-4" role="radiogroup" aria-label="Payment methods">
 
                 <!-- Razorpay option -->
                 <div
@@ -640,7 +583,7 @@ export class CheckoutComponent implements OnInit {
 
   savedAddresses = signal<any[]>([]);
   selectedAddressId = signal<string | null>(null);
-  selectedPayment = signal<string>('cod');
+  selectedPayment = signal<string>('razorpay');
   showNewAddressForm = signal<boolean>(false);
   submitting = signal<boolean>(false);
   errorMessage = signal<string>('');
@@ -658,8 +601,7 @@ export class CheckoutComponent implements OnInit {
   });
 
   addressForm = this.fb.group({
-    firstName: ['', [Validators.required]],
-    lastName: ['', [Validators.required]],
+    fullName: ['', [Validators.required]],
     street: ['', [Validators.required]],
     city: ['', [Validators.required]],
     state: ['', [Validators.required]],
@@ -750,8 +692,7 @@ export class CheckoutComponent implements OnInit {
   private placeOrder(shippingAddress: any) {
     const payload = {
       shippingAddress: {
-        firstName: shippingAddress.firstName || this.authStore.user()?.firstName || 'Customer',
-        lastName: shippingAddress.lastName || this.authStore.user()?.lastName || '',
+        fullName: shippingAddress.fullName || this.authStore.fullName() || 'Customer',
         phone: shippingAddress.phone,
         street: shippingAddress.street,
         city: shippingAddress.city,

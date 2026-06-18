@@ -58,21 +58,15 @@ import { environment } from '../../../../../environments/environment';
               <span class="font-semibold text-neutral-700 dark:text-neutral-200">{{ authStore.fullName() }}</span>
             </div>
             <div>
-              <span class="text-xs text-neutral-400 block">Email</span>
-              <span class="font-semibold text-neutral-700 dark:text-neutral-200">{{ authStore.user()?.email }}</span>
+              <span class="text-xs text-neutral-400 block">Phone</span>
+              <span class="font-semibold text-neutral-700 dark:text-neutral-200">{{ authStore.user()?.phone }}</span>
             </div>
-            @if (authStore.user()?.phone) {
-              <div>
-                <span class="text-xs text-neutral-400 block">Phone</span>
-                <span class="font-semibold text-neutral-700 dark:text-neutral-200">{{ authStore.user()?.phone }}</span>
-              </div>
-            }
             <div>
               <span class="text-xs text-neutral-400 block">Verified Status</span>
               @if (authStore.user()?.isVerified) {
                 <span class="text-emerald-600 font-bold flex items-center gap-1">
                   <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
-                  Email Verified
+                  Mobile Verified
                 </span>
               } @else {
                 <span class="text-red-500 font-bold flex items-center gap-1">

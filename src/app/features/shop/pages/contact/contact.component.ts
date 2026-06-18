@@ -94,10 +94,10 @@ import { RouterModule } from '@angular/router';
                 </div>
 
                 <div>
-                  <label class="block text-xs font-semibold text-neutral-400 mb-1.5">Email Address</label>
-                  <input type="email" formControlName="email" class="input-field py-2.5" placeholder="john.doe@example.com" />
-                  @if (isInvalid('email')) {
-                    <p class="text-red-500 text-[10px] mt-1">Enter a valid email address.</p>
+                  <label class="block text-xs font-semibold text-neutral-400 mb-1.5">Mobile Number</label>
+                  <input type="tel" formControlName="phone" class="input-field py-2.5" placeholder="e.g. +919876543210" />
+                  @if (isInvalid('phone')) {
+                    <p class="text-red-500 text-[10px] mt-1">Please enter a valid mobile number (e.g. +919876543210).</p>
                   }
                 </div>
 
@@ -184,7 +184,7 @@ export class ContactComponent {
   contactForm = this.fb.group({
     firstName: ['', [Validators.required]],
     lastName: ['', [Validators.required]],
-    email: ['', [Validators.required, Validators.email]],
+    phone: ['', [Validators.required, Validators.pattern(/^\+?[1-9]\d{6,14}$/)]],
     subject: ['General Inquiry', [Validators.required]],
     message: ['', [Validators.required, Validators.minLength(10)]],
   });
@@ -197,10 +197,10 @@ export class ContactComponent {
       svgPath: 'M3 5a2 2 0 012-2h3.28a1 1 0 01.94.725l.548 2.2a1 1 0 01-.321.988l-1.305.98a10.582 10.582 0 004.872 4.872l.98-1.305a1 1 0 01.988-.321l2.2.548a1 1 0 01.725.94V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z',
     },
     {
-      title: 'Email Us',
-      detail: 'support@happyhamper.com',
-      subtext: 'We respond to all emails within 24 hours.',
-      svgPath: 'M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z',
+      title: 'WhatsApp Support',
+      detail: '+91 80 4567 8901',
+      subtext: 'We respond to messages instantly or within 2 hours.',
+      svgPath: 'M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z',
     },
     {
       title: 'Our Headquarters',
@@ -225,7 +225,7 @@ export class ContactComponent {
     },
     {
       q: 'Can I cancel or modify my order?',
-      a: 'You can cancel your order directly from your order tracking screen as long as the status is "placed" (not yet processed or shipped). If you need to make changes to the delivery address, please email support immediately.',
+      a: 'You can cancel your order directly from your order tracking screen as long as the status is "placed" (not yet processed or shipped). If you need to make changes to the delivery address, please contact support via WhatsApp immediately.',
     },
   ];
 
@@ -248,7 +248,7 @@ export class ContactComponent {
     this.contactForm.reset({
       firstName: '',
       lastName: '',
-      email: '',
+      phone: '',
       subject: 'General Inquiry',
       message: '',
     });

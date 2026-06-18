@@ -210,7 +210,7 @@ import { ToastService } from '../../../../core/services/toast.service';
           </span>
           <span class="order-chip">{{ orderNumber() || 'HH-PENDING' }}</span>
           <p class="text-xs mt-3 leading-relaxed" style="color: var(--color-text-muted);">
-            A confirmation email with your receipt and tracking details has been sent to your inbox.
+            A confirmation message has been sent to your mobile via WhatsApp.
           </p>
         </div>
 

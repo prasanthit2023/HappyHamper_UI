@@ -741,14 +741,15 @@ export class HomeComponent implements OnInit {
   }
 
   onQuickAdd(product: any) {
-    if (product.variants?.length > 1) {
+    if (!product.variants || product.variants.length === 0 || product.variants.length > 1) {
       this.router.navigate(['/products', product.slug]);
       return;
     }
-    const defaultVariant = product.variants?.[0];
-    const sku = defaultVariant ? defaultVariant.sku : product.sku;
-    if (sku) {
-      this.cartStore.addItem(product._id || product.id, sku, 1).subscribe();
+    const defaultVariant = product.variants[0];
+    if (defaultVariant && defaultVariant.sku) {
+      this.cartStore.addItem(product._id || product.id, defaultVariant.sku, 1).subscribe();
+    } else {
+      this.router.navigate(['/products', product.slug]);
     }
   }
 

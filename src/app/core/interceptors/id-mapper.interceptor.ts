@@ -42,7 +42,28 @@ export const idMapperInterceptor: HttpInterceptorFn = (req, next) => {
   return next(req).pipe(
     map((event) => {
       if (event instanceof HttpResponse && event.body) {
-        const mappedBody = mapIdKeys(event.body);
+        let body = event.body as any;
+
+        // Unwrap NestJS TransformInterceptor standard wrapper if present
+        if (body && typeof body === 'object' && body.success !== undefined && body.data !== undefined) {
+          const innerData = body.data;
+          if (
+            innerData !== null &&
+            typeof innerData === 'object' &&
+            innerData.data !== undefined &&
+            innerData.pagination !== undefined
+          ) {
+            body = {
+              data: innerData.data,
+              pagination: innerData.pagination,
+            };
+          } else {
+            body = innerData;
+          }
+        }
+
+        const mappedBody = mapIdKeys(body);
+        console.log(`[IdMapperInterceptor] URL: ${req.url} | Original keys: ${body && typeof event.body === 'object' ? Object.keys(event.body).join(', ') : 'none'} | Mapped keys: ${mappedBody && typeof mappedBody === 'object' ? Object.keys(mappedBody).join(', ') : 'none'}`);
         return event.clone({ body: mappedBody });
       }
       return event;

@@ -56,22 +56,6 @@ import { AuthStore } from '../../../../state/auth.store';
         </div>
 
         <div>
-          <label for="email" class="block text-xs font-bold text-neutral-500 mb-1.5 uppercase tracking-wider">Email Address</label>
-          <input
-            id="email"
-            type="email"
-            formControlName="email"
-            placeholder="e.g. priya@example.com"
-            class="input-field"
-            autocomplete="email"
-            [class.border-red-400]="isInvalid('email')"
-          />
-          @if (isInvalid('email')) {
-            <p class="text-red-500 text-xs mt-1">Please enter a valid email address.</p>
-          }
-        </div>
-
-        <div>
           <label for="password" class="block text-xs font-bold text-neutral-500 mb-1.5 uppercase tracking-wider">Password</label>
           <input
             id="password"
@@ -136,7 +120,6 @@ export class RegisterComponent {
   form = this.fb.group({
     name: ['', [Validators.required, Validators.maxLength(100)]],
     phone: ['', [Validators.required, Validators.pattern(/^\+?[1-9]\d{6,14}$/)]],
-    email: ['', [Validators.required, Validators.email]],
     password: ['', [Validators.required, Validators.minLength(6)]],
     referralCode: ['', [Validators.maxLength(8)]],
   });
@@ -156,7 +139,6 @@ export class RegisterComponent {
     const payload = {
       name: value.name!.trim(),
       phone: value.phone!.trim(),
-      email: value.email!.trim().toLowerCase(),
       password: value.password!,
       ...(value.referralCode?.trim() ? { referralCode: value.referralCode.trim().toUpperCase() } : {}),
     };
@@ -164,7 +146,7 @@ export class RegisterComponent {
     this.authStore.register(payload).subscribe((result) => {
       if (!result) return;
       this.router.navigate(['/auth/verify-otp'], {
-        queryParams: { email: payload.email },
+        queryParams: { phone: payload.phone },
       });
     });
   }

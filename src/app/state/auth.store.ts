@@ -9,12 +9,11 @@ import { HydrationService } from '../core/services/hydration.service';
 
 export interface User {
   id: string;
-  email: string;
   firstName: string;
   lastName: string;
   role: string;
   avatar?: string;
-  phone?: string;
+  phone: string;
   addresses?: any[];
   isVerified: boolean;
 }
@@ -53,13 +52,13 @@ export class AuthStore {
   }
 
   // ── Login ─────────────────────────────────────────────
-  login(email: string, password: string) {
+  login(phone: string, password: string) {
     this.loading.set(true);
     this.error.set(null);
     return this.http
       .post<{ data: { accessToken: string; refreshToken: string; user: User } }>(
         `${environment.apiUrl}/auth/login`,
-        { email, password },
+        { phone, password },
         { withCredentials: true },
       )
       .pipe(
@@ -129,11 +128,11 @@ export class AuthStore {
       );
   }
 
-  verifyOtp(email: string, otp: string) {
+  verifyOtp(phone: string, otp: string) {
     this.loading.set(true);
     this.error.set(null);
     return this.http
-      .post<{ message: string; data?: unknown }>(`${environment.apiUrl}/auth/verify-otp`, { email, otp })
+      .post<{ message: string; data?: unknown }>(`${environment.apiUrl}/auth/verify-otp`, { phone, otp })
       .pipe(
         tap(() => this.loading.set(false)),
         catchError((err) => {
@@ -144,11 +143,11 @@ export class AuthStore {
       );
   }
 
-  resendOtp(email: string) {
+  resendOtp(phone: string) {
     this.loading.set(true);
     this.error.set(null);
     return this.http
-      .post<{ message: string; data?: unknown }>(`${environment.apiUrl}/auth/resend-otp`, { email })
+      .post<{ message: string; data?: unknown }>(`${environment.apiUrl}/auth/resend-otp`, { phone })
       .pipe(
         tap(() => this.loading.set(false)),
         catchError((err) => {

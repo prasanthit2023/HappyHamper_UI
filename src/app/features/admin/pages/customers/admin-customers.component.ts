@@ -32,7 +32,7 @@ import { environment } from '../../../../../environments/environment';
             <thead>
               <tr class="border-b border-neutral-100 dark:border-neutral-700 text-neutral-400 text-xs font-bold uppercase tracking-wider">
                 <th class="py-3 px-4">Name</th>
-                <th class="py-3 px-4">Email</th>
+                <th class="py-3 px-4">Phone</th>
                 <th class="py-3 px-4">Verification</th>
                 <th class="py-3 px-4">Account status</th>
                 <th class="py-3 px-4 text-right">Actions</th>
@@ -44,7 +44,7 @@ import { environment } from '../../../../../environments/environment';
                   <td class="py-3 px-4 font-bold text-neutral-800 dark:text-white">
                     {{ c.firstName }} {{ c.lastName }}
                   </td>
-                  <td class="py-3 px-4 text-xs text-neutral-500">{{ c.email }}</td>
+                  <td class="py-3 px-4 text-xs text-neutral-500">{{ c.phone }}</td>
                   <td class="py-3 px-4">
                     <span
                       [class.bg-emerald-50]="c.isVerified"

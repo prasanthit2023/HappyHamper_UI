@@ -58,6 +58,10 @@ export class CartStore {
         this.cart.set(res.data);
         this.loading.set(false);
       }),
+      catchError((err) => {
+        this.loading.set(false);
+        return throwError(() => err);
+      })
     );
   }
 
@@ -78,28 +82,52 @@ export class CartStore {
           this.openDrawer();
           this.toastService.success('Added to cart!');
         }),
+        catchError((err) => {
+          this.loading.set(false);
+          const msg = err?.error?.message || 'Failed to add item to cart.';
+          this.toastService.error(msg);
+          return throwError(() => err);
+        })
       );
   }
 
   // ── Update Quantity ───────────────────────────────
   updateQuantity(variantSku: string, quantity: number) {
     // Optimistic update
+    const previousCart = this.cart();
     this.cart.update((c) => ({
       ...c,
       items: c.items.map((i) => (i.variantSku === variantSku ? { ...i, quantity } : i)),
     }));
     return this.http
       .put<{ data: Cart }>(`${environment.apiUrl}/cart/items/${variantSku}`, { quantity })
-      .pipe(tap((res) => this.cart.set(res.data)));
+      .pipe(
+        tap((res) => this.cart.set(res.data)),
+        catchError((err) => {
+          this.cart.set(previousCart);
+          const msg = err?.error?.message || 'Failed to update quantity.';
+          this.toastService.error(msg);
+          return throwError(() => err);
+        })
+      );
   }
 
   // ── Remove Item ───────────────────────────────────
   removeItem(variantSku: string) {
+    const previousCart = this.cart();
     this.cart.update((c) => ({ ...c, items: c.items.filter((i) => i.variantSku !== variantSku) }));
     this.toastService.info('Item removed from cart');
     return this.http
       .delete<{ data: Cart }>(`${environment.apiUrl}/cart/items/${variantSku}`)
-      .pipe(tap((res) => this.cart.set(res.data)));
+      .pipe(
+        tap((res) => this.cart.set(res.data)),
+        catchError((err) => {
+          this.cart.set(previousCart);
+          const msg = err?.error?.message || 'Failed to remove item.';
+          this.toastService.error(msg);
+          return throwError(() => err);
+        })
+      );
   }
 
   // ── Apply Coupon ──────────────────────────────────
