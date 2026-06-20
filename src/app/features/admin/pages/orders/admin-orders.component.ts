@@ -11,133 +11,201 @@ import { environment } from '../../../../../environments/environment';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule, RouterModule, FormsModule],
   template: `
-    <div class="card p-6 space-y-6 page-enter">
-      <div class="flex items-center justify-between border-b pb-4">
+    <div class="card p-6 space-y-5 animate-fade-in">
+
+      <!-- Page Header -->
+      <div class="page-header">
         <div>
-          <h2 class="font-bold text-xl text-neutral-900 dark:text-white font-display">Orders Processing</h2>
-          <p class="text-neutral-500 text-xs mt-1">Review customer sales, update tracking, and update progress</p>
+          <h2 class="page-header-title">Orders</h2>
+          <p class="page-header-sub">{{ orders().length }} total orders · Manage status and track deliveries</p>
+        </div>
+        <div class="page-header-actions">
+          <button (click)="exportCSV()" class="btn-secondary text-xs py-2 px-3 gap-1.5">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+            </svg>
+            Export CSV
+          </button>
         </div>
       </div>
 
-      <!-- Search and Status tabs bar -->
-      <div class="space-y-4">
-        <!-- Search bar -->
-        <div class="relative max-w-md">
+      <!-- Search + Date Filter Bar -->
+      <div class="filter-bar">
+        <div class="relative">
           <input
             type="text"
-            placeholder="Search by order number, customer name, phone..."
+            placeholder="Search by order #, customer name, phone..."
             [ngModel]="searchTerm()"
-            (ngModelChange)="searchTerm.set($event)"
+            (ngModelChange)="searchTerm.set($event); currentPage.set(1)"
             class="input-field py-2.5 pl-9 text-xs"
           />
-          <svg class="w-4 h-4 absolute left-3 top-3.5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="w-4 h-4 absolute left-3 top-3 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
           </svg>
         </div>
+        <input
+          type="date"
+          [ngModel]="dateFrom()"
+          (ngModelChange)="dateFrom.set($event); currentPage.set(1)"
+          class="input-field py-2.5 text-xs"
+          aria-label="Date from"
+        />
+        <input
+          type="date"
+          [ngModel]="dateTo()"
+          (ngModelChange)="dateTo.set($event); currentPage.set(1)"
+          class="input-field py-2.5 text-xs"
+          aria-label="Date to"
+        />
+        @if (searchTerm() || dateFrom() || dateTo()) {
+          <button (click)="clearFilters()" class="btn-ghost text-xs py-2 px-3 text-red-500">
+            Clear
+          </button>
+        }
+      </div>
 
-        <!-- Status Tabs -->
-        <div class="flex flex-wrap gap-2 border-b pb-1 border-neutral-100 dark:border-neutral-800">
+      <!-- Status Tabs (scrollable on mobile) -->
+      <div class="overflow-x-auto -mx-1 px-1 pb-1">
+        <div class="flex gap-1 min-w-max border-b" style="border-color: var(--color-border);">
           @for (tab of tabs; track tab.id) {
             <button
-              (click)="activeTab.set(tab.id)"
-              class="px-4 py-2 text-xs font-bold transition-all border-b-2 cursor-pointer focus:outline-none flex items-center gap-1.5"
+              (click)="selectTab(tab.id)"
+              class="px-4 py-2.5 text-xs font-semibold transition-all border-b-2 -mb-px whitespace-nowrap"
               [style.border-color]="activeTab() === tab.id ? 'var(--color-primary)' : 'transparent'"
               [style.color]="activeTab() === tab.id ? 'var(--color-primary)' : 'var(--color-text-muted)'"
             >
               {{ tab.label }}
-              <span 
-                class="px-1.5 py-0.5 rounded-full text-[10px] font-semibold"
+              <span
+                class="ml-1.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold"
                 [style.background]="activeTab() === tab.id ? 'var(--color-primary-light)' : 'var(--color-bg-subtle)'"
                 [style.color]="activeTab() === tab.id ? 'var(--color-primary)' : 'var(--color-text-muted)'"
-              >
-                {{ getTabCount(tab.id) }}
-              </span>
+              >{{ getTabCount(tab.id) }}</span>
             </button>
           }
         </div>
       </div>
 
       @if (loading()) {
-        <div class="space-y-4">
-          <div class="skeleton h-16 w-full rounded-2xl"></div>
-          <div class="skeleton h-16 w-full rounded-2xl"></div>
+        <div class="space-y-3">
+          @for (_ of [1,2,3,4]; track $index) {
+            <div class="skeleton h-16 w-full rounded-xl"></div>
+          }
         </div>
       } @else if (orders().length === 0) {
-        <div class="text-center py-12 text-neutral-400">
-          No orders found.
+        <div class="empty-state">
+          <div class="empty-state-icon">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+            </svg>
+          </div>
+          <div class="empty-state-title">No orders yet</div>
+          <div class="empty-state-sub">Orders will appear here once customers start purchasing.</div>
         </div>
       } @else if (filteredOrders().length === 0) {
-        <div class="text-center py-12 text-neutral-400 text-sm">
-          No orders match your filter criteria or search.
+        <div class="empty-state">
+          <div class="empty-state-icon">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            </svg>
+          </div>
+          <div class="empty-state-title">No matching orders</div>
+          <div class="empty-state-sub">Try adjusting your search or filter criteria.</div>
         </div>
       } @else {
-        <div class="overflow-x-auto">
-          <table class="w-full text-left text-sm border-collapse">
+        <div class="w-full overflow-x-auto rounded-xl border" style="border-color: var(--color-border);">
+          <table class="admin-table">
             <thead>
-              <tr class="border-b border-neutral-100 dark:border-neutral-700 text-neutral-400 text-xs font-bold uppercase tracking-wider">
-                <th class="py-3 px-4">Order info</th>
-                <th class="py-3 px-4">Customer</th>
-                <th class="py-3 px-4">Total</th>
-                <th class="py-3 px-4">Payment</th>
-                <th class="py-3 px-4">Status & Transition</th>
-                <th class="py-3 px-4 text-right">Actions</th>
+              <tr>
+                <th class="sortable" (click)="sortBy('orderNumber')">
+                  Order # <span class="ml-0.5">{{ sortField() === 'orderNumber' ? (sortAsc() ? '↑' : '↓') : '' }}</span>
+                </th>
+                <th>Customer</th>
+                <th class="sortable" (click)="sortBy('totalAmount')">
+                  Total <span class="ml-0.5">{{ sortField() === 'totalAmount' ? (sortAsc() ? '↑' : '↓') : '' }}</span>
+                </th>
+                <th>Payment</th>
+                <th class="sortable" (click)="sortBy('createdAt')">
+                  Date <span class="ml-0.5">{{ sortField() === 'createdAt' ? (sortAsc() ? '↑' : '↓') : '' }}</span>
+                </th>
+                <th>Status</th>
+                <th class="col-actions">Update</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-neutral-100 dark:divide-neutral-800 text-neutral-700 dark:text-neutral-200">
-              @for (order of filteredOrders(); track order.id || order._id) {
-                <tr class="hover:bg-neutral-50/50 dark:hover:bg-neutral-800/40 transition-colors">
-                  <td class="py-3 px-4">
-                    <span class="font-mono font-bold text-neutral-800 dark:text-white">#{{ order.orderNumber }}</span>
-                    <span class="text-[10px] text-neutral-400 block">{{ order.createdAt | date:'mediumDate' }}</span>
+            <tbody>
+              @for (order of paginatedOrders(); track order._id || order.id) {
+                <tr>
+                  <td>
+                    <span class="font-mono font-bold text-xs" style="color: var(--color-text);">#{{ order.orderNumber }}</span>
                   </td>
-                  <td class="py-3 px-4">
-                    <span class="font-semibold block text-neutral-800 dark:text-neutral-200">
+                  <td>
+                    <span class="font-semibold text-sm block" style="color: var(--color-text);">
                       {{ order.shippingAddress?.firstName }} {{ order.shippingAddress?.lastName }}
                     </span>
-                    <span class="text-xs text-neutral-400 block">{{ order.shippingAddress?.phone }}</span>
+                    <span class="text-xs font-mono" style="color: var(--color-text-muted);">{{ order.shippingAddress?.phone }}</span>
                   </td>
-                  <td class="py-3 px-4 font-bold text-neutral-900 dark:text-white">
-                    ₹{{ order.totalAmount | number:'1.0-0' }}
-                  </td>
-                  <td class="py-3 px-4">
-                    <span
-                      [class.bg-green-50]="order.paymentStatus === 'paid'"
-                      [class.text-green-700]="order.paymentStatus === 'paid'"
-                      [class.bg-amber-50]="order.paymentStatus === 'pending'"
-                      [class.text-amber-700]="order.paymentStatus === 'pending'"
-                      [class.bg-red-50]="order.paymentStatus === 'failed'"
-                      [class.text-red-700]="order.paymentStatus === 'failed'"
-                      class="px-2 py-0.5 rounded text-xs font-semibold capitalize"
-                    >
-                      {{ order.paymentStatus }}
+                  <td class="font-bold" style="color: var(--color-text);">₹{{ order.totalAmount | number:'1.0-0' }}</td>
+                  <td>
+                    <span class="status-badge"
+                          [class]="order.paymentStatus === 'paid' ? 'status-delivered' : order.paymentStatus === 'failed' ? 'status-cancelled' : 'status-pending'">
+                      {{ order.paymentStatus | titlecase }}
                     </span>
                   </td>
-                  <td class="py-3 px-4">
-                    <div class="flex items-center gap-2">
-                      <select
-                        [ngModel]="order.orderStatus"
-                        (ngModelChange)="updateStatus(order.id || order._id, $event)"
-                        class="px-2 py-1 border rounded-lg text-xs bg-white dark:bg-neutral-800 dark:text-neutral-250 focus:outline-none cursor-pointer"
-                      >
-                        <option value="placed">Placed</option>
-                        <option value="confirmed">Confirmed</option>
-                        <option value="processing">Processing</option>
-                        <option value="shipped">Shipped</option>
-                        <option value="out_for_delivery">Out for Delivery</option>
-                        <option value="delivered">Delivered</option>
-                        <option value="cancelled">Cancelled</option>
-                      </select>
-                    </div>
+                  <td class="text-xs" style="color: var(--color-text-muted);">{{ order.createdAt | date:'dd MMM yy' }}</td>
+                  <td>
+                    <span class="status-badge" [class]="getStatusClass(order.orderStatus)">
+                      {{ formatStatus(order.orderStatus) }}
+                    </span>
                   </td>
-                  <td class="py-3 px-4 text-right">
-                    <a [routerLink]="['/account/orders', order.id || order._id]" class="text-xs text-primary-500 font-semibold hover:underline">
-                      Review Items
-                    </a>
+                  <td class="col-actions">
+                    <select
+                      [ngModel]="order.orderStatus"
+                      (ngModelChange)="updateStatus(order.id || order._id, $event)"
+                      class="text-xs px-2 py-1.5 rounded-lg border cursor-pointer focus:outline-none transition-all"
+                      style="border-color: var(--color-border); color: var(--color-text); background: white; min-width: 130px;"
+                    >
+                      <option value="placed">Placed</option>
+                      <option value="confirmed">Confirmed</option>
+                      <option value="processing">Processing</option>
+                      <option value="shipped">Shipped</option>
+                      <option value="out_for_delivery">Out for Delivery</option>
+                      <option value="delivered">Delivered</option>
+                      <option value="cancelled">Cancelled</option>
+                    </select>
                   </td>
                 </tr>
               }
             </tbody>
           </table>
+        </div>
+
+        <!-- Pagination UI -->
+        <div class="flex items-center justify-between pt-2">
+          <span class="text-xs" style="color: var(--color-text-muted);">
+            Showing {{ (currentPage() - 1) * pageSize() + 1 }} - {{ Math.min(currentPage() * pageSize(), filteredOrders().length) }} of {{ filteredOrders().length }} orders
+          </span>
+          <div class="flex items-center gap-1.5">
+            <button
+              [disabled]="currentPage() === 1"
+              (click)="currentPage.set(currentPage() - 1)"
+              class="btn-icon w-8 h-8 rounded-lg"
+              [class.opacity-50]="currentPage() === 1"
+              aria-label="Previous page"
+            >
+              <i class="pi pi-chevron-left text-xs"></i>
+            </button>
+            <span class="text-xs font-semibold px-3 py-1.5 rounded-lg bg-neutral-50 border" style="border-color: var(--color-border); color: var(--color-text);">
+              Page {{ currentPage() }} of {{ totalPages() }}
+            </span>
+            <button
+              [disabled]="currentPage() === totalPages()"
+              (click)="currentPage.set(currentPage() + 1)"
+              class="btn-icon w-8 h-8 rounded-lg"
+              [class.opacity-50]="currentPage() === totalPages()"
+              aria-label="Next page"
+            >
+              <i class="pi pi-chevron-right text-xs"></i>
+            </button>
+          </div>
         </div>
       }
     </div>
@@ -145,110 +213,155 @@ import { environment } from '../../../../../environments/environment';
 })
 export class AdminOrdersComponent implements OnInit {
   private http = inject(HttpClient);
-  private cdr = inject(ChangeDetectorRef);
+  private cdr  = inject(ChangeDetectorRef);
 
-  orders = signal<any[]>([]);
-  loading = signal<boolean>(true);
-
-  // Filters signals
-  searchTerm = signal<string>('');
-  activeTab = signal<string>('all');
+  orders      = signal<any[]>([]);
+  loading     = signal<boolean>(true);
+  searchTerm  = signal<string>('');
+  activeTab   = signal<string>('all');
+  dateFrom    = signal<string>('');
+  dateTo      = signal<string>('');
+  sortField   = signal<string>('createdAt');
+  sortAsc     = signal<boolean>(false);
+  currentPage = signal<number>(1);
+  pageSize    = signal<number>(10);
+  Math = Math;
 
   tabs = [
-    { id: 'all', label: 'All Orders' },
-    { id: 'pending', label: 'Pending / Confirmed' },
+    { id: 'all',        label: 'All' },
+    { id: 'pending',    label: 'Pending' },
     { id: 'processing', label: 'Processing' },
-    { id: 'transit', label: 'In Transit' },
-    { id: 'delivered', label: 'Delivered' },
-    { id: 'cancelled', label: 'Cancelled' },
+    { id: 'transit',    label: 'In Transit' },
+    { id: 'delivered',  label: 'Delivered' },
+    { id: 'cancelled',  label: 'Cancelled' },
   ];
 
   filteredOrders = computed(() => {
-    let list = this.orders();
+    let list  = this.orders();
     const tab = this.activeTab();
-    const search = this.searchTerm().toLowerCase().trim();
+    const q   = this.searchTerm().toLowerCase().trim();
+    const df  = this.dateFrom();
+    const dt  = this.dateTo();
 
-    // 1. Tab filter
     if (tab !== 'all') {
-      if (tab === 'pending') {
-        list = list.filter((o) => o.orderStatus === 'placed' || o.orderStatus === 'confirmed');
-      } else if (tab === 'processing') {
-        list = list.filter((o) => o.orderStatus === 'processing');
-      } else if (tab === 'transit') {
-        list = list.filter((o) => o.orderStatus === 'shipped' || o.orderStatus === 'out_for_delivery');
-      } else if (tab === 'delivered') {
-        list = list.filter((o) => o.orderStatus === 'delivered');
-      } else if (tab === 'cancelled') {
-        list = list.filter((o) => o.orderStatus === 'cancelled');
-      }
+      const tabMap: Record<string, string[]> = {
+        pending:    ['placed', 'confirmed'],
+        processing: ['processing'],
+        transit:    ['shipped', 'out_for_delivery'],
+        delivered:  ['delivered'],
+        cancelled:  ['cancelled'],
+      };
+      list = list.filter(o => tabMap[tab]?.includes(o.orderStatus));
     }
-
-    // 2. Search filter
-    if (search) {
-      list = list.filter((o) =>
-        o.orderNumber?.toLowerCase().includes(search) ||
-        o.shippingAddress?.firstName?.toLowerCase().includes(search) ||
-        o.shippingAddress?.lastName?.toLowerCase().includes(search) ||
-        o.shippingAddress?.phone?.includes(search)
+    if (q) {
+      list = list.filter(o =>
+        o.orderNumber?.toLowerCase().includes(q) ||
+        o.shippingAddress?.firstName?.toLowerCase().includes(q) ||
+        o.shippingAddress?.lastName?.toLowerCase().includes(q) ||
+        o.shippingAddress?.phone?.includes(q)
       );
     }
+    if (df) list = list.filter(o => new Date(o.createdAt) >= new Date(df));
+    if (dt) list = list.filter(o => new Date(o.createdAt) <= new Date(dt + 'T23:59:59'));
+
+    const field = this.sortField();
+    const asc   = this.sortAsc();
+    list = [...list].sort((a, b) => {
+      const av = field === 'createdAt' ? new Date(a[field]).getTime() : (a[field] ?? 0);
+      const bv = field === 'createdAt' ? new Date(b[field]).getTime() : (b[field] ?? 0);
+      return asc ? (av > bv ? 1 : -1) : (av < bv ? 1 : -1);
+    });
 
     return list;
   });
 
-  ngOnInit() {
-    this.fetchOrders();
-  }
+  paginatedOrders = computed(() => {
+    const start = (this.currentPage() - 1) * this.pageSize();
+    const end   = start + this.pageSize();
+    return this.filteredOrders().slice(start, end);
+  });
+
+  totalPages = computed(() => {
+    return Math.ceil(this.filteredOrders().length / this.pageSize()) || 1;
+  });
+
+  ngOnInit() { this.fetchOrders(); }
 
   fetchOrders() {
     this.loading.set(true);
     this.http.get<any>(`${environment.apiUrl}/orders/admin/all`).subscribe({
-      next: (res) => {
-        this.orders.set(res.data || []);
-        this.loading.set(false);
-        this.cdr.markForCheck();
-      },
-      error: () => {
-        this.loading.set(false);
-        this.cdr.markForCheck();
-      },
+      next: (res) => { this.orders.set(res.data || []); this.loading.set(false); this.cdr.markForCheck(); },
+      error: ()   => { this.loading.set(false); this.cdr.markForCheck(); },
     });
+  }
+
+  selectTab(id: string) {
+    this.activeTab.set(id);
+    this.currentPage.set(1);
+  }
+
+  clearFilters() {
+    this.searchTerm.set('');
+    this.dateFrom.set('');
+    this.dateTo.set('');
+    this.currentPage.set(1);
+  }
+
+  sortBy(field: string) {
+    if (this.sortField() === field) {
+      this.sortAsc.update(v => !v);
+    } else {
+      this.sortField.set(field);
+      this.sortAsc.set(false);
+    }
+    this.currentPage.set(1);
   }
 
   getTabCount(tabId: string): number {
     const list = this.orders();
+    const tabMap: Record<string, string[]> = {
+      all: [], pending: ['placed','confirmed'], processing: ['processing'],
+      transit: ['shipped','out_for_delivery'], delivered: ['delivered'], cancelled: ['cancelled'],
+    };
     if (tabId === 'all') return list.length;
-    if (tabId === 'pending') {
-      return list.filter((o) => o.orderStatus === 'placed' || o.orderStatus === 'confirmed').length;
-    }
-    if (tabId === 'processing') {
-      return list.filter((o) => o.orderStatus === 'processing').length;
-    }
-    if (tabId === 'transit') {
-      return list.filter((o) => o.orderStatus === 'shipped' || o.orderStatus === 'out_for_delivery').length;
-    }
-    if (tabId === 'delivered') {
-      return list.filter((o) => o.orderStatus === 'delivered').length;
-    }
-    if (tabId === 'cancelled') {
-      return list.filter((o) => o.orderStatus === 'cancelled').length;
-    }
-    return 0;
+    return list.filter(o => tabMap[tabId]?.includes(o.orderStatus)).length;
+  }
+
+  formatStatus(s: string): string {
+    return (s || 'placed').charAt(0).toUpperCase() + s.slice(1).replace(/_/g, ' ');
+  }
+
+  getStatusClass(s: string): string {
+    return 'status-' + (s || 'placed').toLowerCase();
   }
 
   updateStatus(id: string, newStatus: string) {
-    const payload = {
-      status: newStatus,
-      note: 'Status updated by administrator',
-    };
-
-    this.http.put<any>(`${environment.apiUrl}/orders/admin/${id}/status`, payload).subscribe({
+    this.http.put<any>(`${environment.apiUrl}/orders/admin/${id}/status`, { status: newStatus, note: 'Updated by admin' }).subscribe({
       next: () => {
-        this.orders.update((list) =>
-          list.map((o) => ((o.id || o._id) === id ? { ...o, orderStatus: newStatus } : o))
-        );
+        this.orders.update(list => list.map(o => (o.id || o._id) === id ? { ...o, orderStatus: newStatus } : o));
         this.cdr.markForCheck();
       },
     });
+  }
+
+  exportCSV() {
+    const rows = this.filteredOrders();
+    const csv  = [
+      ['Order #','Customer','Phone','Total','Payment','Status','Date'],
+      ...rows.map(o => [
+        o.orderNumber,
+        `${o.shippingAddress?.firstName} ${o.shippingAddress?.lastName}`,
+        o.shippingAddress?.phone || '',
+        o.totalAmount,
+        o.paymentStatus,
+        o.orderStatus,
+        o.createdAt ? new Date(o.createdAt).toLocaleDateString() : ''
+      ])
+    ].map(r => r.join(',')).join('\n');
+
+    const a   = document.createElement('a');
+    a.href    = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+    a.download = `orders-${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
   }
 }

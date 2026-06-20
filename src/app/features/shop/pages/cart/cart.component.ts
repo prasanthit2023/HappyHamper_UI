@@ -67,23 +67,37 @@ import { CartStore, CartItem } from '../../../../state/cart.store';
               </svg>
               Shop Now
             </a>
-            <a routerLink="/products" [queryParams]="{category: 'new-arrivals'}" class="btn-secondary py-3 px-6 inline-flex items-center gap-2" aria-label="View new arrivals">
-              ✨ New Arrivals
+            <a routerLink="/products" [queryParams]="{newArrival: true}" class="btn-secondary py-3 px-6 inline-flex items-center gap-2" aria-label="View new arrivals">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
+              </svg>
+              New Arrivals
             </a>
+
           </div>
           <!-- Trust badges in empty state -->
           <div class="flex flex-wrap justify-center gap-4 pt-4 border-t border-[var(--color-border)]">
-            <span class="text-xs text-[var(--color-text-muted)] flex items-center gap-1">
-              <span class="text-green-500">🔒</span> Secure Checkout
+            <span class="text-xs text-[var(--color-text-muted)] flex items-center gap-1.5">
+              <svg class="w-3.5 h-3.5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+              </svg>
+              Secure Checkout
             </span>
-            <span class="text-xs text-[var(--color-text-muted)] flex items-center gap-1">
-              <span>🚚</span> Free Delivery ₹499+
+            <span class="text-xs text-[var(--color-text-muted)] flex items-center gap-1.5">
+              <svg class="w-3.5 h-3.5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8l1.6 12h10.8L19 8"/>
+              </svg>
+              Free Delivery ₹499+
             </span>
-            <span class="text-xs text-[var(--color-text-muted)] flex items-center gap-1">
-              <span>↩️</span> 7-Day Returns
+            <span class="text-xs text-[var(--color-text-muted)] flex items-center gap-1.5">
+              <svg class="w-3.5 h-3.5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+              </svg>
+              7-Day Returns
             </span>
           </div>
         </div>
+
 
       <!-- Cart with Items -->
       } @else {

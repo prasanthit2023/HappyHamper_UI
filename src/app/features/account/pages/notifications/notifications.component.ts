@@ -43,7 +43,7 @@ import { environment } from '../../../../../environments/environment';
         </div>
       } @else {
         <div class="space-y-3">
-          @for (notif of notifications(); track notif._id) {
+          @for (notif of notifications(); track notif.id) {
             <div
               [class.bg-primary-50]="!notif.isRead"
               [class.border-l-primary-500]="!notif.isRead"
@@ -61,7 +61,7 @@ import { environment } from '../../../../../environments/environment';
 
               @if (!notif.isRead) {
                 <button
-                  (click)="markAsRead(notif._id)"
+                  (click)="markAsRead(notif.id)"
                   [disabled]="actionLoading()"
                   class="text-[10px] font-bold text-primary-500 hover:underline uppercase tracking-wider flex-shrink-0"
                 >
@@ -108,7 +108,7 @@ export class NotificationsComponent implements OnInit {
       next: () => {
         this.actionLoading.set(false);
         this.notifications.update((list) =>
-          list.map((n) => (n._id === id ? { ...n, isRead: true } : n))
+          list.map((n) => (n.id === id ? { ...n, isRead: true } : n))
         );
         this.cdr.markForCheck();
       },

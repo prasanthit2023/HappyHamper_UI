@@ -82,24 +82,44 @@ import { environment } from '../../../../../environments/environment';
             </div>
           </div>
           
-          <!-- Dynamic Bar Chart Visual -->
-          <div class="flex items-end gap-1.5 h-36">
-            @if (revenueData().length === 0) {
-              <div class="w-full h-full flex items-center justify-center text-xs text-neutral-400">
-                No revenue records found for this period.
-              </div>
-            } @else {
-              @for (bar of revenueData(); track $index) {
-                <div
-                  class="flex-1 rounded-t-sm transition-opacity duration-200 bar-chart-item cursor-pointer"
-                  [style.height.%]="bar.height"
-                  [style.background]="'var(--gradient-primary)'"
-                  [title]="bar.label + ': ₹' + (bar.revenue | number:'1.0-0') + ' (' + bar.orders + ' orders)'"
-                ></div>
+          <!-- Dynamic Bar Chart Visual with Y-Axis -->
+          <div class="flex h-36 gap-3">
+            <!-- Y-Axis Labels -->
+            <div class="flex flex-col justify-between text-[10px] text-neutral-400 h-full pb-1 flex-shrink-0 w-12 text-right">
+              <span>₹{{ maxRevenue() >= 100000 ? (maxRevenue() / 100000 | number:'1.0-1') + 'L' : maxRevenue() >= 1000 ? (maxRevenue() / 1000 | number:'1.0-1') + 'K' : maxRevenue() }}</span>
+              <span>₹{{ (maxRevenue() / 2) >= 100000 ? (maxRevenue() / 2 / 100000 | number:'1.0-1') + 'L' : (maxRevenue() / 2) >= 1000 ? (maxRevenue() / 2 / 1000 | number:'1.0-1') + 'K' : (maxRevenue() / 2) }}</span>
+              <span>₹0</span>
+            </div>
+            
+            <!-- Chart Bars -->
+            <div class="flex-1 flex items-end gap-1.5 h-full pl-2 overflow-x-auto relative border-l border-b border-neutral-100">
+              @if (revenueData().length === 0) {
+                <div class="w-full h-full flex items-center justify-center text-xs text-neutral-400">
+                  No revenue records found for this period.
+                </div>
+              } @else {
+                @for (bar of revenueData(); track $index) {
+                  <div class="flex-1 min-w-[12px] max-w-[28px] h-full flex items-end justify-center relative group">
+                    <div
+                      class="w-full rounded-t-sm transition-all duration-200 bar-chart-item cursor-pointer"
+                      [style.height.%]="bar.height"
+                      [style.background]="'var(--gradient-primary)'"
+                    ></div>
+                    <!-- Tooltip -->
+                    <div class="absolute bottom-full mb-2 hidden group-hover:flex flex-col items-center z-20">
+                      <div class="bg-neutral-800 text-white text-[10px] py-1.5 px-2.5 rounded-xl shadow-lg whitespace-nowrap">
+                        <div class="font-semibold">{{ bar.label }}</div>
+                        <div class="font-bold text-primary-light mt-0.5">₹{{ bar.revenue | number:'1.0-0' }}</div>
+                        <div class="text-[9px] opacity-75">{{ bar.orders }} orders</div>
+                      </div>
+                      <div class="w-1.5 h-1.5 bg-neutral-800 rotate-45 -mt-1"></div>
+                    </div>
+                  </div>
+                }
               }
-            }
+            </div>
           </div>
-          <div class="flex justify-between mt-2 text-xs" style="color: var(--color-text-muted);">
+          <div class="flex justify-between mt-2 text-[10px] pl-16" style="color: var(--color-text-muted);">
             <span>Start</span>
             <span>Middle</span>
             <span>End</span>
@@ -160,9 +180,8 @@ import { environment } from '../../../../../environments/environment';
         </div>
       </div>
 
-      <!-- Bottom Row -->
+      <!-- Bottom Row: Recent Orders & Top Sellers -->
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
-
         <!-- Recent Orders -->
         <div class="card p-6 lg:col-span-2">
           <div class="flex items-center justify-between mb-5">
@@ -178,29 +197,35 @@ import { environment } from '../../../../../environments/environment';
             </a>
           </div>
 
-          <div class="overflow-x-auto">
-            <table class="w-full text-sm" aria-label="Recent orders table">
+          <div class="w-full overflow-x-auto">
+            <table class="w-full text-sm min-w-[600px]" aria-label="Recent orders table">
               <thead>
                 <tr style="border-bottom: 1px solid var(--color-border);">
                   <th class="text-left pb-3 text-xs font-semibold uppercase tracking-wider" style="color: var(--color-text-muted);">Order ID</th>
                   <th class="text-left pb-3 text-xs font-semibold uppercase tracking-wider" style="color: var(--color-text-muted);">Customer</th>
+                  <th class="text-left pb-3 text-xs font-semibold uppercase tracking-wider" style="color: var(--color-text-muted);">Date</th>
                   <th class="text-left pb-3 text-xs font-semibold uppercase tracking-wider" style="color: var(--color-text-muted);">Amount</th>
                   <th class="text-left pb-3 text-xs font-semibold uppercase tracking-wider" style="color: var(--color-text-muted);">Status</th>
+                  <th class="text-right pb-3 text-xs font-semibold uppercase tracking-wider" style="color: var(--color-text-muted);">Action</th>
                 </tr>
               </thead>
               <tbody>
                 @if (recentOrders().length === 0) {
                   <tr>
-                    <td colspan="4" class="text-center py-8 text-neutral-400">No orders logged in database.</td>
+                    <td colspan="6" class="text-center py-8 text-neutral-400">No orders logged in database.</td>
                   </tr>
                 } @else {
                   @for (order of recentOrders(); track order.id) {
                     <tr class="table-row-hover" style="border-bottom: 1px solid var(--color-border);">
                       <td class="py-3 font-mono text-xs font-bold" style="color: var(--color-text-muted);">{{ order.id }}</td>
                       <td class="py-3 font-medium" style="color: var(--color-text);">{{ order.customer }}</td>
+                      <td class="py-3 text-neutral-500 text-xs">{{ order.date }}</td>
                       <td class="py-3 font-semibold" style="color: var(--color-text);">₹{{ order.amount | number:'1.0-0' }}</td>
                       <td class="py-3">
-                        <span class="badge text-xs" [ngClass]="getStatusClass(order.status)">{{ order.status }}</span>
+                        <span class="status-badge" [ngClass]="getStatusBadgeClass(order.status)">{{ order.status }}</span>
+                      </td>
+                      <td class="py-3 text-right">
+                        <a [routerLink]="['/admin/orders']" [queryParams]="{search: order.id.replace('#', '')}" class="text-xs font-semibold hover:underline" style="color: var(--color-primary);">View</a>
                       </td>
                     </tr>
                   }
@@ -210,29 +235,55 @@ import { environment } from '../../../../../environments/environment';
           </div>
         </div>
 
-        <!-- Quick Actions -->
+        <!-- Top Sellers -->
         <div class="card p-6">
-          <h3 class="font-semibold text-base mb-1" style="color: var(--color-text);">Quick Actions</h3>
-          <p class="text-xs mb-5" style="color: var(--color-text-muted);">Common tasks</p>
-          <div class="space-y-2">
-            @for (action of quickActions; track action.label) {
-              <a [routerLink]="action.path"
-                 class="flex items-center gap-3 p-3 rounded-xl transition-all duration-200 group hover:-translate-y-0.5 action-link">
-                <span class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" [style.background]="action.bg">
-                  <svg class="w-4 h-4" [style.color]="action.iconColor" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" [attr.d]="action.svgPath"/>
-                  </svg>
-                </span>
-                <div class="flex-1 min-w-0">
-                  <div class="font-medium text-sm" style="color: var(--color-text);">{{ action.label }}</div>
-                  <div class="text-xs" style="color: var(--color-text-muted);">{{ action.sub }}</div>
+          <div class="flex items-center justify-between mb-5">
+            <div>
+              <h3 class="font-semibold text-base" style="color: var(--color-text);">Top Sellers</h3>
+              <p class="text-xs mt-0.5" style="color: var(--color-text-muted);">Top 3 products by sales</p>
+            </div>
+            <a routerLink="/admin/products" class="text-sm font-medium flex items-center gap-1 transition-colors" style="color: var(--color-primary);">
+              View all
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+              </svg>
+            </a>
+          </div>
+          <div class="space-y-4">
+            @if (topProducts().length === 0) {
+              <div class="text-center py-12 text-neutral-400 text-xs">No top products data.</div>
+            } @else {
+              @for (prod of topProducts(); track prod.id) {
+                <div class="flex items-center gap-3 p-2 rounded-xl transition-all duration-200 hover:bg-neutral-50 cursor-pointer" [routerLink]="['/admin/products']" [queryParams]="{search: prod.title}">
+                  <img [src]="prod.images?.[0] || '/assets/placeholder-product.jpg'" [alt]="prod.title" class="w-12 h-12 object-cover rounded-xl bg-neutral-50 flex-shrink-0 border border-neutral-100" />
+                  <div class="flex-1 min-w-0">
+                    <div class="font-semibold text-sm truncate text-neutral-800">{{ prod.title }}</div>
+                    <div class="text-xs text-neutral-400 mt-0.5">{{ prod.salesCount || 0 }} sales · ₹{{ prod.price | number:'1.0-0' }}</div>
+                  </div>
                 </div>
-                <svg class="w-4 h-4 transition-transform group-hover:translate-x-0.5 flex-shrink-0" style="color: var(--color-primary);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                </svg>
-              </a>
+              }
             }
           </div>
+        </div>
+      </div>
+
+      <!-- Quick Actions Grid -->
+      <div class="card p-6">
+        <h3 class="font-semibold text-base mb-1" style="color: var(--color-text);">Quick Actions</h3>
+        <p class="text-xs mb-5" style="color: var(--color-text-muted);">Common tasks and shortcuts</p>
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+          @for (action of quickActions; track action.label) {
+            <a [routerLink]="action.path"
+               class="flex flex-col items-center text-center p-4 rounded-xl border border-neutral-100 transition-all duration-200 hover:-translate-y-1 hover:shadow-warm action-link bg-white">
+              <span class="w-10 h-10 rounded-xl flex items-center justify-center mb-3" [style.background]="action.bg">
+                <svg class="w-5 h-5" [style.color]="action.iconColor" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" [attr.d]="action.svgPath"/>
+                </svg>
+              </span>
+              <div class="font-semibold text-xs text-neutral-800 mb-0.5">{{ action.label }}</div>
+              <div class="text-[10px] text-neutral-400">{{ action.sub }}</div>
+            </a>
+          }
         </div>
       </div>
     </div>
@@ -245,12 +296,14 @@ export class AdminDashboardComponent implements OnInit {
   readonly kpiCards            = signal<any[]>([]);
   readonly activePeriod        = signal('Daily');
   readonly revenueData         = signal<any[]>([]);
+  readonly maxRevenue          = signal<number>(0);
   readonly totalPeriodRevenue  = signal<number>(0);
   readonly avgPeriodRevenue    = signal<number>(0);
   readonly totalPeriodOrders   = signal<number>(0);
   readonly orderStatuses       = signal<any[]>([]);
   readonly totalOrdersCount    = signal<number>(0);
   readonly recentOrders        = signal<any[]>([]);
+  readonly topProducts         = signal<any[]>([]);
 
   today = new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
 
@@ -267,6 +320,7 @@ export class AdminDashboardComponent implements OnInit {
     this.loadRevenueChartData();
     this.loadOrderStatusBreakdown();
     this.loadRecentOrders();
+    this.loadTopProducts();
   }
 
   changePeriod(p: string) {
@@ -281,7 +335,9 @@ export class AdminDashboardComponent implements OnInit {
         const revTotal = d.revenue?.total ?? 0;
         const totalRevFormatted = '₹' + (revTotal >= 100000 
           ? (revTotal / 100000).toFixed(1) + 'L' 
-          : (revTotal / 1000).toFixed(1) + 'K');
+          : revTotal >= 1000 
+            ? (revTotal / 1000).toFixed(1) + 'K' 
+            : revTotal.toLocaleString());
 
         this.kpiCards.set([
           {
@@ -322,10 +378,17 @@ export class AdminDashboardComponent implements OnInit {
 
   private loadRevenueChartData() {
     const periodParam = this.activePeriod().toLowerCase(); // daily, weekly, monthly
-    this.http.get<any>(`${environment.apiUrl}/admin/analytics/revenue`, { params: { period: periodParam, days: 30 } }).subscribe({
+    let days = 30;
+    if (periodParam === 'weekly') {
+      days = 90;
+    } else if (periodParam === 'monthly') {
+      days = 365;
+    }
+
+    this.http.get<any>(`${environment.apiUrl}/admin/analytics/revenue`, { params: { period: periodParam, days } }).subscribe({
       next: (res) => {
         const data = res.data || [];
-        const maxVal = Math.max(...data.map((item: any) => item.revenue), 1);
+        const maxVal = data.length > 0 ? Math.max(...data.map((item: any) => item.revenue), 1) : 1;
         let total = 0;
         let totalOrders = 0;
 
@@ -340,6 +403,7 @@ export class AdminDashboardComponent implements OnInit {
           };
         });
 
+        this.maxRevenue.set(maxVal);
         this.revenueData.set(mappedBars);
         this.totalPeriodRevenue.set(total);
         this.totalPeriodOrders.set(totalOrders);
@@ -347,6 +411,7 @@ export class AdminDashboardComponent implements OnInit {
         this.cdr.markForCheck();
       },
       error: () => {
+        this.maxRevenue.set(0);
         this.revenueData.set([]);
         this.totalPeriodRevenue.set(0);
         this.totalPeriodOrders.set(0);
@@ -401,10 +466,12 @@ export class AdminDashboardComponent implements OnInit {
       next: (res) => {
         const raw = res.data || [];
         const mapped = raw.map((o: any) => ({
+          dbId: o.id || o._id,
           id: '#' + o.orderNumber,
-          customer: o.shippingAddress ? `${o.shippingAddress.firstName} ${o.shippingAddress.lastName}` : 'Guest',
+          customer: o.shippingAddress?.fullName || 'Guest',
           amount: o.totalAmount,
-          status: o.orderStatus ? o.orderStatus.charAt(0).toUpperCase() + o.orderStatus.slice(1).replace(/_/g, ' ') : 'Placed'
+          status: o.orderStatus ? o.orderStatus.charAt(0).toUpperCase() + o.orderStatus.slice(1).replace(/_/g, ' ') : 'Placed',
+          date: o.createdAt ? new Date(o.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : ''
         }));
         this.recentOrders.set(mapped);
         this.cdr.markForCheck();
@@ -414,6 +481,24 @@ export class AdminDashboardComponent implements OnInit {
         this.cdr.markForCheck();
       }
     });
+  }
+
+  private loadTopProducts() {
+    this.http.get<any>(`${environment.apiUrl}/admin/analytics/top-products`, { params: { limit: 3 } }).subscribe({
+      next: (res) => {
+        this.topProducts.set(res.data || []);
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.topProducts.set([]);
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  getStatusBadgeClass(status: string): string {
+    const s = status.toLowerCase().replace(/ /g, '_');
+    return `status-${s}`;
   }
 
   getStatusClass(status: string): string {

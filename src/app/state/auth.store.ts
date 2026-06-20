@@ -36,6 +36,7 @@ export class AuthStore {
   // ── Computed ──────────────────────────────────────────
   readonly isLoggedIn   = computed(() => !!this.user() && !!this.token());
   readonly isAdmin      = computed(() => ['admin', 'superadmin'].includes(this.user()?.role ?? ''));
+  readonly isSuperAdmin = computed(() => this.user()?.role === 'superadmin');
   readonly fullName     = computed(() => {
     const u = this.user();
     return u ? `${u.firstName} ${u.lastName}` : '';

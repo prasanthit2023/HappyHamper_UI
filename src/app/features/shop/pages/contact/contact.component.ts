@@ -8,11 +8,11 @@ import { RouterModule } from '@angular/router';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, RouterModule],
   template: `
-    <div class="bb-container py-10 page-enter">
+    <div class="bb-container py-10 page-enter animate-fade-in">
       <!-- Hero Header -->
       <section class="rounded-3xl p-8 md:p-12 mb-10 text-center relative overflow-hidden" style="background: var(--gradient-pastel); border: 1px solid var(--color-border);">
         <div class="relative z-10 max-w-2xl mx-auto space-y-4">
-          <span class="inline-block text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full bg-primary-light text-primary">
+          <span class="inline-block text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full bg-[var(--color-primary-light)] text-[var(--color-primary)]">
             Support Desk
           </span>
           <h1 class="font-display text-3xl md:text-5xl font-black tracking-tight" style="color: var(--color-text);">
@@ -32,18 +32,22 @@ import { RouterModule } from '@angular/router';
           </h2>
 
           @for (card of contactChannels; track card.title) {
-            <div class="card p-6 flex items-start gap-4 hover-lift bg-white">
+            <a
+              [href]="card.link"
+              target="_blank"
+              class="card p-6 flex items-start gap-4 hover-lift bg-white transition-all hover:border-[var(--color-primary)] hover:shadow-md block focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+            >
               <div class="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" style="background: var(--color-primary-light); color: var(--color-primary);">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" [attr.d]="card.svgPath"/>
                 </svg>
               </div>
-              <div class="space-y-1">
-                <h3 class="font-semibold text-base" style="color: var(--color-text);">{{ card.title }}</h3>
-                <p class="text-xs font-semibold" style="color: var(--color-primary);">{{ card.detail }}</p>
-                <p class="text-xs" style="color: var(--color-text-muted);">{{ card.subtext }}</p>
+              <div class="space-y-1 min-w-0">
+                <h3 class="font-bold text-sm text-[var(--color-text)]">{{ card.title }}</h3>
+                <p class="text-xs font-bold text-[var(--color-primary)] truncate">{{ card.detail }}</p>
+                <p class="text-[11px] text-[var(--color-text-muted)] leading-tight">{{ card.subtext }}</p>
               </div>
-            </div>
+            </a>
           }
         </div>
 
@@ -54,20 +58,20 @@ import { RouterModule } from '@angular/router';
               <h2 class="font-display font-bold text-xl uppercase tracking-wider" style="color: var(--color-text);">
                 Send a Message
               </h2>
-              <p class="text-xs" style="color: var(--color-text-muted);">
+              <p class="text-xs text-[var(--color-text-muted)]">
                 Fill out the form below and we will get back to you within 24 hours.
               </p>
             </div>
 
             @if (submitted()) {
-              <div class="bg-primary-50 border border-primary-200 text-primary-850 p-6 rounded-2xl text-center space-y-3 animate-scale-in">
-                <div class="w-14 h-14 bg-white rounded-full flex items-center justify-center mx-auto shadow-sm border border-primary-100">
-                  <svg class="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div class="bg-[var(--color-primary-light)] border border-[var(--color-primary)] border-opacity-20 text-[var(--color-text)] p-6 rounded-2xl text-center space-y-3 animate-scale-in">
+                <div class="w-14 h-14 bg-white rounded-full flex items-center justify-center mx-auto shadow-sm border border-[var(--color-border)]">
+                  <svg class="w-8 h-8 text-[var(--color-primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
                   </svg>
                 </div>
-                <h3 class="font-bold text-lg text-neutral-800">Message Sent Successfully!</h3>
-                <p class="text-xs text-neutral-600 max-w-sm mx-auto">
+                <h3 class="font-bold text-lg text-[var(--color-text)]">Message Sent Successfully!</h3>
+                <p class="text-xs text-[var(--color-text-muted)] max-w-sm mx-auto">
                   Thank you for reaching out to Happy Hamper. One of our customer care executives will contact you shortly.
                 </p>
                 <button (click)="submitted.set(false)" class="btn-secondary py-2 px-6 text-xs mt-2 font-bold">
@@ -75,53 +79,129 @@ import { RouterModule } from '@angular/router';
                 </button>
               </div>
             } @else {
-              <form [formGroup]="contactForm" (ngSubmit)="onSubmit()" class="space-y-4">
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label class="block text-xs font-semibold text-neutral-400 mb-1.5">First Name</label>
-                    <input type="text" formControlName="firstName" class="input-field py-2.5" placeholder="John" />
+              <form [formGroup]="contactForm" (ngSubmit)="onSubmit()" class="space-y-5" novalidate>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  <!-- First Name -->
+                  <div class="floating-label-group">
+                    <input
+                      type="text"
+                      id="firstName"
+                      formControlName="firstName"
+                      placeholder=" "
+                      class="floating-label-input"
+                      [class.border-red-400]="isInvalid('firstName')"
+                    />
+                    <label
+                      for="firstName"
+                      class="floating-label-text"
+                    >
+                      First Name *
+                    </label>
                     @if (isInvalid('firstName')) {
-                      <p class="text-red-500 text-[10px] mt-1">First name is required.</p>
+                      <p class="text-red-500 text-[10px] mt-1 flex items-center gap-1 font-semibold" role="alert">
+                        First name is required.
+                      </p>
                     }
                   </div>
-                  <div>
-                    <label class="block text-xs font-semibold text-neutral-400 mb-1.5">Last Name</label>
-                    <input type="text" formControlName="lastName" class="input-field py-2.5" placeholder="Doe" />
+
+                  <!-- Last Name -->
+                  <div class="floating-label-group">
+                    <input
+                      type="text"
+                      id="lastName"
+                      formControlName="lastName"
+                      placeholder=" "
+                      class="floating-label-input"
+                      [class.border-red-400]="isInvalid('lastName')"
+                    />
+                    <label
+                      for="lastName"
+                      class="floating-label-text"
+                    >
+                      Last Name *
+                    </label>
                     @if (isInvalid('lastName')) {
-                      <p class="text-red-500 text-[10px] mt-1">Last name is required.</p>
+                      <p class="text-red-500 text-[10px] mt-1 flex items-center gap-1 font-semibold" role="alert">
+                        Last name is required.
+                      </p>
                     }
                   </div>
                 </div>
 
-                <div>
-                  <label class="block text-xs font-semibold text-neutral-400 mb-1.5">Mobile Number</label>
-                  <input type="tel" formControlName="phone" class="input-field py-2.5" placeholder="e.g. +919876543210" />
+                <!-- Mobile Number -->
+                <div class="floating-label-group">
+                  <input
+                    type="tel"
+                    id="phone"
+                    formControlName="phone"
+                    placeholder=" "
+                    class="floating-label-input"
+                    [class.border-red-400]="isInvalid('phone')"
+                  />
+                  <label
+                    for="phone"
+                    class="floating-label-text"
+                  >
+                    Mobile Number *
+                  </label>
                   @if (isInvalid('phone')) {
-                    <p class="text-red-500 text-[10px] mt-1">Please enter a valid mobile number (e.g. +919876543210).</p>
+                    <p class="text-red-500 text-[10px] mt-1 flex items-center gap-1 font-semibold" role="alert">
+                      Please enter a valid mobile number (e.g. +919876543210).
+                    </p>
                   }
                 </div>
 
-                <div>
-                  <label class="block text-xs font-semibold text-neutral-400 mb-1.5">Subject</label>
-                  <select formControlName="subject" class="input-field py-2.5">
+                <div class="floating-label-group">
+                  <select
+                    id="subject"
+                    formControlName="subject"
+                    class="floating-label-input cursor-pointer appearance-none"
+                  >
                     <option value="General Inquiry">General Inquiry</option>
                     <option value="Order Support">Order Status & Support</option>
                     <option value="Returns & Refunds">Returns & Refunds</option>
                     <option value="Bulk Purchase">Bulk & Business Inquiries</option>
                     <option value="Other">Other Issues</option>
                   </select>
+                  <label
+                    for="subject"
+                    class="floating-label-text"
+                  >
+                    Subject
+                  </label>
+                  <!-- Custom arrow for select -->
+                  <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-[var(--color-text-muted)]">
+                    <svg class="fill-current h-4 w-4" viewBox="0 0 20 20">
+                      <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
+                    </svg>
+                  </div>
                 </div>
 
-                <div>
-                  <label class="block text-xs font-semibold text-neutral-400 mb-1.5">Message</label>
-                  <textarea formControlName="message" rows="5" class="input-field" placeholder="How can we help you?"></textarea>
+                <!-- Message -->
+                <div class="floating-label-group">
+                  <textarea
+                    id="message"
+                    formControlName="message"
+                    rows="5"
+                    placeholder=" "
+                    class="floating-label-input"
+                    [class.border-red-400]="isInvalid('message')"
+                  ></textarea>
+                  <label
+                    for="message"
+                    class="floating-label-text"
+                  >
+                    Message *
+                  </label>
                   @if (isInvalid('message')) {
-                    <p class="text-red-500 text-[10px] mt-1">Message must be at least 10 characters long.</p>
+                    <p class="text-red-500 text-[10px] mt-1 flex items-center gap-1 font-semibold" role="alert">
+                      Message must be at least 10 characters long.
+                    </p>
                   }
                 </div>
 
                 <div class="pt-2">
-                  <button type="submit" [disabled]="contactForm.invalid" class="btn-primary w-full py-3.5 text-sm font-bold shadow-pink">
+                  <button type="submit" [disabled]="contactForm.invalid" class="btn-primary w-full py-3.5 text-sm font-bold shadow-warm">
                     Submit Inquiry
                   </button>
                 </div>
@@ -134,8 +214,8 @@ import { RouterModule } from '@angular/router';
       <!-- FAQ Section -->
       <section class="max-w-4xl mx-auto space-y-8">
         <div class="text-center">
-          <h2 class="section-title text-2xl md:text-3xl">Frequently Asked Questions</h2>
-          <p class="section-subtitle text-sm">Quick answers to common questions about ordering, delivery, and returns</p>
+          <h2 class="section-title text-2xl md:text-3xl" style="color: var(--color-text);">Frequently Asked Questions</h2>
+          <p class="section-subtitle text-sm" style="color: var(--color-text-muted);">Quick answers to common questions about ordering, delivery, and returns</p>
         </div>
 
         <div class="space-y-4">
@@ -194,18 +274,21 @@ export class ContactComponent {
       title: 'Phone Support',
       detail: '+91 80 4567 8900',
       subtext: 'Mon - Sat: 9:00 AM - 6:00 PM IST',
+      link: 'tel:+918045678900',
       svgPath: 'M3 5a2 2 0 012-2h3.28a1 1 0 01.94.725l.548 2.2a1 1 0 01-.321.988l-1.305.98a10.582 10.582 0 004.872 4.872l.98-1.305a1 1 0 01.988-.321l2.2.548a1 1 0 01.725.94V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z',
     },
     {
       title: 'WhatsApp Support',
       detail: '+91 80 4567 8901',
       subtext: 'We respond to messages instantly or within 2 hours.',
+      link: 'https://wa.me/918045678901',
       svgPath: 'M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z',
     },
     {
       title: 'Our Headquarters',
-      detail: 'Happy Hamper, Promantus Tech',
+      detail: 'Happy Hamper, Bengaluru',
       subtext: 'No 45, Residency Road, Bengaluru, KA - 560025',
+      link: 'https://maps.google.com/?q=No+45,+Residency+Road,+Bengaluru,+KA+-+560025',
       svgPath: 'M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z M15 11a3 3 0 11-6 0 3 3 0 016 0z',
     },
   ];

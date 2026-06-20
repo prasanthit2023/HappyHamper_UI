@@ -4,16 +4,20 @@ import {
   inject,
   signal,
   ChangeDetectionStrategy,
+  ChangeDetectorRef,
 } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { ActivatedRoute } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
 import { ToastService } from '../../../../core/services/toast.service';
+import { environment } from '../../../../../environments/environment';
 
 @Component({
   selector: 'bb-order-success',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink],
+  imports: [CommonModule, RouterLink],
   styles: [`
     /* ── Confetti dots ───────────────────────────────────────── */
     .confetti-wrap {
@@ -200,19 +204,125 @@ import { ToastService } from '../../../../core/services/toast.service';
           Order Confirmed! 🎉
         </h1>
         <p class="section-subtitle mb-6" style="max-width:36ch; margin-inline:auto;">
-          Thank you for shopping with Happy Hamper. Your little ones are going to love it!
+          Thank you for shopping with Happy Hamper. Your order is registered successfully!
         </p>
 
-        <!-- ── Order number ── -->
-        <div class="card p-6 mb-6 text-center" style="border-color: var(--color-border); background: var(--color-bg-subtle);">
-          <span class="text-xs font-semibold uppercase tracking-widest mb-2 block" style="color: var(--color-text-muted);">
-            Order Number
-          </span>
-          <span class="order-chip">{{ orderNumber() || 'HH-PENDING' }}</span>
-          <p class="text-xs mt-3 leading-relaxed" style="color: var(--color-text-muted);">
-            A confirmation message has been sent to your mobile via WhatsApp.
-          </p>
-        </div>
+        <!-- ── Order number (simple fallback or header details) ── -->
+        @if (!order() && !loadingDetails()) {
+          <div class="card p-6 mb-6 text-center" style="border-color: var(--color-border); background: var(--color-bg-subtle);">
+            <span class="text-xs font-semibold uppercase tracking-widest mb-2 block" style="color: var(--color-text-muted);">
+              Order Number
+            </span>
+            <span class="order-chip">{{ orderNumber() || 'HH-PENDING' }}</span>
+            <p class="text-xs mt-3 leading-relaxed" style="color: var(--color-text-muted);">
+              A confirmation message has been sent to your mobile via WhatsApp.
+            </p>
+          </div>
+        }
+
+        <!-- ── Loading details state ── -->
+        @if (loadingDetails()) {
+          <div class="card p-6 mb-6 text-center bg-white border border-[var(--color-border)] rounded-2xl animate-pulse">
+            <div class="h-4 bg-neutral-100 rounded w-1/3 mx-auto mb-4"></div>
+            <div class="space-y-3">
+              <div class="h-10 bg-neutral-100 rounded w-full"></div>
+              <div class="h-10 bg-neutral-100 rounded w-full"></div>
+            </div>
+          </div>
+        }
+
+        <!-- ── Detailed Order Summary Card ── -->
+        @if (order(); as o) {
+          <div class="card p-6 mb-6 text-left bg-white border border-[var(--color-border)] shadow-sm rounded-2xl animate-fade-in">
+            <div class="flex justify-between items-center border-b border-[var(--color-border)] pb-3 mb-4">
+              <div>
+                <span class="text-[10px] font-bold text-[var(--color-text-muted)] uppercase tracking-wider">Order Reference</span>
+                <p class="text-sm font-bold text-[var(--color-primary)] font-mono">{{ o.orderNumber }}</p>
+              </div>
+              <div class="text-right">
+                <span class="text-[10px] font-bold text-[var(--color-text-muted)] uppercase tracking-wider">Date</span>
+                <p class="text-xs font-semibold text-[var(--color-text)]">{{ o.createdAt | date:'mediumDate' }}</p>
+              </div>
+            </div>
+            
+            <h3 class="text-xs font-bold text-[var(--color-text)] uppercase tracking-wider mb-2">Items Ordered</h3>
+            
+            <!-- Items list -->
+            <div class="divide-y divide-[var(--color-border)] border-t border-b border-[var(--color-border)] py-2 mb-4">
+              @for (item of o.items; track item.variantSku) {
+                <div class="flex items-center gap-3 py-3">
+                  <img
+                    [src]="item.image || '/assets/placeholder-product.jpg'"
+                    [alt]="item.title"
+                    class="w-12 h-12 object-cover rounded-xl bg-[var(--color-bg-subtle)] border border-[var(--color-border)] flex-shrink-0"
+                  />
+                  <div class="flex-1 min-w-0">
+                    <p class="text-xs font-bold text-[var(--color-text)] truncate">{{ item.title }}</p>
+                    <p class="text-[10px] text-[var(--color-text-muted)] mt-0.5 font-medium">
+                      Qty: {{ item.quantity }} @if (item.size) { &bull; Size: {{ item.size }} } @if (item.color) { &bull; {{ item.color }} }
+                    </p>
+                  </div>
+                  <span class="text-xs font-bold text-[var(--color-text)] whitespace-nowrap">₹{{ (item.price * item.quantity) | number:'1.0-0' }}</span>
+                </div>
+              }
+            </div>
+            
+            <!-- Totals breakdown -->
+            <div class="space-y-2 text-xs text-[var(--color-text-muted)] mb-4">
+              <div class="flex justify-between">
+                <span>Subtotal</span>
+                <span class="font-semibold text-[var(--color-text)]">₹{{ o.subTotal | number:'1.0-0' }}</span>
+              </div>
+              @if (o.discountAmount > 0) {
+                <div class="flex justify-between text-green-600 font-semibold">
+                  <span>Discount</span>
+                  <span>-₹{{ o.discountAmount | number:'1.0-0' }}</span>
+                </div>
+              }
+              <div class="flex justify-between">
+                <span>Shipping</span>
+                <span class="font-semibold text-[var(--color-text)]">₹{{ o.shippingFee | number:'1.0-0' }}</span>
+              </div>
+              <div class="flex justify-between">
+                <span>GST (5%)</span>
+                <span class="font-semibold text-[var(--color-text)]">₹{{ o.taxAmount | number:'1.0-0' }}</span>
+              </div>
+              <div class="border-t border-[var(--color-border)] pt-2.5 flex justify-between items-baseline text-sm font-bold text-[var(--color-text)]">
+                <span>Total Paid</span>
+                <span class="text-base font-extrabold text-[var(--color-primary)]">₹{{ o.totalAmount | number:'1.0-0' }}</span>
+              </div>
+            </div>
+            
+            <!-- Shipping Details & Payment -->
+            <div class="border-t border-[var(--color-border)] pt-4 grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+              <div class="bg-[var(--color-bg-subtle)] p-3 rounded-xl">
+                <p class="font-bold text-[var(--color-text-muted)] mb-1 uppercase tracking-wider text-[10px]">Shipping Address</p>
+                <p class="font-bold text-[var(--color-text)]">{{ o.shippingAddressFullName }}</p>
+                <p class="text-[var(--color-text-muted)] mt-0.5 leading-relaxed text-[11px]">
+                  {{ o.shippingAddressStreet }}, {{ o.shippingAddressCity }}, {{ o.shippingAddressState }} - {{ o.shippingAddressZipCode }}
+                </p>
+                <p class="text-[var(--color-text-muted)] mt-1.5 font-semibold text-[11px]">📞 {{ o.shippingAddressPhone }}</p>
+              </div>
+              <div class="bg-[var(--color-bg-subtle)] p-3 rounded-xl flex flex-col justify-between">
+                <div>
+                  <p class="font-bold text-[var(--color-text-muted)] mb-1 uppercase tracking-wider text-[10px]">Payment Method</p>
+                  <p class="font-bold text-[var(--color-text)] uppercase text-[11px]">{{ o.paymentMethod }}</p>
+                </div>
+                <div class="mt-2 pt-2 border-t border-[var(--color-border)] border-dashed">
+                  <p class="font-bold text-[var(--color-text-muted)] uppercase tracking-wider text-[10px] mb-0.5">Status</p>
+                  <span class="inline-flex items-center gap-1 font-bold uppercase text-[11px]" 
+                        [class.text-green-600]="o.paymentStatus === 'paid'" 
+                        [class.text-amber-500]="o.paymentStatus === 'pending'">
+                    <span class="w-1.5 h-1.5 rounded-full" 
+                          [class.bg-green-600]="o.paymentStatus === 'paid'" 
+                          [class.bg-amber-500]="o.paymentStatus === 'pending'"></span>
+                    {{ o.paymentStatus }}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        }
 
         <!-- ── Estimated delivery ── -->
         <div class="flex items-center justify-center gap-2 mb-8">
@@ -229,8 +339,8 @@ import { ToastService } from '../../../../core/services/toast.service';
 
           <!-- Track Order -->
           <a
-            routerLink="/account/orders"
-            class="action-card"
+            [routerLink]="order() ? '/account/orders/' + order().id : '/account/orders'"
+            class="action-card shadow-sm"
             role="listitem"
             aria-label="Track your order"
           >
@@ -246,7 +356,7 @@ import { ToastService } from '../../../../core/services/toast.service';
           <!-- Continue Shopping -->
           <a
             routerLink="/products"
-            class="action-card"
+            class="action-card shadow-sm"
             role="listitem"
             aria-label="Continue shopping"
           >
@@ -261,7 +371,7 @@ import { ToastService } from '../../../../core/services/toast.service';
           <!-- View All Orders -->
           <a
             routerLink="/account/orders"
-            class="action-card"
+            class="action-card shadow-sm"
             role="listitem"
             aria-label="View all orders"
           >
@@ -325,18 +435,44 @@ import { ToastService } from '../../../../core/services/toast.service';
   `,
 })
 export class OrderSuccessComponent implements OnInit {
-  private route        = inject(ActivatedRoute);
+  private route = inject(ActivatedRoute);
+  private http = inject(HttpClient);
   private toastService = inject(ToastService);
+  private cdr = inject(ChangeDetectorRef);
 
   readonly orderNumber = signal<string>('');
+  readonly order = signal<any | null>(null);
+  readonly loadingDetails = signal<boolean>(false);
 
   ngOnInit(): void {
     const num = this.route.snapshot.queryParamMap.get('orderNumber') ?? '';
+    const id = this.route.snapshot.queryParamMap.get('orderId') ?? '';
     this.orderNumber.set(num);
+
+    if (id) {
+      this.fetchOrderDetails(id);
+    }
 
     // Trigger success toast after a short delay so the animation settles first
     setTimeout(() => {
       this.toastService.success('Order placed successfully! 🎉');
     }, 600);
+  }
+
+  fetchOrderDetails(id: string) {
+    this.loadingDetails.set(true);
+    this.cdr.markForCheck();
+
+    this.http.get<any>(`${environment.apiUrl}/orders/${id}`).subscribe({
+      next: (res) => {
+        this.order.set(res.data);
+        this.loadingDetails.set(false);
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.loadingDetails.set(false);
+        this.cdr.markForCheck();
+      },
+    });
   }
 }

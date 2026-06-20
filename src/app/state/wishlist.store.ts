@@ -31,10 +31,10 @@ export class WishlistStore {
     }
 
     return this.http
-      .post<{ data: { inWishlist: boolean } }>(`${environment.apiUrl}/wishlist/${productId}/toggle`, {})
+      .post<{ inWishlist: boolean }>(`${environment.apiUrl}/wishlist/${productId}/toggle`, {})
       .pipe(
         tap((res) => {
-          const hasInWishlist = res.data?.inWishlist;
+          const hasInWishlist = res.inWishlist;
           // Sync with server response
           if (hasInWishlist && !this.items().includes(productId)) {
             this.items.update((ids) => [...ids, productId]);

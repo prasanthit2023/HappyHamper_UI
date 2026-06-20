@@ -52,8 +52,8 @@ import { environment } from '../../../../../environments/environment';
             <label class="block text-xs font-semibold text-neutral-400 mb-1.5">Category</label>
             <select formControlName="categoryId" class="input-field py-2">
               <option value="">Select Category</option>
-              @for (cat of categories(); track cat._id) {
-                <option [value]="cat._id">{{ cat.name }}</option>
+              @for (cat of categories(); track cat.id) {
+                <option [value]="cat.id">{{ cat.name }}</option>
               }
             </select>
           </div>

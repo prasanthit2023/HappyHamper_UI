@@ -12,15 +12,16 @@ export const routes: Routes = [
       {
         path: '',
         pathMatch: 'full',
-        redirectTo: 'products',
-      },
-      {
-        path: 'products',
         title: 'Shop All Products – Happy Hamper',
         loadComponent: () =>
           import('./features/shop/pages/product-listing/product-listing.component').then(
             (m) => m.ProductListingComponent,
           ),
+      },
+      {
+        path: 'products',
+        redirectTo: '',
+        pathMatch: 'full',
       },
       {
         path: 'products/:slug',
@@ -78,6 +79,78 @@ export const routes: Routes = [
             (m) => m.ContactComponent,
           ),
       },
+      // ─── Customer Account Routes ───────────────────────────
+      {
+        path: 'account',
+        canActivate: [authGuard],
+        loadComponent: () =>
+          import('./features/account/profile-layout/profile-layout.component').then(
+            (m) => m.ProfileLayoutComponent,
+          ),
+        children: [
+          {
+            path: '',
+            redirectTo: 'dashboard',
+            pathMatch: 'full',
+          },
+          {
+            path: 'dashboard',
+            title: 'My Account – Happy Hamper',
+            loadComponent: () =>
+              import('./features/account/pages/dashboard/account-dashboard.component').then(
+                (m) => m.AccountDashboardComponent,
+              ),
+          },
+          {
+            path: 'orders',
+            title: 'My Orders – Happy Hamper',
+            loadComponent: () =>
+              import('./features/account/pages/orders/orders.component').then(
+                (m) => m.OrdersComponent,
+              ),
+          },
+          {
+            path: 'orders/:id',
+            title: 'Order Details – Happy Hamper',
+            loadComponent: () =>
+              import('./features/account/pages/order-detail/order-detail.component').then(
+                (m) => m.OrderDetailComponent,
+              ),
+          },
+          {
+            path: 'wishlist',
+            title: 'My Wishlist – Happy Hamper',
+            loadComponent: () =>
+              import('./features/account/pages/wishlist/wishlist.component').then(
+                (m) => m.WishlistComponent,
+              ),
+          },
+          {
+            path: 'addresses',
+            title: 'My Addresses – Happy Hamper',
+            loadComponent: () =>
+              import('./features/account/pages/addresses/addresses.component').then(
+                (m) => m.AddressesComponent,
+              ),
+          },
+          {
+            path: 'profile',
+            title: 'Edit Profile – Happy Hamper',
+            loadComponent: () =>
+              import('./features/account/pages/profile-edit/profile-edit.component').then(
+                (m) => m.ProfileEditComponent,
+              ),
+          },
+          {
+            path: 'notifications',
+            title: 'Notifications – Happy Hamper',
+            loadComponent: () =>
+              import('./features/account/pages/notifications/notifications.component').then(
+                (m) => m.NotificationsComponent,
+              ),
+          },
+        ],
+      },
     ],
   },
 
@@ -124,79 +197,6 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/auth/pages/oauth-callback/oauth-callback.component').then(
             (m) => m.OAuthCallbackComponent,
-          ),
-      },
-    ],
-  },
-
-  // ─── Customer Account Routes ───────────────────────────
-  {
-    path: 'account',
-    canActivate: [authGuard],
-    loadComponent: () =>
-      import('./features/account/profile-layout/profile-layout.component').then(
-        (m) => m.ProfileLayoutComponent,
-      ),
-    children: [
-      {
-        path: '',
-        redirectTo: 'dashboard',
-        pathMatch: 'full',
-      },
-      {
-        path: 'dashboard',
-        title: 'My Account – Happy Hamper',
-        loadComponent: () =>
-          import('./features/account/pages/dashboard/account-dashboard.component').then(
-            (m) => m.AccountDashboardComponent,
-          ),
-      },
-      {
-        path: 'orders',
-        title: 'My Orders – Happy Hamper',
-        loadComponent: () =>
-          import('./features/account/pages/orders/orders.component').then(
-            (m) => m.OrdersComponent,
-          ),
-      },
-      {
-        path: 'orders/:id',
-        title: 'Order Details – Happy Hamper',
-        loadComponent: () =>
-          import('./features/account/pages/order-detail/order-detail.component').then(
-            (m) => m.OrderDetailComponent,
-          ),
-      },
-      {
-        path: 'wishlist',
-        title: 'My Wishlist – Happy Hamper',
-        loadComponent: () =>
-          import('./features/account/pages/wishlist/wishlist.component').then(
-            (m) => m.WishlistComponent,
-          ),
-      },
-      {
-        path: 'addresses',
-        title: 'My Addresses – Happy Hamper',
-        loadComponent: () =>
-          import('./features/account/pages/addresses/addresses.component').then(
-            (m) => m.AddressesComponent,
-          ),
-      },
-      {
-        path: 'profile',
-        title: 'Edit Profile – Happy Hamper',
-        loadComponent: () =>
-          import('./features/account/pages/profile-edit/profile-edit.component').then(
-            (m) => m.ProfileEditComponent,
-          ),
-      },
-      {
-        path: 'notifications',
-        title: 'Notifications – Happy Hamper',
-        loadComponent: () =>
-          import('./features/account/pages/notifications/notifications.component').then(
-            (m) => m.NotificationsComponent,
           ),
       },
     ],

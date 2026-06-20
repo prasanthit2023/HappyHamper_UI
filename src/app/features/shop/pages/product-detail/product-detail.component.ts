@@ -310,15 +310,23 @@ import { environment } from '../../../../../environments/environment';
                   <!-- Size Picker -->
                   @if (availableSizes().length > 0) {
                     <div>
-                      <h3 class="font-bold text-xs uppercase tracking-wider mb-2"
-                          style="color:var(--color-text-muted)">
-                        Size
-                        @if (selectedSize()) {
-                          <span class="ml-2 font-extrabold" style="color:var(--color-primary)">
-                            — {{ selectedSize() }}
-                          </span>
-                        }
-                      </h3>
+                      <div class="flex justify-between items-center mb-2">
+                        <h3 class="font-bold text-xs uppercase tracking-wider"
+                            style="color:var(--color-text-muted)">
+                          Size
+                          @if (selectedSize()) {
+                            <span class="ml-2 font-extrabold" style="color:var(--color-primary)">
+                              — {{ selectedSize() }}
+                            </span>
+                          }
+                        </h3>
+                        <button (click)="showSizeGuide.set(true)" 
+                                type="button"
+                                class="text-xs font-semibold underline hover:text-primary transition-colors focus:outline-none"
+                                style="color:var(--color-text-muted)">
+                          Size Guide
+                        </button>
+                      </div>
                       <div class="flex flex-wrap gap-2">
                         @for (size of availableSizes(); track size) {
                           <button
@@ -792,6 +800,66 @@ import { environment } from '../../../../../environments/environment';
         </div>
       </div>
     }
+
+    <!-- Size Guide Modal -->
+    @if (showSizeGuide()) {
+      <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-900/60 backdrop-blur-sm"
+           (click)="showSizeGuide.set(false)">
+        <div class="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-4 animate-fade-in border border-beige"
+             (click)="$event.stopPropagation()">
+          <div class="flex items-center justify-between border-b border-beige pb-3">
+            <h3 class="font-display font-black text-lg text-neutral-800 flex items-center gap-2">
+              <i class="pi pi-table text-primary"></i>
+              Baby Size Guide
+            </h3>
+            <button (click)="showSizeGuide.set(false)" class="w-8 h-8 rounded-full bg-neutral-100 hover:bg-neutral-200 flex items-center justify-center transition-colors">
+              <i class="pi pi-times text-xs"></i>
+            </button>
+          </div>
+          
+          <div class="overflow-x-auto rounded-xl border border-beige">
+            <table class="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr class="bg-neutral-50 text-neutral-500 uppercase font-bold border-b border-beige">
+                  <th class="p-3">Age Group</th>
+                  <th class="p-3">Height (cm)</th>
+                  <th class="p-3">Weight (kg)</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-beige text-neutral-700">
+                <tr class="hover:bg-neutral-50/50">
+                  <td class="p-3 font-bold">0–3 Months</td>
+                  <td class="p-3">55 – 61 cm</td>
+                  <td class="p-3">3.0 – 5.7 kg</td>
+                </tr>
+                <tr class="hover:bg-neutral-50/50">
+                  <td class="p-3 font-bold">3–6 Months</td>
+                  <td class="p-3">61 – 67 cm</td>
+                  <td class="p-3">5.7 – 7.4 kg</td>
+                </tr>
+                <tr class="hover:bg-neutral-50/50">
+                  <td class="p-3 font-bold">6–12 Months</td>
+                  <td class="p-3">67 – 78 cm</td>
+                  <td class="p-3">7.4 – 11.1 kg</td>
+                </tr>
+                <tr class="hover:bg-neutral-50/50">
+                  <td class="p-3 font-bold">12–24 Months</td>
+                  <td class="p-3">78 – 88 cm</td>
+                  <td class="p-3">11.1 – 13.6 kg</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          
+          <div class="bg-primary-light/35 p-3 rounded-xl border border-primary-light/50 flex gap-2">
+            <i class="pi pi-info-circle text-primary mt-0.5 flex-shrink-0"></i>
+            <p class="text-[10px] text-neutral-600 leading-relaxed">
+              <strong>Tip:</strong> If your baby is between sizes, we recommend choosing the larger size for a more comfortable and long-lasting fit.
+            </p>
+          </div>
+        </div>
+      </div>
+    }
   `,
 })
 export class ProductDetailComponent implements OnInit, OnDestroy {
@@ -837,6 +905,7 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
   // ── UI state ─────────────────────────────────────────────────────────
   accordionOpen = signal<boolean>(false);
   showStickyBar = signal<boolean>(false);
+  showSizeGuide = signal<boolean>(false);
 
   // ── Review form ───────────────────────────────────────────────────────
   reviewForm = this.fb.group({

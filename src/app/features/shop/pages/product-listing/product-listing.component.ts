@@ -163,126 +163,161 @@ import { environment } from '../../../../../environments/environment';
 
           <!-- Sidebar Filters (Desktop) -->
           <aside class="hidden md:flex flex-col gap-5 col-span-1" aria-label="Product filters">
-
-            <!-- Categories Filter -->
             <div class="card p-5">
-              <h3 class="font-bold text-xs uppercase tracking-widest mb-4 flex items-center gap-2" style="color: var(--color-text-muted);">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
-                Categories
-              </h3>
-              <div class="space-y-1.5">
-                <a
-                  routerLink="/products"
-                  [queryParams]="{}"
-                  class="flex items-center justify-between px-3 py-2 rounded-xl text-sm transition-all duration-200 category-filter-link"
-                  [class.category-filter-active]="!activeCategorySlug()"
-                  [class.category-filter-inactive]="!!activeCategorySlug()"
-                >
-                  <span>All Products</span>
-                  <svg class="w-4 h-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-                </a>
-                @for (cat of categories(); track cat.id || cat._id) {
+              <button (click)="categoriesExpanded.set(!categoriesExpanded())" 
+                      class="w-full flex items-center justify-between font-bold text-xs uppercase tracking-widest focus:outline-none" 
+                      [class.mb-4]="categoriesExpanded()"
+                      style="color: var(--color-text-muted);">
+                <span class="flex items-center gap-2">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                  Categories
+                </span>
+                <i class="pi text-[10px]" [class.pi-chevron-up]="categoriesExpanded()" [class.pi-chevron-down]="!categoriesExpanded()"></i>
+              </button>
+              
+              @if (categoriesExpanded()) {
+                <div class="space-y-1.5 animate-fade-in">
                   <a
-                    [routerLink]="['/category', cat.slug]"
-                    [queryParamsHandling]="'merge'"
+                    routerLink="/products"
+                    [queryParams]="{}"
                     class="flex items-center justify-between px-3 py-2 rounded-xl text-sm transition-all duration-200 category-filter-link"
-                    [class.category-filter-active]="activeCategorySlug() === cat.slug"
-                    [class.category-filter-inactive]="activeCategorySlug() !== cat.slug"
+                    [class.category-filter-active]="!activeCategorySlug()"
+                    [class.category-filter-inactive]="!!activeCategorySlug()"
                   >
-                    <span>{{ cat.name }}</span>
+                    <span>All Products</span>
                     <svg class="w-4 h-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                   </a>
-                }
-              </div>
+                  @for (cat of categories(); track cat.id || cat._id) {
+                    <a
+                      [routerLink]="['/category', cat.slug]"
+                      [queryParamsHandling]="'merge'"
+                      class="flex items-center justify-between px-3 py-2 rounded-xl text-sm transition-all duration-200 category-filter-link"
+                      [class.category-filter-active]="activeCategorySlug() === cat.slug"
+                      [class.category-filter-inactive]="activeCategorySlug() !== cat.slug"
+                    >
+                      <span>{{ cat.name }}</span>
+                      <svg class="w-4 h-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                    </a>
+                  }
+                </div>
+              }
             </div>
 
             <!-- Price Range Filter -->
             <div class="card p-5">
-              <h3 class="font-bold text-xs uppercase tracking-widest mb-4 flex items-center gap-2" style="color: var(--color-text-muted);">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                Price Range
-              </h3>
-              <!-- Quick price buckets -->
-              <div class="flex flex-wrap gap-2 mb-4">
-                @for (bucket of priceBuckets; track bucket.label) {
-                  <button
-                    (click)="applyPriceBucket(bucket.min, bucket.max)"
-                    class="px-3 py-1.5 rounded-full text-xs font-semibold border transition-all duration-200"
-                    [style]="(minPrice === bucket.min && maxPrice === bucket.max) ? 'background: var(--color-primary); color: white; border-color: var(--color-primary);' : 'background: white; color: var(--color-text-muted); border-color: var(--color-border);'"
-                  >
-                    {{ bucket.label }}
-                  </button>
-                }
-              </div>
-              <!-- Custom range -->
-              <div class="grid grid-cols-2 gap-2">
-                <div>
-                  <label class="text-[10px] font-semibold uppercase block mb-1" style="color: var(--color-text-muted);">Min (₹)</label>
-                  <input type="number" [(ngModel)]="minPrice" placeholder="0" class="input-field py-2 text-xs" />
+              <button (click)="priceExpanded.set(!priceExpanded())" 
+                      class="w-full flex items-center justify-between font-bold text-xs uppercase tracking-widest focus:outline-none" 
+                      [class.mb-4]="priceExpanded()"
+                      style="color: var(--color-text-muted);">
+                <span class="flex items-center gap-2">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                  Price Range
+                </span>
+                <i class="pi text-[10px]" [class.pi-chevron-up]="priceExpanded()" [class.pi-chevron-down]="!priceExpanded()"></i>
+              </button>
+
+              @if (priceExpanded()) {
+                <div class="space-y-4 animate-fade-in">
+                  <!-- Quick price buckets -->
+                  <div class="flex flex-wrap gap-2">
+                    @for (bucket of priceBuckets; track bucket.label) {
+                      <button
+                        (click)="applyPriceBucket(bucket.min, bucket.max)"
+                        class="px-3 py-1.5 rounded-full text-xs font-semibold border transition-all duration-200"
+                        [style]="(minPrice === bucket.min && maxPrice === bucket.max) ? 'background: var(--color-primary); color: white; border-color: var(--color-primary);' : 'background: white; color: var(--color-text-muted); border-color: var(--color-border);'"
+                      >
+                        {{ bucket.label }}
+                      </button>
+                    }
+                  </div>
+                  <!-- Custom range -->
+                  <div class="grid grid-cols-2 gap-2">
+                    <div>
+                      <label class="text-[10px] font-semibold uppercase block mb-1" style="color: var(--color-text-muted);">Min (₹)</label>
+                      <input type="number" [(ngModel)]="minPrice" placeholder="0" class="input-field py-2 text-xs" />
+                    </div>
+                    <div>
+                      <label class="text-[10px] font-semibold uppercase block mb-1" style="color: var(--color-text-muted);">Max (₹)</label>
+                      <input type="number" [(ngModel)]="maxPrice" placeholder="5000" class="input-field py-2 text-xs" />
+                    </div>
+                  </div>
+                  <button (click)="onFilterChange()" class="btn-primary w-full py-2.5 text-xs">Apply Price</button>
                 </div>
-                <div>
-                  <label class="text-[10px] font-semibold uppercase block mb-1" style="color: var(--color-text-muted);">Max (₹)</label>
-                  <input type="number" [(ngModel)]="maxPrice" placeholder="5000" class="input-field py-2 text-xs" />
-                </div>
-              </div>
-              <button (click)="onFilterChange()" class="btn-primary w-full py-2.5 text-xs mt-3">Apply Price</button>
+              }
             </div>
 
             <!-- Special Filters -->
             <div class="card p-5">
-              <h3 class="font-bold text-xs uppercase tracking-widest mb-4 flex items-center gap-2" style="color: var(--color-text-muted);">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>
-                Special
-              </h3>
-              <div class="space-y-3">
-                @for (filter of specialFilters; track filter.key) {
-                  <label class="flex items-center gap-3 cursor-pointer group">
-                    <div class="relative flex-shrink-0">
-                      <input
-                        type="checkbox"
-                        [(ngModel)]="filterValues[filter.key]"
-                        (change)="onSpecialFilterChange()"
-                        class="sr-only"
-                        [id]="'filter-' + filter.key"
-                      />
-                      <div class="w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all"
-                           [style]="filterValues[filter.key] ? 'background: var(--gradient-primary); border-color: var(--color-primary);' : 'border-color: var(--color-border); background: white;'">
-                        @if (filterValues[filter.key]) {
-                          <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
-                          </svg>
-                        }
+              <button (click)="specialExpanded.set(!specialExpanded())" 
+                      class="w-full flex items-center justify-between font-bold text-xs uppercase tracking-widest focus:outline-none" 
+                      [class.mb-4]="specialExpanded()"
+                      style="color: var(--color-text-muted);">
+                <span class="flex items-center gap-2">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>
+                  Special
+                </span>
+                <i class="pi text-[10px]" [class.pi-chevron-up]="specialExpanded()" [class.pi-chevron-down]="!specialExpanded()"></i>
+              </button>
+
+              @if (specialExpanded()) {
+                <div class="space-y-3 animate-fade-in">
+                  @for (filter of specialFilters; track filter.key) {
+                    <label class="flex items-center gap-3 cursor-pointer group">
+                      <div class="relative flex-shrink-0">
+                        <input
+                          type="checkbox"
+                          [(ngModel)]="filterValues[filter.key]"
+                          (change)="onSpecialFilterChange()"
+                          class="sr-only"
+                          [id]="'filter-' + filter.key"
+                        />
+                        <div class="w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all"
+                             [style]="filterValues[filter.key] ? 'background: var(--gradient-primary); border-color: var(--color-primary);' : 'border-color: var(--color-border); background: white;'">
+                          @if (filterValues[filter.key]) {
+                            <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+                            </svg>
+                          }
+                        </div>
                       </div>
-                    </div>
-                    <div class="flex items-center gap-2">
-                      <span class="text-sm font-medium" style="color: var(--color-text);">{{ filter.label }}</span>
-                      <span class="text-xs px-1.5 py-0.5 rounded font-semibold" [style]="filter.badgeStyle">{{ filter.badge }}</span>
-                    </div>
-                  </label>
-                }
-              </div>
+                      <div class="flex items-center gap-2">
+                        <span class="text-sm font-medium text-neutral-700 group-hover:text-primary transition-colors">{{ filter.label }}</span>
+                        <span class="text-xs px-1.5 py-0.5 rounded font-semibold" [style]="filter.badgeStyle">{{ filter.badge }}</span>
+                      </div>
+                    </label>
+                  }
+                </div>
+              }
             </div>
 
             <!-- Age Group Filter -->
             <div class="card p-5">
-              <h3 class="font-bold text-xs uppercase tracking-widest mb-4 flex items-center gap-2" style="color: var(--color-text-muted);">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                Age Group
-              </h3>
-              <div class="flex flex-wrap gap-2">
-                @for (age of ageGroups; track age.tag) {
-                  <a
-                    routerLink="/products"
-                    [queryParams]="{tags: age.tag}"
-                    class="px-3 py-1.5 rounded-full text-xs font-semibold border transition-all duration-200 hover:scale-105"
-                    style="background: var(--color-primary-light); color: var(--color-primary); border-color: transparent;"
-                  >
-                    {{ age.label }}
-                  </a>
-                }
-              </div>
-            </div>
+              <button (click)="ageExpanded.set(!ageExpanded())" 
+                      class="w-full flex items-center justify-between font-bold text-xs uppercase tracking-widest focus:outline-none" 
+                      [class.mb-4]="ageExpanded()"
+                      style="color: var(--color-text-muted);">
+                <span class="flex items-center gap-2">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                  Age Group
+                </span>
+                <i class="pi text-[10px]" [class.pi-chevron-up]="ageExpanded()" [class.pi-chevron-down]="!ageExpanded()"></i>
+              </button>
 
+              @if (ageExpanded()) {
+                <div class="flex flex-wrap gap-2 animate-fade-in">
+                  @for (age of ageGroups; track age.tag) {
+                    <a
+                      routerLink="/products"
+                      [queryParams]="{tags: age.tag}"
+                      class="px-3 py-1.5 rounded-full text-xs font-semibold border transition-all duration-200 hover:scale-105"
+                      style="background: var(--color-primary-light); color: var(--color-primary); border-color: transparent;"
+                    >
+                      {{ age.label }}
+                    </a>
+                  }
+                </div>
+              }
+            </div>
           </aside>
 
           <!-- Product Grid -->
@@ -517,6 +552,12 @@ export class ProductListingComponent implements OnInit, OnDestroy {
   showMobileFilters = signal<boolean>(false);
   activeCategorySlug = signal<string | null>(null);
   viewMode = signal<'grid' | 'list'>('grid');
+
+  // Collapse states for filter sections
+  categoriesExpanded = signal<boolean>(true);
+  priceExpanded = signal<boolean>(true);
+  specialExpanded = signal<boolean>(true);
+  ageExpanded = signal<boolean>(true);
 
   // Filter state
   selectedSort = '-createdAt';

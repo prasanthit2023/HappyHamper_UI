@@ -1,7 +1,9 @@
 import {
   Component,
   OnInit,
+  OnDestroy,
   signal,
+  computed,
   inject,
   ChangeDetectionStrategy,
   ChangeDetectorRef,
@@ -29,7 +31,7 @@ import { environment } from '../../../../../environments/environment';
     <!-- ══════════════════════════════════════════════════════
          HERO SECTION
     ══════════════════════════════════════════════════════ -->
-    <section class="relative min-h-[80vh] flex items-center overflow-hidden" style="background: var(--gradient-pastel);">
+    <section class="relative min-h-[85vh] flex items-center overflow-hidden" style="background: var(--gradient-pastel);">
       <!-- Decorative background blooms -->
       <div class="absolute top-0 right-0 w-[500px] h-[500px] rounded-full pointer-events-none"
            style="background: radial-gradient(circle, rgba(124,131,195,0.06) 0%, transparent 70%); transform: translate(20%, -20%);"></div>
@@ -40,8 +42,8 @@ import { environment } from '../../../../../environments/environment';
         <div class="grid lg:grid-cols-2 gap-12 items-center">
           
           <!-- Hero Text -->
-          <div class="animate-slide-up">
-            <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs mb-6 font-semibold uppercase tracking-wider"
+          <div class="animate-slide-up flex flex-col justify-center">
+            <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs mb-6 font-semibold uppercase tracking-wider w-fit"
                  style="background: var(--color-primary-light); color: var(--color-primary);">
               <svg class="w-4 h-4 animate-bounce-soft" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 21C12 14.5 9 10 9 5"/>
@@ -49,22 +51,22 @@ import { environment } from '../../../../../environments/environment';
               Pure Organic Cotton Collection
             </div>
             
-            <h1 class="font-display text-4xl lg:text-5xl xl:text-6xl font-black leading-[1.1] mb-6" style="color: var(--color-text);">
+            <h1 class="font-display text-4xl lg:text-5xl xl:text-6xl font-black leading-[1.1] mb-6 min-h-[140px] md:min-h-[110px] text-neutral-800 transition-all duration-500 animate-fade-in">
               {{ activeHero()?.title || 'Gentle Pieces, Precious Memories' }}
             </h1>
             
-            <p class="text-base lg:text-lg mb-8 max-w-lg leading-relaxed" style="color: var(--color-text-muted);">
+            <p class="text-base lg:text-lg mb-8 max-w-lg leading-relaxed min-h-[80px] text-neutral-500 transition-all duration-500 animate-fade-in">
               {{ activeHero()?.subtitle || 'Adorable, soft, and safe clothing for newborns and babies aged 0–24 months. Made with love and 100% certified organic cotton.' }}
             </p>
             
             <div class="flex flex-wrap gap-4">
-              <a [routerLink]="getRoutePath(activeHero()?.link || '/products')" [queryParams]="getRouteQueryParams(activeHero()?.link || '/products', {newArrival:true})" class="btn-primary text-base px-8 py-4" id="hero-shop-now">
+              <a [routerLink]="getRoutePath(activeHero()?.link || '/products')" [queryParams]="getRouteQueryParams(activeHero()?.link || '/products', {newArrival:true})" class="btn-primary text-base px-8 py-4 flex items-center gap-2 shadow-sm active:scale-95 transition-all" id="hero-shop-now">
                 {{ activeHero()?.ctaText || 'Discover Collection' }}
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
                 </svg>
               </a>
-              <a routerLink="/products" [queryParams]="{bestSeller:true}" class="btn-secondary text-base px-8 py-4 inline-flex items-center gap-2">
+              <a routerLink="/products" [queryParams]="{bestSeller:true}" class="btn-secondary text-base px-8 py-4 inline-flex items-center gap-2 hover:bg-neutral-50 active:scale-95 transition-all">
                 Best Sellers
               </a>
             </div>
@@ -79,8 +81,8 @@ import { environment } from '../../../../../environments/environment';
                     </svg>
                   </div>
                   <div>
-                    <div class="font-semibold text-sm" style="color: var(--color-text);">{{ badge.label }}</div>
-                    <div class="text-xs" style="color: var(--color-text-muted);">{{ badge.sub }}</div>
+                    <div class="font-semibold text-sm text-neutral-800">{{ badge.label }}</div>
+                    <div class="text-xs text-neutral-400">{{ badge.sub }}</div>
                   </div>
                 </div>
               }
@@ -91,15 +93,14 @@ import { environment } from '../../../../../environments/environment';
           <div class="relative hidden lg:flex items-center justify-center">
             <div class="relative w-full max-w-[440px]">
               @if (activeHero()?.imageUrl) {
-                <div class="relative rounded-3xl overflow-hidden shadow-float aspect-[4/5] bg-neutral-50 border border-beige">
+                <div class="relative rounded-3xl overflow-hidden shadow-float aspect-[4/5] bg-neutral-50 border border-beige transition-all duration-500 animate-fade-in">
                   <img [src]="activeHero()?.imageUrl" alt="Featured Happy Hamper Collection" class="w-full h-full object-cover rounded-3xl" />
                 </div>
               } @else {
                 <!-- Fallback premium layout visual -->
-                <div class="relative rounded-3xl overflow-hidden shadow-float aspect-[4/5] flex items-center justify-center"
-                     style="background: var(--gradient-pastel); border: 1px solid var(--color-border);">
+                <div class="relative rounded-3xl overflow-hidden shadow-float aspect-[4/5] flex items-center justify-center bg-white border border-beige">
                   <div class="text-center space-y-4 px-8 w-full">
-                    <div class="w-24 h-24 mx-auto rounded-2xl flex items-center justify-center bg-white shadow-sm border border-neutral-100">
+                    <div class="w-24 h-24 mx-auto rounded-2xl flex items-center justify-center bg-neutral-50 border border-beige shadow-sm">
                       <!-- Custom Bluebell Flower SVG -->
                       <svg class="w-14 h-14 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 21C12 14.5 9 10 9 5 M9 5c1-1 3-1 4 0 M12 7c1.5 0 2.5 1 2.5 2.5v1c0 1-1 1.5-2 1.5s-2-0.5-2-1.5 M9 11c1.5 0 2.5 1 2.5 2.5v1c0 1-1 1.5-2 1.5s-2-0.5-2-1.5" />
@@ -107,53 +108,74 @@ import { environment } from '../../../../../environments/environment';
                     </div>
                     <div>
                       <h3 class="font-display font-black text-2xl tracking-wider text-neutral-800">HAPPY HAMPER</h3>
-                       <p class="text-xs text-neutral-500 font-semibold tracking-widest mt-1">GENTLE PIECES, PRECIOUS MEMORIES</p>
+                      <p class="text-xs text-neutral-400 font-semibold tracking-widest mt-1">GENTLE PIECES, PRECIOUS MEMORIES</p>
                     </div>
                   </div>
                 </div>
               }
 
               <!-- Floating stat cards -->
-              <div class="absolute -left-10 top-12 card px-4 py-3 animate-fade-in shadow-float bg-white">
-                <div class="text-2xl font-bold" style="color: var(--color-primary);">100%</div>
-                <div class="text-xs font-semibold" style="color: var(--color-text-muted);">Organic Cotton</div>
+              <div class="absolute -left-10 top-12 card px-4 py-3 animate-fade-in shadow-float bg-white border border-beige">
+                <div class="text-2xl font-bold text-primary">100%</div>
+                <div class="text-xs font-semibold text-neutral-500">Organic Cotton</div>
               </div>
-              <div class="absolute -right-8 bottom-20 card px-4 py-3 animate-fade-in shadow-float bg-white" style="animation-delay:0.3s">
+              <div class="absolute -right-8 bottom-20 card px-4 py-3 animate-fade-in shadow-float bg-white border border-beige" style="animation-delay:0.3s">
                 <div class="flex items-center gap-1.5 mb-0.5">
                   <svg class="w-4 h-4 text-primary" fill="currentColor" viewBox="0 0 20 20">
                     <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
                   </svg>
-                  <span class="font-bold text-sm" style="color: var(--color-text);">4.9/5</span>
+                  <span class="font-bold text-sm text-neutral-800">4.9/5</span>
                 </div>
-                <div class="text-xs" style="color: var(--color-text-muted);">Avg. rating</div>
+                <div class="text-xs text-neutral-400">Avg. rating</div>
               </div>
-              <div class="absolute -left-4 bottom-14 card px-3 py-2 animate-fade-in shadow-float bg-white" style="animation-delay:0.6s">
+              <div class="absolute -left-4 bottom-14 card px-3 py-2 animate-fade-in shadow-float bg-white border border-beige" style="animation-delay:0.6s">
                 <div class="flex items-center gap-1.5">
                   <span class="w-5 h-5 rounded-full flex items-center justify-center text-xs" style="background: var(--color-primary-light); color: var(--color-primary);">
                     <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                       <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
                     </svg>
                   </span>
-                  <span class="text-xs font-semibold" style="color: var(--color-text);">Premium Quality</span>
+                  <span class="text-xs font-semibold text-neutral-700">Premium Quality</span>
                 </div>
               </div>
             </div>
           </div>
         </div>
       </div>
+
+      <!-- Carousel Dots Navigation -->
+      @if (heroBanners().length > 1) {
+        <div class="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2.5 z-20">
+          @for (b of heroBanners(); track b._id || b.id; let idx = $index) {
+            <button (click)="setHeroIndex(idx)" 
+                    class="w-2.5 h-2.5 rounded-full transition-all duration-300 focus:outline-none"
+                    [style.background]="activeHeroIndex() === idx ? 'var(--color-primary)' : 'rgba(62,57,53,0.15)'"
+                    [style.transform]="activeHeroIndex() === idx ? 'scale(1.2)' : 'none'"
+                    [attr.aria-label]="'Go to slide ' + (idx + 1)"></button>
+          }
+        </div>
+
+        <!-- Left/Right Arrow Buttons (Desktop) -->
+        <button (click)="prevHero()" class="absolute left-6 top-1/2 -translate-y-1/2 hidden md:flex w-10 h-10 rounded-full bg-white/80 hover:bg-white border border-beige items-center justify-center text-neutral-700 hover:text-primary transition-all active:scale-95 z-20 shadow-sm focus:outline-none">
+          <i class="pi pi-chevron-left text-xs"></i>
+        </button>
+        <button (click)="nextHero()" class="absolute right-6 top-1/2 -translate-y-1/2 hidden md:flex w-10 h-10 rounded-full bg-white/80 hover:bg-white border border-beige items-center justify-center text-neutral-700 hover:text-primary transition-all active:scale-95 z-20 shadow-sm focus:outline-none">
+          <i class="pi pi-chevron-right text-xs"></i>
+        </button>
+      }
     </section>
 
     <!-- ══════════════════════════════════════════════════════
-         CATEGORY SLIDER
+         CATEGORY CARDS SECTION
     ══════════════════════════════════════════════════════ -->
-    <section class="py-14" style="background: white;">
+    <section class="py-16" style="background: white;">
       <div class="bb-container">
-        <div class="flex items-center justify-between mb-8">
+        <div class="flex items-center justify-between mb-10">
           <div>
-            <h2 class="section-title text-2xl">Shop by Category</h2>
-            <p class="section-subtitle text-sm">Gentle clothing & accessories for your baby</p>
+            <h2 class="section-title text-2xl text-neutral-800">Shop by Category</h2>
+            <p class="section-subtitle text-sm text-neutral-500">Gentle clothing & accessories for your baby</p>
           </div>
-          <a routerLink="/products" class="btn-ghost hidden sm:flex">
+          <a routerLink="/products" class="btn-ghost hidden sm:inline-flex items-center gap-1 hover:text-primary">
             View all
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
@@ -165,22 +187,29 @@ import { environment } from '../../../../../environments/environment';
           <div class="w-full text-center py-6 text-neutral-400 text-xs">No active categories.</div>
         } @else {
           <!-- Desktop Grid View (systems) -->
-          <div class="hidden md:grid grid-cols-5 gap-6 justify-items-center">
+          <div class="hidden md:grid grid-cols-5 gap-6">
             @for (cat of categories(); track cat.slug) {
               <a
                 [routerLink]="['/category', cat.slug]"
-                class="flex flex-col items-center gap-3 group cursor-pointer w-full text-center"
+                class="card p-5 flex flex-col items-center justify-center gap-4 group cursor-pointer w-full text-center hover-lift border border-beige relative overflow-hidden transition-all duration-300"
+                [style.background]="cat.style.color"
               >
-                <div class="w-24 h-24 rounded-full overflow-hidden
-                            group-hover:scale-105 transition-all duration-300 flex items-center justify-center category-item-icon"
-                     [style.background]="cat.style.color">
-                  <svg class="w-10 h-10" [style.color]="cat.style.iconColor" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <!-- Soft background pattern -->
+                <div class="absolute -right-6 -bottom-6 w-20 h-20 rounded-full opacity-[0.04] group-hover:scale-125 transition-transform" 
+                     [style.background]="cat.style.iconColor"></div>
+
+                <div class="w-16 h-16 rounded-2xl bg-white shadow-sm flex items-center justify-center group-hover:scale-110 group-hover:rotate-3 transition-all duration-300"
+                     style="box-shadow: 0 4px 10px rgba(62,57,53,0.03);">
+                  <svg class="w-8 h-8" [style.color]="cat.style.iconColor" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" [attr.d]="cat.style.svgPath"/>
                   </svg>
                 </div>
-                <span class="text-sm font-semibold transition-colors category-item-label">
-                  {{ cat.name }}
-                </span>
+                <div>
+                  <span class="text-sm font-bold text-neutral-800 transition-colors group-hover:text-primary">
+                    {{ cat.name }}
+                  </span>
+                  <span class="block text-[10px] text-neutral-400 font-semibold tracking-wider uppercase mt-0.5 group-hover:text-primary/70">Shop Now</span>
+                </div>
               </a>
             }
           </div>
@@ -190,17 +219,16 @@ import { environment } from '../../../../../environments/environment';
             @for (cat of categories(); track cat.slug) {
               <a
                 [routerLink]="['/category', cat.slug]"
-                class="flex-shrink-0 snap-start flex flex-col items-center gap-3 group cursor-pointer"
-                style="min-width: 110px;"
+                class="flex-shrink-0 snap-start card p-4 flex flex-col items-center justify-center gap-3 group cursor-pointer border border-beige rounded-2xl w-28"
+                [style.background]="cat.style.color"
               >
-                <div class="w-20 h-20 rounded-full overflow-hidden
-                            group-hover:scale-105 transition-all duration-300 flex items-center justify-center category-item-icon"
-                     [style.background]="cat.style.color">
-                  <svg class="w-9 h-9" [style.color]="cat.style.iconColor" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="w-12 h-12 rounded-xl bg-white shadow-sm flex items-center justify-center"
+                     style="box-shadow: 0 4px 10px rgba(62,57,53,0.03);">
+                  <svg class="w-6 h-6" [style.color]="cat.style.iconColor" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" [attr.d]="cat.style.svgPath"/>
                   </svg>
                 </div>
-                <span class="text-xs font-semibold text-center transition-colors category-item-label">
+                <span class="text-xs font-bold text-neutral-800 text-center truncate w-full">
                   {{ cat.name }}
                 </span>
               </a>
@@ -216,11 +244,11 @@ import { environment } from '../../../../../environments/environment';
     @if (middleBanners().length > 0) {
       <section class="py-4" style="background: var(--color-bg);">
         <div class="bb-container">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            @for (promo of middleBanners(); track promo._id) {
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            @for (promo of middleBanners(); track promo._id || promo.id) {
               <a [routerLink]="getRoutePath(promo.link || '/products')" 
                  [queryParams]="getRouteQueryParams(promo.link || '/products')"
-                 class="relative rounded-2xl overflow-hidden h-36 flex items-center px-6 group cursor-pointer transition-all duration-300 hover:-translate-y-1 block promo-card"
+                 class="relative rounded-2xl overflow-hidden h-36 flex items-center px-6 group cursor-pointer transition-all duration-300 hover:-translate-y-1 block promo-card shadow-sm"
                  [style.background]="promo.bg">
                 <div class="relative z-10 max-w-[70%]">
                   <p class="text-[9px] font-bold text-white/80 uppercase tracking-widest mb-1">PROMOTION</p>
@@ -251,8 +279,8 @@ import { environment } from '../../../../../environments/environment';
     <section class="py-16 bg-white">
       <div class="bb-container">
         <div class="text-center mb-10">
-          <h2 class="section-title">Happy Hamper Products Showcase</h2>
-          <p class="section-subtitle">Select a product type to view all available varieties</p>
+          <h2 class="section-title text-neutral-800">Happy Hamper Products Showcase</h2>
+          <p class="section-subtitle text-neutral-500">Select a product type to view all available varieties</p>
         </div>
 
         <!-- Tabs headers -->
@@ -272,7 +300,7 @@ import { environment } from '../../../../../environments/environment';
         </div>
 
         @if (loadingShowcase()) {
-          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
+          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
             @for (s of skeletons; track s) {
               <div class="rounded-2xl overflow-hidden card p-2 bg-white animate-pulse">
                 <div class="skeleton aspect-[3/4] w-full rounded-2xl"></div>
@@ -286,7 +314,7 @@ import { environment } from '../../../../../environments/environment';
         } @else if (showcaseProducts().length === 0) {
           <div class="text-center py-12 text-neutral-400 text-sm">No products available in this showcase.</div>
         } @else {
-          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5 animate-fade-in">
+          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 animate-fade-in">
             @for (product of showcaseProducts(); track product._id) {
               <bb-product-card [product]="product" (quickAdd)="onQuickAdd($event)" />
             }
@@ -302,16 +330,16 @@ import { environment } from '../../../../../environments/environment';
       <div class="bb-container">
         <div class="text-center mb-10">
           <span class="inline-block text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full bg-primary-light text-primary mb-2">Value Bundles</span>
-          <h2 class="section-title text-3xl">Happy Hamper Combo Packs</h2>
-          <p class="section-subtitle">Specially curated gift sets and essential starter bundles for your baby.</p>
+          <h2 class="section-title text-3xl text-neutral-800">Happy Hamper Combo Packs</h2>
+          <p class="section-subtitle text-neutral-500 font-medium">Specially curated gift sets and essential starter bundles for your baby.</p>
         </div>
 
         @if (comboProducts().length === 0) {
           <div class="text-center py-6 text-neutral-400 text-xs">Loading premium combos...</div>
         } @else {
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
             @for (p of comboProducts(); track p._id) {
-              <div class="card p-5 bg-white flex flex-col justify-between hover-lift relative overflow-hidden group">
+              <div class="card p-5 bg-white border border-beige flex flex-col justify-between hover-lift relative overflow-hidden group">
                 <span class="absolute top-4 right-4 bg-primary text-white text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider z-10">Best Value</span>
                 
                 <a [routerLink]="['/products', p.slug]" class="block aspect-[4/3] rounded-xl overflow-hidden bg-neutral-50 mb-5 relative">
@@ -320,11 +348,11 @@ import { environment } from '../../../../../environments/environment';
 
                 <div class="space-y-2">
                   <a [routerLink]="['/products', p.slug]" class="block">
-                    <h3 class="font-display font-bold text-lg text-neutral-900 group-hover:text-primary transition-colors">{{ p.title }}</h3>
+                    <h3 class="font-display font-bold text-lg text-neutral-800 group-hover:text-primary transition-colors">{{ p.title }}</h3>
                   </a>
                   <p class="text-xs text-neutral-500 line-clamp-2 leading-relaxed">{{ p.shortDescription || p.description }}</p>
                   
-                  <div class="flex items-center justify-between pt-4 border-t border-neutral-100">
+                  <div class="flex items-center justify-between pt-4 border-t border-beige">
                     <div>
                       <span class="text-lg font-bold text-neutral-800">₹{{ p.discountPrice || p.price }}</span>
                       @if (p.discountPrice && p.price > p.discountPrice) {
@@ -369,13 +397,13 @@ import { environment } from '../../../../../environments/environment';
       <div class="bb-container">
         <div class="flex items-center justify-between mb-10">
           <div>
-            <h2 class="section-title flex items-center gap-2">
+            <h2 class="section-title flex items-center gap-2 text-neutral-800">
               Best Sellers
               <svg class="w-6 h-6 text-primary" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd"/>
               </svg>
             </h2>
-            <p class="section-subtitle">Most loved by our customers</p>
+            <p class="section-subtitle text-neutral-500">Most loved by our customers</p>
           </div>
           <a routerLink="/products" [queryParams]="{bestSeller:true}" class="btn-secondary hidden sm:inline-flex text-sm">
             View all
@@ -466,17 +494,17 @@ import { environment } from '../../../../../environments/environment';
             </div>
           </div>
           <div class="flex gap-6 overflow-x-auto pb-4" style="scrollbar-width: thin; scrollbar-color: var(--color-border) transparent;">
-            @for (item of recentlyViewedService.items(); track item._id) {
+            @for (item of recentlyViewedService.items(); track $any(item)._id || $any(item).id) {
               <div class="flex-shrink-0 w-48 card p-3 bg-white flex flex-col justify-between hover-lift relative overflow-hidden group border" style="border-color: var(--color-border);">
-                <a [routerLink]="['/products', item.slug]" class="block h-full">
+                <a [routerLink]="['/products', $any(item).slug]" class="block h-full">
                   <div class="aspect-[4/3] rounded-xl overflow-hidden bg-neutral-50 mb-3 relative">
-                    <img [src]="item.images?.[0] || '/assets/placeholder-product.jpg'" [alt]="item.title" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                    <img [src]="$any(item).images?.[0] || '/assets/placeholder-product.jpg'" [alt]="$any(item).title" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                   </div>
-                  <h3 class="font-semibold text-xs text-neutral-900 group-hover:text-primary transition-colors truncate mb-1">{{ item.title }}</h3>
+                  <h3 class="font-semibold text-xs text-neutral-900 group-hover:text-primary transition-colors truncate mb-1">{{ $any(item).title }}</h3>
                   <div class="flex items-baseline gap-1.5">
-                    <span class="text-sm font-extrabold" style="color: var(--color-primary);">₹{{ (item.discountPrice || item.price) | number:'1.0-0' }}</span>
-                    @if (item.discountPrice && item.price > item.discountPrice) {
-                      <span class="text-[10px] text-neutral-400 line-through">₹{{ item.price | number:'1.0-0' }}</span>
+                    <span class="text-sm font-extrabold" style="color: var(--color-primary);">₹{{ ($any(item).discountPrice || $any(item).price) | number:'1.0-0' }}</span>
+                    @if ($any(item).discountPrice && $any(item).price > $any(item).discountPrice) {
+                      <span class="text-[10px] text-neutral-400 line-through">₹{{ $any(item).price | number:'1.0-0' }}</span>
                     }
                   </div>
                 </a>
@@ -566,6 +594,8 @@ export class HomeComponent implements OnInit {
 
   readonly categories = signal<any[]>([]);
   readonly activeHero = signal<any | null>(null);
+  readonly heroBanners = signal<any[]>([]);
+  readonly activeHeroIndex = signal<number>(0);
   readonly middleBanners = signal<any[]>([]);
 
   // Showcase Signals
@@ -614,11 +644,53 @@ export class HomeComponent implements OnInit {
     { title: 'Eco-Friendly', desc: 'Reusable diapers and sustainable packaging options.', svgPath: 'M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3' },
   ];
 
+  private heroIntervalId?: any;
+
   ngOnInit() {
     this.setupSEO();
     this.loadProducts();
     this.loadCategories();
     this.loadBanners();
+  }
+
+  ngOnDestroy() {
+    this.stopHeroCarousel();
+  }
+
+  startHeroCarousel() {
+    this.stopHeroCarousel();
+    if (this.heroBanners().length > 1) {
+      this.heroIntervalId = setInterval(() => {
+        this.nextHero();
+      }, 5000);
+    }
+  }
+
+  stopHeroCarousel() {
+    if (this.heroIntervalId) {
+      clearInterval(this.heroIntervalId);
+      this.heroIntervalId = undefined;
+    }
+  }
+
+  nextHero() {
+    const len = this.heroBanners().length;
+    if (len <= 1) return;
+    this.activeHeroIndex.update(idx => (idx + 1) % len);
+    this.cdr.markForCheck();
+  }
+
+  prevHero() {
+    const len = this.heroBanners().length;
+    if (len <= 1) return;
+    this.activeHeroIndex.update(idx => (idx - 1 + len) % len);
+    this.cdr.markForCheck();
+  }
+
+  setHeroIndex(idx: number) {
+    this.activeHeroIndex.set(idx);
+    this.startHeroCarousel();
+    this.cdr.markForCheck();
   }
 
   private setupSEO() {
@@ -666,9 +738,9 @@ export class HomeComponent implements OnInit {
     this.http.get<any>(`${environment.apiUrl}/banners/active`, { params: { position: 'hero' } }).subscribe({
       next: (res) => {
         const list = res.data || [];
-        if (list.length > 0) {
-          this.activeHero.set(list[0]);
-        }
+        this.heroBanners.set(list);
+        this.activeHeroIndex.set(0);
+        this.startHeroCarousel();
         this.cdr.markForCheck();
       }
     });
