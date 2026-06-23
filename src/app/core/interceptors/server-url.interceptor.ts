@@ -11,7 +11,7 @@ export const serverUrlInterceptor: HttpInterceptorFn = (req, next) => {
 
   if (isPlatformServer(platformId) && (req.url.startsWith('/') || !req.url.startsWith('http'))) {
     // Read backend URL from environment variables, fallback to local default
-    const backendUrl = (typeof process !== 'undefined' && process.env ? process.env['BACKEND_URL'] || process.env['API_URL'] : null) || 'http://localhost:3000';
+    const backendUrl = (typeof process !== 'undefined' && process.env ? process.env['BACKEND_URL'] || process.env['API_URL'] : null) || 'https://localhost:7226';
     
     // Clean up slash transitions (e.g. backendUrl = http://localhost:3000, req.url = /api/v1 => http://localhost:3000/api/v1)
     const normalizedUrl = req.url.startsWith('/') ? req.url : `/${req.url}`;
