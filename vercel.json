@@ -4,11 +4,11 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://backend-production-bddd.up.railway.app/api/:path*"
+      "destination": "https://happyhamper-ayhnh0geczaretd8.centralindia-01.azurewebsites.net/api/:path*"
     },
     {
       "source": "/storage/:path*",
-      "destination": "https://backend-production-bddd.up.railway.app/storage/:path*"
+      "destination": "https://happyhamper-ayhnh0geczaretd8.centralindia-01.azurewebsites.net/storage/:path*"
     }
   ],
   "headers": [

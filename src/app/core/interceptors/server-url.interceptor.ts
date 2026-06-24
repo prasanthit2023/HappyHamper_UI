@@ -2,6 +2,8 @@ import { HttpInterceptorFn } from '@angular/common/http';
 import { inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformServer } from '@angular/common';
 
+declare const process: any;
+
 /**
  * Prepend backend API host to relative API endpoints when executing on server-side rendering (SSR).
  * This ensures SSR can successfully resolve backend URLs (since server environment lacks browser hostname routing).
