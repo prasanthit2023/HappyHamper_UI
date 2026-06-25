@@ -5,6 +5,7 @@ import { FormBuilder, ReactiveFormsModule, Validators, FormArray } from '@angula
 import { HttpClient } from '@angular/common/http';
 import { Subscription } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
+import { ImageUploadService } from '../../../../core/services/image-upload.service';
 
 @Component({
   selector: 'bb-product-form',
@@ -227,6 +228,7 @@ export class ProductFormComponent implements OnInit, OnDestroy {
   private fb = inject(FormBuilder);
   private http = inject(HttpClient);
   private cdr = inject(ChangeDetectorRef);
+  private uploadService = inject(ImageUploadService);
 
   private routeSub!: Subscription;
 
@@ -506,12 +508,7 @@ export class ProductFormComponent implements OnInit, OnDestroy {
     this.errorMessage.set('');
     this.cdr.markForCheck();
 
-    const formData = new FormData();
-    for (let i = 0; i < files.length; i++) {
-      formData.append('files', files[i]);
-    }
-
-    this.http.post<any>(`${environment.apiUrl}/upload/multiple?folder=products`, formData).subscribe({
+    this.uploadService.uploadMultiple(files, 'products').subscribe({
       next: (res) => {
         this.uploadingImages.set(false);
         const urls = res.data?.urls || [];
@@ -522,7 +519,7 @@ export class ProductFormComponent implements OnInit, OnDestroy {
       },
       error: (err) => {
         this.uploadingImages.set(false);
-        this.errorMessage.set(err.error?.message || 'Failed to upload images.');
+        this.errorMessage.set(err.message || err.error?.message || 'Failed to upload images.');
         this.cdr.markForCheck();
       }
     });
