@@ -510,14 +510,20 @@ export class ProductFormComponent implements OnInit, OnDestroy {
 
     this.uploadService.uploadMultiple(files, 'products').subscribe({
       next: (res) => {
+        console.log('DEBUG: Upload response received:', res);
         this.uploadingImages.set(false);
         const urls = res.data?.urls || [];
+        console.log('DEBUG: Parsed URLs from response:', urls);
+        
         urls.forEach((url: string) => {
           this.imagesFormArray.push(this.fb.control(url));
         });
+        
+        console.log('DEBUG: imagesFormArray value after push:', this.imagesFormArray.value);
         this.cdr.markForCheck();
       },
       error: (err) => {
+        console.error('DEBUG: Upload error:', err);
         this.uploadingImages.set(false);
         this.errorMessage.set(err.message || err.error?.message || 'Failed to upload images.');
         this.cdr.markForCheck();
