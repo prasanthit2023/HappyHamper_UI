@@ -551,6 +551,8 @@ export class ProductFormComponent implements OnInit, OnDestroy {
       isPublished: !!formVal.isPublished,
     };
 
+    console.log('DEBUG: Submitting product payload:', payload);
+
     const id = this.productId();
     const request$ = this.editMode()
       ? this.http.put<any>(`${environment.apiUrl}/products/${id}`, payload)
