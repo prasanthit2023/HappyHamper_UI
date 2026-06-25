@@ -512,7 +512,7 @@ export class ProductFormComponent implements OnInit, OnDestroy {
       next: (res) => {
         console.log('DEBUG: Upload response received:', res);
         this.uploadingImages.set(false);
-        const urls = res.data?.urls || [];
+        const urls = res.urls || res.data?.urls || [];
         console.log('DEBUG: Parsed URLs from response:', urls);
         
         urls.forEach((url: string) => {
