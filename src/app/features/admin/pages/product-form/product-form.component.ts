@@ -183,19 +183,36 @@ import { ImageUploadService } from '../../../../core/services/image-upload.servi
           </div>
 
           <!-- Thumbnails grid -->
-          @if (imagesFormArray.controls.length > 0) {
+          @if (imagesFormArray.controls.length > 0 || localPreviewUrls.length > 0) {
             <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 pt-2">
+              <!-- Existing Images -->
               @for (imgCtrl of imagesFormArray.controls; track $index) {
                 <div class="relative group aspect-square rounded-xl overflow-hidden border border-neutral-200 bg-neutral-50 shadow-sm">
                   <img [src]="imgCtrl.value" class="w-full h-full object-cover" alt="Product image preview" />
                   <button
                     type="button"
-                    (click)="removeImageLink($index)"
+                    (click)="removeExistingImage($index)"
                     class="absolute top-1 right-1 w-6 h-6 rounded-full bg-red-500/90 text-white flex items-center justify-center shadow-sm opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:scale-105"
                     title="Remove Image"
                   >
                     <i class="pi pi-times text-[10px]"></i>
                   </button>
+                </div>
+              }
+
+              <!-- New Previews (Pending Upload) -->
+              @for (previewUrl of localPreviewUrls; track $index) {
+                <div class="relative group aspect-square rounded-xl overflow-hidden border border-neutral-200 bg-neutral-50 shadow-sm ring-2 ring-primary-500/50">
+                  <img [src]="previewUrl" class="w-full h-full object-cover" alt="New image preview" />
+                  <button
+                    type="button"
+                    (click)="removeNewImage($index)"
+                    class="absolute top-1 right-1 w-6 h-6 rounded-full bg-red-500/90 text-white flex items-center justify-center shadow-sm opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:scale-105"
+                    title="Remove Image"
+                  >
+                    <i class="pi pi-times text-[10px]"></i>
+                  </button>
+                  <span class="absolute bottom-1 left-1 bg-primary-500 text-white text-[8px] font-bold px-1.5 py-0.5 rounded-md shadow-sm">NEW</span>
                 </div>
               }
             </div>
@@ -240,6 +257,9 @@ export class ProductFormComponent implements OnInit, OnDestroy {
   errorMessage = signal<string>('');
   uploadingImages = signal<boolean>(false);
   isDragging = signal<boolean>(false);
+
+  newFilesToUpload: File[] = [];
+  localPreviewUrls: string[] = [];
 
   readonly colorHexMap: Record<string, string> = {
     red: '#dc2626',
@@ -350,6 +370,7 @@ export class ProductFormComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     if (this.routeSub) this.routeSub.unsubscribe();
+    this.localPreviewUrls.forEach(url => URL.revokeObjectURL(url));
   }
 
   loadCategories() {
@@ -470,14 +491,22 @@ export class ProductFormComponent implements OnInit, OnDestroy {
     this.imagesFormArray.push(this.fb.control(''));
   }
 
-  removeImageLink(index: number) {
+  removeExistingImage(index: number) {
     this.imagesFormArray.removeAt(index);
+  }
+
+  removeNewImage(index: number) {
+    const previewUrl = this.localPreviewUrls[index];
+    URL.revokeObjectURL(previewUrl);
+    this.localPreviewUrls.splice(index, 1);
+    this.newFilesToUpload.splice(index, 1);
+    this.cdr.markForCheck();
   }
 
   onFileSelected(event: Event) {
     const input = event.target as HTMLInputElement;
     if (input.files) {
-      this.uploadFiles(input.files);
+      this.handleSelectedFiles(input.files);
     }
   }
 
@@ -498,37 +527,34 @@ export class ProductFormComponent implements OnInit, OnDestroy {
     event.stopPropagation();
     this.isDragging.set(false);
     if (event.dataTransfer?.files) {
-      this.uploadFiles(event.dataTransfer.files);
+      this.handleSelectedFiles(event.dataTransfer.files);
     }
   }
 
-  uploadFiles(files: FileList | File[]) {
+  handleSelectedFiles(files: FileList | File[]) {
     if (!files || files.length === 0) return;
-    this.uploadingImages.set(true);
-    this.errorMessage.set('');
-    this.cdr.markForCheck();
+    const filesArray = Array.from(files);
 
-    this.uploadService.uploadMultiple(files, 'products').subscribe({
-      next: (res) => {
-        console.log('DEBUG: Upload response received:', res);
-        this.uploadingImages.set(false);
-        const urls = res.urls || res.data?.urls || [];
-        console.log('DEBUG: Parsed URLs from response:', urls);
-        
-        urls.forEach((url: string) => {
-          this.imagesFormArray.push(this.fb.control(url));
-        });
-        
-        console.log('DEBUG: imagesFormArray value after push:', this.imagesFormArray.value);
+    for (const file of filesArray) {
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'];
+      const maxSizeBytes = 5 * 1024 * 1024; // 5MB
+
+      if (!allowedTypes.includes(file.type)) {
+        this.errorMessage.set(`File type '${file.type}' is not supported. Supported: JPG, PNG, GIF, WebP, SVG`);
         this.cdr.markForCheck();
-      },
-      error: (err) => {
-        console.error('DEBUG: Upload error:', err);
-        this.uploadingImages.set(false);
-        this.errorMessage.set(err.message || err.error?.message || 'Failed to upload images.');
-        this.cdr.markForCheck();
+        return;
       }
-    });
+      if (file.size > maxSizeBytes) {
+        this.errorMessage.set(`File '${file.name}' exceeds the 5MB size limit.`);
+        this.cdr.markForCheck();
+        return;
+      }
+
+      this.newFilesToUpload.push(file);
+      const previewUrl = URL.createObjectURL(file);
+      this.localPreviewUrls.push(previewUrl);
+    }
+    this.cdr.markForCheck();
   }
 
   onSubmit() {
@@ -537,6 +563,43 @@ export class ProductFormComponent implements OnInit, OnDestroy {
     this.successMessage.set('');
     this.errorMessage.set('');
 
+    // If there are new local files to upload, upload them first
+    if (this.newFilesToUpload.length > 0) {
+      this.uploadingImages.set(true);
+      this.cdr.markForCheck();
+
+      this.uploadService.uploadMultiple(this.newFilesToUpload, 'products').subscribe({
+        next: (res) => {
+          this.uploadingImages.set(false);
+          const urls = res.urls || res.data?.urls || [];
+          
+          // Append the new uploaded URLs to the FormArray
+          urls.forEach((url: string) => {
+            this.imagesFormArray.push(this.fb.control(url));
+          });
+          
+          // Clear the local files list since they are now uploaded
+          this.newFilesToUpload = [];
+          this.localPreviewUrls.forEach(url => URL.revokeObjectURL(url));
+          this.localPreviewUrls = [];
+
+          // Proceed with saving the product details
+          this.saveProductDetails();
+        },
+        error: (err) => {
+          this.uploadingImages.set(false);
+          this.submitting.set(false);
+          this.errorMessage.set(err.message || err.error?.message || 'Failed to upload images.');
+          this.cdr.markForCheck();
+        }
+      });
+    } else {
+      // No new files, just save the product details
+      this.saveProductDetails();
+    }
+  }
+
+  saveProductDetails() {
     const formVal = this.form.value;
 
     // Build payload matching backend schemas
