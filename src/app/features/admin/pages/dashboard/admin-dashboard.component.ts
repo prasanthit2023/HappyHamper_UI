@@ -332,11 +332,12 @@ export class AdminDashboardComponent implements OnInit {
     this.http.get<any>(`${environment.apiUrl}/admin/dashboard`).subscribe({
       next: (res) => {
         const d = res?.data || {};
-        const revTotal = d.revenue?.total ?? 0;
-        const totalRevFormatted = '₹' + (revTotal >= 100000 
-          ? (revTotal / 100000).toFixed(1) + 'L' 
-          : revTotal >= 1000 
-            ? (revTotal / 1000).toFixed(1) + 'K' 
+        // Backend returns flat fields: totalRevenue, totalOrders, totalCustomers, pendingOrders
+        const revTotal = d.totalRevenue ?? 0;
+        const totalRevFormatted = '₹' + (revTotal >= 100000
+          ? (revTotal / 100000).toFixed(1) + 'L'
+          : revTotal >= 1000
+            ? (revTotal / 1000).toFixed(1) + 'K'
             : revTotal.toLocaleString());
 
         this.kpiCards.set([
@@ -346,30 +347,29 @@ export class AdminDashboardComponent implements OnInit {
             svgPath: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z'
           },
           {
-            label: 'Total Orders', value: (d.orders?.total ?? 0).toLocaleString(), change: '8.3%', changePositive: true,
+            label: 'Total Orders', value: (d.totalOrders ?? 0).toLocaleString(), change: '8.3%', changePositive: true,
             iconBg: 'var(--color-accent-light)', iconColor: 'var(--color-accent)', progress: '55%', progressColor: 'var(--color-accent)',
             svgPath: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2'
           },
           {
-            label: 'Total Customers', value: (d.customers?.total ?? 0).toLocaleString(), change: '5.2%', changePositive: true,
+            label: 'Total Customers', value: (d.totalCustomers ?? 0).toLocaleString(), change: '5.2%', changePositive: true,
             iconBg: '#E6FFFA', iconColor: 'var(--color-green)', progress: '68%', progressColor: 'var(--color-green)',
             svgPath: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z'
           },
           {
-            label: 'Pending Returns', value: (d.pendingReturns ?? 0).toLocaleString(), change: '0%', changePositive: true,
+            label: 'Pending Orders', value: (d.pendingOrders ?? 0).toLocaleString(), change: '0%', changePositive: true,
             iconBg: '#FDF2F8', iconColor: 'var(--color-pink)', progress: '10%', progressColor: 'var(--color-pink)',
-            svgPath: 'M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15'
+            svgPath: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01'
           },
         ]);
         this.cdr.markForCheck();
       },
       error: () => {
-        // Fallback static cards if API fails
         this.kpiCards.set([
-          { label: 'Total Revenue', value: '₹0.0K', change: '0%', changePositive: true, iconBg: 'var(--color-primary-light)', iconColor: 'var(--color-primary)', progress: '0%', progressColor: 'var(--color-primary)', svgPath: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z' },
-          { label: 'Total Orders', value: '0', change: '0%', changePositive: true, iconBg: 'var(--color-accent-light)', iconColor: 'var(--color-accent)', progress: '0%', progressColor: 'var(--color-accent)', svgPath: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2' },
-          { label: 'Total Customers', value: '0', change: '0%', changePositive: true, iconBg: '#E6FFFA', iconColor: 'var(--color-green)', progress: '0%', progressColor: 'var(--color-green)', svgPath: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z' },
-          { label: 'Pending Returns', value: '0', change: '0%', changePositive: true, iconBg: '#FDF2F8', iconColor: 'var(--color-pink)', progress: '0%', progressColor: 'var(--color-pink)', svgPath: 'M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15' },
+          { label: 'Total Revenue',   value: '₹0',  change: '0%', changePositive: true, iconBg: 'var(--color-primary-light)', iconColor: 'var(--color-primary)', progress: '0%', progressColor: 'var(--color-primary)', svgPath: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z' },
+          { label: 'Total Orders',    value: '0',   change: '0%', changePositive: true, iconBg: 'var(--color-accent-light)', iconColor: 'var(--color-accent)', progress: '0%', progressColor: 'var(--color-accent)', svgPath: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2' },
+          { label: 'Total Customers', value: '0',   change: '0%', changePositive: true, iconBg: '#E6FFFA', iconColor: 'var(--color-green)', progress: '0%', progressColor: 'var(--color-green)', svgPath: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z' },
+          { label: 'Pending Orders',  value: '0',   change: '0%', changePositive: true, iconBg: '#FDF2F8', iconColor: 'var(--color-pink)', progress: '0%', progressColor: 'var(--color-pink)', svgPath: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01' },
         ]);
         this.cdr.markForCheck();
       }
@@ -377,37 +377,37 @@ export class AdminDashboardComponent implements OnInit {
   }
 
   private loadRevenueChartData() {
-    const periodParam = this.activePeriod().toLowerCase(); // daily, weekly, monthly
-    let days = 30;
-    if (periodParam === 'weekly') {
-      days = 90;
-    } else if (periodParam === 'monthly') {
-      days = 365;
-    }
+    // Map UI period names to backend period params
+    const periodMap: Record<string, string> = { 'Daily': '7d', 'Weekly': '30d', 'Monthly': '90d' };
+    const periodParam = periodMap[this.activePeriod()] ?? '30d';
 
-    this.http.get<any>(`${environment.apiUrl}/admin/analytics/revenue`, { params: { period: periodParam, days } }).subscribe({
+    this.http.get<any>(`${environment.apiUrl}/admin/analytics/revenue`, { params: { period: periodParam } }).subscribe({
       next: (res) => {
-        const data = res.data || [];
-        const maxVal = data.length > 0 ? Math.max(...data.map((item: any) => item.revenue), 1) : 1;
+        const data: any[] = res.data || [];
+        // Backend returns: { date: 'yyyy-MM-dd', revenue: number }
+        const maxVal = data.length > 0 ? Math.max(...data.map(item => item.revenue ?? 0), 1) : 1;
         let total = 0;
-        let totalOrders = 0;
 
-        const mappedBars = data.map((item: any) => {
-          total += item.revenue;
-          totalOrders += item.orders;
+        const mappedBars = data.map(item => {
+          total += item.revenue ?? 0;
+          // Format date label: show day/month only
+          const dateLabel = item.date
+            ? new Date(item.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })
+            : '';
           return {
-            label: item._id,
-            revenue: item.revenue,
-            orders: item.orders,
-            height: Math.round((item.revenue / maxVal) * 100)
+            label:   dateLabel,
+            revenue: item.revenue ?? 0,
+            orders:  item.orders  ?? 0,
+            height:  maxVal > 0 ? Math.round(((item.revenue ?? 0) / maxVal) * 100) : 0
           };
         });
 
         this.maxRevenue.set(maxVal);
         this.revenueData.set(mappedBars);
         this.totalPeriodRevenue.set(total);
-        this.totalPeriodOrders.set(totalOrders);
-        this.avgPeriodRevenue.set(totalOrders > 0 ? total / totalOrders : 0);
+        this.totalPeriodOrders.set(mappedBars.reduce((s, b) => s + b.orders, 0));
+        this.avgPeriodRevenue.set(mappedBars.filter(b => b.revenue > 0).length > 0
+          ? total / mappedBars.filter(b => b.revenue > 0).length : 0);
         this.cdr.markForCheck();
       },
       error: () => {
@@ -423,28 +423,30 @@ export class AdminDashboardComponent implements OnInit {
 
   private loadOrderStatusBreakdown() {
     const statusMap: Record<string, { label: string, color: string }> = {
-      placed: { label: 'Placed', color: 'var(--color-teal)' },
-      confirmed: { label: 'Confirmed', color: 'var(--color-orange)' },
-      processing: { label: 'Processing', color: 'var(--color-purple)' },
-      shipped: { label: 'Shipped', color: 'var(--color-teal)' },
-      out_for_delivery: { label: 'Out for Delivery', color: 'var(--color-green)' },
-      delivered: { label: 'Delivered', color: 'var(--color-green)' },
-      cancelled: { label: 'Cancelled', color: 'var(--color-pink)' },
-      return_requested: { label: 'Return Requested', color: 'var(--color-orange)' },
-      returned: { label: 'Returned', color: 'var(--color-text-muted)' }
+      placed:            { label: 'Placed',           color: 'var(--color-teal)' },
+      confirmed:         { label: 'Confirmed',         color: 'var(--color-orange)' },
+      processing:        { label: 'Processing',        color: 'var(--color-purple)' },
+      shipped:           { label: 'Shipped',           color: 'var(--color-teal)' },
+      out_for_delivery:  { label: 'Out for Delivery',  color: 'var(--color-green)' },
+      delivered:         { label: 'Delivered',         color: 'var(--color-green)' },
+      cancelled:         { label: 'Cancelled',         color: 'var(--color-pink)' },
+      return_requested:  { label: 'Return Requested',  color: 'var(--color-orange)' },
+      returned:          { label: 'Returned',          color: 'var(--color-text-muted)' }
     };
 
     this.http.get<any>(`${environment.apiUrl}/admin/analytics/orders-breakdown`).subscribe({
       next: (res) => {
-        const raw = res.data || [];
-        const total = raw.reduce((sum: number, curr: any) => sum + curr.count, 0);
-        
-        const mappedStatuses = raw.map((item: any) => {
-          const config = statusMap[item._id] || { label: item._id.toUpperCase(), color: 'var(--color-text-muted)' };
+        const raw: any[] = res.data || [];
+        const total = raw.reduce((sum, curr) => sum + (curr.count ?? 0), 0);
+
+        // Backend returns { status: string, count: number } (not _id)
+        const mappedStatuses = raw.map(item => {
+          const key = (item.status ?? item._id ?? '').toLowerCase();
+          const config = statusMap[key] || { label: key.toUpperCase(), color: 'var(--color-text-muted)' };
           return {
             label: config.label,
-            count: item.count,
-            pct: total > 0 ? Math.round((item.count / total) * 100) : 0,
+            count: item.count ?? 0,
+            pct:   total > 0 ? Math.round(((item.count ?? 0) / total) * 100) : 0,
             color: config.color
           };
         });

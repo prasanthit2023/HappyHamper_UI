@@ -48,22 +48,20 @@ import { AuthStore } from '../../../../state/auth.store';
           </div>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label class="block text-xs font-semibold text-neutral-400 mb-1.5">First Name</label>
-            <input type="text" formControlName="firstName" class="input-field py-2" />
-            @if (form.get('firstName')?.invalid && form.get('firstName')?.touched) {
-              <p class="text-red-500 text-[10px] mt-1">First name is required.</p>
-            }
-          </div>
-
-          <div>
-            <label class="block text-xs font-semibold text-neutral-400 mb-1.5">Last Name</label>
-            <input type="text" formControlName="lastName" class="input-field py-2" />
-            @if (form.get('lastName')?.invalid && form.get('lastName')?.touched) {
-              <p class="text-red-500 text-[10px] mt-1">Last name is required.</p>
-            }
-          </div>
+        <div>
+          <label class="block text-xs font-semibold text-neutral-400 mb-1.5">Full Name</label>
+          <input type="text" formControlName="fullName" class="input-field py-2" placeholder="e.g. Priya Sharma" maxlength="100" />
+          @if (form.get('fullName')?.invalid && form.get('fullName')?.touched) {
+            <p class="text-red-500 text-[10px] mt-1">
+              @if (form.get('fullName')?.errors?.['required']) {
+                Full name is required.
+              } @else if (form.get('fullName')?.errors?.['maxlength']) {
+                Full name must be at most 100 characters.
+              } @else if (form.get('fullName')?.errors?.['pattern']) {
+                Full name must contain only letters and spaces (no special characters or numbers).
+              }
+            </p>
+          }
         </div>
 
         <div>
@@ -98,17 +96,23 @@ export class ProfileEditComponent implements OnInit {
   selectedAvatar = signal<string>('#7C83C3');
 
   form = this.fb.group({
-    firstName: ['', [Validators.required, Validators.maxLength(50)]],
-    lastName: ['', [Validators.required, Validators.maxLength(50)]],
-    phone: ['', [Validators.required, Validators.pattern(/^\+?[1-9]\d{6,14}$/)]],
+    fullName: [
+      '',
+      [
+        Validators.required,
+        Validators.maxLength(100),
+        Validators.pattern(/^[a-zA-Z\s]+$/),
+      ],
+    ],
+    phone: ['', [Validators.required, Validators.pattern(/^[6-9]\d{9}$/)]],
   });
 
   ngOnInit() {
     const user = this.authStore.user();
     if (user) {
+      const full = user.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : '';
       this.form.patchValue({
-        firstName: user.firstName,
-        lastName: user.lastName,
+        fullName: full,
         phone: user.phone || '',
       });
       if (user.avatar) {
@@ -126,8 +130,7 @@ export class ProfileEditComponent implements OnInit {
     this.successMessage.set('');
 
     const payload = {
-      firstName: this.form.value.firstName!.trim(),
-      lastName: this.form.value.lastName!.trim(),
+      fullName: this.form.value.fullName!.trim(),
       phone: this.form.value.phone!.trim(),
       avatar: this.selectedAvatar(),
     };

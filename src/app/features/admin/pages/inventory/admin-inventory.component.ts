@@ -107,7 +107,8 @@ import { ActivatedRoute } from '@angular/router';
                 <tr [class.bg-red-50]="item.stock === 0" [class.bg-amber-50]="item.stock > 0 && item.stock <= item.lowStockThreshold">
                   <td>
                     <div class="flex items-center gap-3">
-                      <img [src]="item.product?.images?.[0] || '/assets/placeholder-product.jpg'"
+                      <img [src]="item.product?.images?.[0] || '/assets/placeholder-product.svg'"
+                           (error)="$any($event.target).src='/assets/placeholder-product.svg'"
                            class="w-10 h-10 rounded-lg object-cover flex-shrink-0 border"
                            style="border-color: var(--color-border);" alt="" />
                       <span class="font-medium text-sm" style="color: var(--color-text);">

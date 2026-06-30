@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal, OnInit } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { AuthStore } from '../../../../state/auth.store';
@@ -43,6 +43,12 @@ import { AuthStore } from '../../../../state/auth.store';
           @if (isInvalid('otp')) {
             <p class="text-red-500 text-xs mt-1">Enter the 6-digit OTP.</p>
           }
+          @if (receivedDevOtp()) {
+            <div class="p-3 bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl flex items-center justify-between text-xs mt-2 text-neutral-600 dark:text-neutral-400 animate-fade-in">
+              <span>[DEV TEST OTP]: <span class="text-[var(--color-primary)] font-mono text-xs font-bold">{{ receivedDevOtp() }}</span></span>
+              <button type="button" class="text-primary hover:underline font-semibold" (click)="autofillDevOtp()">Autofill</button>
+            </div>
+          }
         </div>
 
         <button type="submit" class="btn-primary w-full py-3.5 text-base" [disabled]="form.invalid || authStore.loading()">
@@ -69,22 +75,38 @@ import { AuthStore } from '../../../../state/auth.store';
     </div>
   `,
 })
-export class VerifyOtpComponent {
+export class VerifyOtpComponent implements OnInit {
   readonly authStore = inject(AuthStore);
   private readonly fb = inject(FormBuilder);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
 
   readonly successMessage = signal('');
+  readonly receivedDevOtp = signal<string | null>(null);
 
   form = this.fb.group({
     phone: [this.route.snapshot.queryParamMap.get('phone') || '', [Validators.required, Validators.pattern(/^\+?[1-9]\d{6,14}$/)]],
     otp: ['', [Validators.required, Validators.pattern(/^\d{6}$/)]],
   });
 
+  ngOnInit() {
+    // Automatically trigger sending the OTP when landing on this page
+    const phone = this.form.value.phone;
+    if (phone && this.form.get('phone')?.valid) {
+      this.resendOtp(true);
+    }
+  }
+
   isInvalid(controlName: string) {
     const control = this.form.get(controlName);
     return !!control && control.invalid && (control.dirty || control.touched);
+  }
+
+  autofillDevOtp() {
+    const otp = this.receivedDevOtp();
+    if (otp) {
+      this.form.patchValue({ otp });
+    }
   }
 
   onSubmit() {
@@ -103,13 +125,21 @@ export class VerifyOtpComponent {
     });
   }
 
-  resendOtp() {
+  resendOtp(isAuto = false) {
     const phone = this.form.value.phone?.trim();
     if (!phone) return;
 
-    this.authStore.resendOtp(phone).subscribe((result) => {
-      if (!result) return;
-      this.successMessage.set('A fresh OTP has been sent via WhatsApp.');
+    this.authStore.resendOtp(phone).subscribe((res: any) => {
+      if (!res) return;
+      if (!isAuto) {
+        this.successMessage.set('A fresh OTP has been sent via WhatsApp.');
+      } else {
+        this.successMessage.set('OTP automatically requested.');
+      }
+      const otpVal = res?.otp_dev || res?.data?.otp_dev || res?.otp || res?.data?.otp;
+      if (otpVal) {
+        this.receivedDevOtp.set(otpVal);
+      }
     });
   }
 }

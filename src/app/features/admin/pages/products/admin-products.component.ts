@@ -140,10 +140,11 @@ import { ConfirmService } from '../../../../core/services/confirm.service';
                   </td>
                   <td>
                     <div class="flex items-center gap-3">
-                      <img [src]="p.images?.[0] || '/assets/placeholder-product.jpg'"
-                           class="w-12 h-12 object-cover rounded-xl flex-shrink-0 border"
-                           style="border-color: var(--color-border);"
-                           [alt]="p.title" />
+                       <img [src]="p.images?.[0] || '/assets/placeholder-product.svg'"
+                            (error)="$any($event.target).src='/assets/placeholder-product.svg'"
+                            class="w-12 h-12 object-cover rounded-xl flex-shrink-0 border"
+                            style="border-color: var(--color-border);"
+                            [alt]="p.title" />
                       <div class="min-w-0">
                         <span class="font-semibold text-sm block truncate max-w-[180px]" 
                               style="color: var(--color-text);" 

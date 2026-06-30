@@ -5,7 +5,6 @@ import { FormBuilder, ReactiveFormsModule, Validators, FormArray } from '@angula
 import { HttpClient } from '@angular/common/http';
 import { Subscription } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
-import { ImageUploadService } from '../../../../core/services/image-upload.service';
 
 @Component({
   selector: 'bb-product-form',
@@ -54,7 +53,7 @@ import { ImageUploadService } from '../../../../core/services/image-upload.servi
             <select formControlName="categoryId" class="input-field py-2">
               <option value="">Select Category</option>
               @for (cat of categories(); track cat.id) {
-                <option [value]="cat.id">{{ cat.name }}</option>
+                <option [value]="cat.id.toString()">{{ cat.name }}</option>
               }
             </select>
           </div>
@@ -183,36 +182,27 @@ import { ImageUploadService } from '../../../../core/services/image-upload.servi
           </div>
 
           <!-- Thumbnails grid -->
-          @if (imagesFormArray.controls.length > 0 || localPreviewUrls.length > 0) {
+          @if (imagesFormArray.controls.length > 0) {
+            <div class="text-xs text-neutral-500 font-semibold mb-1">
+              Uploaded Images ({{ imagesFormArray.controls.length }}):
+            </div>
             <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 pt-2">
-              <!-- Existing Images -->
               @for (imgCtrl of imagesFormArray.controls; track $index) {
-                <div class="relative group aspect-square rounded-xl overflow-hidden border border-neutral-200 bg-neutral-50 shadow-sm">
-                  <img [src]="imgCtrl.value" class="w-full h-full object-cover" alt="Product image preview" />
-                  <button
-                    type="button"
-                    (click)="removeExistingImage($index)"
-                    class="absolute top-1 right-1 w-6 h-6 rounded-full bg-red-500/90 text-white flex items-center justify-center shadow-sm opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:scale-105"
-                    title="Remove Image"
-                  >
-                    <i class="pi pi-times text-[10px]"></i>
-                  </button>
-                </div>
-              }
-
-              <!-- New Previews (Pending Upload) -->
-              @for (previewUrl of localPreviewUrls; track $index) {
-                <div class="relative group aspect-square rounded-xl overflow-hidden border border-neutral-200 bg-neutral-50 shadow-sm ring-2 ring-primary-500/50">
-                  <img [src]="previewUrl" class="w-full h-full object-cover" alt="New image preview" />
-                  <button
-                    type="button"
-                    (click)="removeNewImage($index)"
-                    class="absolute top-1 right-1 w-6 h-6 rounded-full bg-red-500/90 text-white flex items-center justify-center shadow-sm opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:scale-105"
-                    title="Remove Image"
-                  >
-                    <i class="pi pi-times text-[10px]"></i>
-                  </button>
-                  <span class="absolute bottom-1 left-1 bg-primary-500 text-white text-[8px] font-bold px-1.5 py-0.5 rounded-md shadow-sm">NEW</span>
+                <div class="flex flex-col items-center">
+                  <div class="relative group rounded-xl overflow-hidden border border-neutral-200 bg-neutral-50 shadow-sm w-full" style="aspect-ratio: 1/1; min-height: 100px;">
+                    <img [src]="imgCtrl.value" class="w-full h-full object-cover" alt="Product image preview" />
+                    <button
+                      type="button"
+                      (click)="removeImageLink($index)"
+                      class="absolute top-1 right-1 w-6 h-6 rounded-full bg-red-500/90 text-white flex items-center justify-center shadow-sm opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:scale-105"
+                      title="Remove Image"
+                    >
+                      <i class="pi pi-times text-[10px]"></i>
+                    </button>
+                  </div>
+                  <div class="text-[9px] text-neutral-400 truncate w-full mt-1 text-center" [title]="imgCtrl.value">
+                    {{ imgCtrl.value }}
+                  </div>
                 </div>
               }
             </div>
@@ -245,7 +235,6 @@ export class ProductFormComponent implements OnInit, OnDestroy {
   private fb = inject(FormBuilder);
   private http = inject(HttpClient);
   private cdr = inject(ChangeDetectorRef);
-  private uploadService = inject(ImageUploadService);
 
   private routeSub!: Subscription;
 
@@ -257,9 +246,6 @@ export class ProductFormComponent implements OnInit, OnDestroy {
   errorMessage = signal<string>('');
   uploadingImages = signal<boolean>(false);
   isDragging = signal<boolean>(false);
-
-  newFilesToUpload: File[] = [];
-  localPreviewUrls: string[] = [];
 
   readonly colorHexMap: Record<string, string> = {
     red: '#dc2626',
@@ -315,6 +301,19 @@ export class ProductFormComponent implements OnInit, OnDestroy {
     return sku;
   }
 
+  uiLogs = signal<string[]>([]);
+
+  addUiLog(msg: string) {
+    console.log(msg);
+    this.uiLogs.update((logs) => [...logs, `[${new Date().toLocaleTimeString()}] ${msg}`]);
+    this.cdr.detectChanges();
+  }
+
+  clearUiLogs() {
+    this.uiLogs.set([]);
+    this.cdr.detectChanges();
+  }
+
   form = this.fb.group({
     title: ['', [Validators.required]],
     sku: ['', [Validators.required]],
@@ -364,32 +363,38 @@ export class ProductFormComponent implements OnInit, OnDestroy {
           ctrl.get('sku')?.setValue(genSku, { emitEvent: false });
         }
       });
-      this.cdr.markForCheck();
+      this.cdr.detectChanges();
     });
   }
 
   ngOnDestroy() {
     if (this.routeSub) this.routeSub.unsubscribe();
-    this.localPreviewUrls.forEach(url => URL.revokeObjectURL(url));
   }
 
   loadCategories() {
     this.http.get<any>(`${environment.apiUrl}/categories`).subscribe({
       next: (res) => {
         this.categories.set(res.data || []);
-        this.cdr.markForCheck();
+        this.cdr.detectChanges();
       },
     });
   }
 
   loadProductDetails(id: string) {
+    this.addUiLog('[DEBUG] loadProductDetails starting for ID: ' + id);
     this.http.get<any>(`${environment.apiUrl}/products/${id}`).subscribe({
       next: (res) => {
         const prod = res.data;
+        this.addUiLog('[DEBUG] Load product details response data keys: ' + Object.keys(prod || {}).join(', '));
+        if (!prod) {
+          this.addUiLog('[WARN] Product data is empty.');
+          return;
+        }
+
         this.form.patchValue({
           title: prod.title,
           sku: prod.sku,
-          categoryId: prod.categoryId?._id || prod.categoryId?.id || prod.categoryId || '',
+          categoryId: String(prod.categoryId?._id || prod.categoryId?.id || prod.categoryId || ''),
           price: prod.price,
           discountPrice: prod.discountPrice || null,
           brand: prod.brand || '',
@@ -403,11 +408,14 @@ export class ProductFormComponent implements OnInit, OnDestroy {
 
         // Set Images
         this.imagesFormArray.clear();
+        this.addUiLog('[DEBUG] Cleared images form array. Current images list: ' + JSON.stringify(prod.images));
         if (prod.images?.length > 0) {
-          prod.images.forEach((img: string) => {
+          prod.images.forEach((img: string, idx: number) => {
             this.imagesFormArray.push(this.fb.control(img));
+            this.addUiLog(`[DEBUG] Pushed image index ${idx} to FormArray: ${img}`);
           });
         }
+        this.addUiLog('[DEBUG] Final images FormArray length: ' + this.imagesFormArray.length);
 
         // Set Variants
         this.variantsFormArray.clear();
@@ -438,15 +446,19 @@ export class ProductFormComponent implements OnInit, OnDestroy {
               }
             };
 
-            group.get('size')?.valueChanges.subscribe(() => updateSkuAndHex());
-            group.get('color')?.valueChanges.subscribe(() => updateSkuAndHex());
+            group.get('size')?.valueChanges.subscribe(updateSkuAndHex);
+            group.get('color')?.valueChanges.subscribe(updateSkuAndHex);
 
             this.variantsFormArray.push(group);
           });
         }
 
-        this.cdr.markForCheck();
+        this.cdr.detectChanges();
+        this.addUiLog('[DEBUG] Completed loadProductDetails and triggered change detection.');
       },
+      error: (err) => {
+        this.addUiLog('[ERROR] Failed to load product details: ' + JSON.stringify(err));
+      }
     });
   }
 
@@ -491,22 +503,18 @@ export class ProductFormComponent implements OnInit, OnDestroy {
     this.imagesFormArray.push(this.fb.control(''));
   }
 
-  removeExistingImage(index: number) {
+  removeImageLink(index: number) {
     this.imagesFormArray.removeAt(index);
-  }
-
-  removeNewImage(index: number) {
-    const previewUrl = this.localPreviewUrls[index];
-    URL.revokeObjectURL(previewUrl);
-    this.localPreviewUrls.splice(index, 1);
-    this.newFilesToUpload.splice(index, 1);
-    this.cdr.markForCheck();
   }
 
   onFileSelected(event: Event) {
     const input = event.target as HTMLInputElement;
-    if (input.files) {
-      this.handleSelectedFiles(input.files);
+    if (input.files && input.files.length > 0) {
+      this.addUiLog(`[DEBUG] onFileSelected event fired: ${input.files.length} file(s) chosen.`);
+      this.uploadFiles(input.files);
+      input.value = ''; // Clear value to allow selecting same file again
+    } else {
+      this.addUiLog('[DEBUG] onFileSelected event fired but no files chosen.');
     }
   }
 
@@ -527,34 +535,45 @@ export class ProductFormComponent implements OnInit, OnDestroy {
     event.stopPropagation();
     this.isDragging.set(false);
     if (event.dataTransfer?.files) {
-      this.handleSelectedFiles(event.dataTransfer.files);
+      this.uploadFiles(event.dataTransfer.files);
     }
   }
 
-  handleSelectedFiles(files: FileList | File[]) {
-    if (!files || files.length === 0) return;
-    const filesArray = Array.from(files);
-
-    for (const file of filesArray) {
-      const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'];
-      const maxSizeBytes = 5 * 1024 * 1024; // 5MB
-
-      if (!allowedTypes.includes(file.type)) {
-        this.errorMessage.set(`File type '${file.type}' is not supported. Supported: JPG, PNG, GIF, WebP, SVG`);
-        this.cdr.markForCheck();
-        return;
-      }
-      if (file.size > maxSizeBytes) {
-        this.errorMessage.set(`File '${file.name}' exceeds the 5MB size limit.`);
-        this.cdr.markForCheck();
-        return;
-      }
-
-      this.newFilesToUpload.push(file);
-      const previewUrl = URL.createObjectURL(file);
-      this.localPreviewUrls.push(previewUrl);
+  uploadFiles(files: FileList | File[]) {
+    if (!files || files.length === 0) {
+      this.addUiLog('[WARN] uploadFiles called with empty file list.');
+      return;
     }
-    this.cdr.markForCheck();
+        this.addUiLog('[DEBUG] uploadFiles started for ' + files.length + ' file(s).');
+    this.uploadingImages.set(true);
+    this.errorMessage.set('');
+    this.cdr.detectChanges();
+
+    const formData = new FormData();
+    for (let i = 0; i < files.length; i++) {
+      formData.append('files', files[i]);
+      this.addUiLog(`[DEBUG] Appending file to FormData: ${files[i].name} (${files[i].size} bytes, type: ${files[i].type})`);
+    }
+
+    this.http.post<any>(`${environment.apiUrl}/upload/multiple`, formData).subscribe({
+      next: (res) => {
+        this.addUiLog('[DEBUG] uploadFiles success. Server response: ' + JSON.stringify(res));
+        const newUrls: string[] = res.urls || res.data?.urls || (Array.isArray(res.data) ? res.data : []);
+        this.addUiLog('[DEBUG] Extracted URLs: ' + JSON.stringify(newUrls));
+        newUrls.forEach(url => {
+          this.imagesFormArray.push(this.fb.control(url));
+          this.addUiLog('[DEBUG] Pushed URL to FormArray: ' + url);
+        });
+        this.uploadingImages.set(false);
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.addUiLog('[ERROR] uploadFiles failed: ' + JSON.stringify(err));
+        this.errorMessage.set('Failed to upload images.');
+        this.uploadingImages.set(false);
+        this.cdr.detectChanges();
+      }
+    });
   }
 
   onSubmit() {
@@ -563,50 +582,13 @@ export class ProductFormComponent implements OnInit, OnDestroy {
     this.successMessage.set('');
     this.errorMessage.set('');
 
-    // If there are new local files to upload, upload them first
-    if (this.newFilesToUpload.length > 0) {
-      this.uploadingImages.set(true);
-      this.cdr.markForCheck();
-
-      this.uploadService.uploadMultiple(this.newFilesToUpload, 'products').subscribe({
-        next: (res) => {
-          this.uploadingImages.set(false);
-          const urls = res.urls || res.data?.urls || [];
-          
-          // Append the new uploaded URLs to the FormArray
-          urls.forEach((url: string) => {
-            this.imagesFormArray.push(this.fb.control(url));
-          });
-          
-          // Clear the local files list since they are now uploaded
-          this.newFilesToUpload = [];
-          this.localPreviewUrls.forEach(url => URL.revokeObjectURL(url));
-          this.localPreviewUrls = [];
-
-          // Proceed with saving the product details
-          this.saveProductDetails();
-        },
-        error: (err) => {
-          this.uploadingImages.set(false);
-          this.submitting.set(false);
-          this.errorMessage.set(err.message || err.error?.message || 'Failed to upload images.');
-          this.cdr.markForCheck();
-        }
-      });
-    } else {
-      // No new files, just save the product details
-      this.saveProductDetails();
-    }
-  }
-
-  saveProductDetails() {
     const formVal = this.form.value;
 
     // Build payload matching backend schemas
     const payload = {
       title: formVal.title,
       sku: formVal.sku,
-      categoryId: formVal.categoryId,
+      categoryId: formVal.categoryId ? Number(formVal.categoryId) : 0,
       price: Number(formVal.price),
       discountPrice: formVal.discountPrice ? Number(formVal.discountPrice) : undefined,
       brand: formVal.brand,
@@ -615,12 +597,16 @@ export class ProductFormComponent implements OnInit, OnDestroy {
       material: formVal.material,
       careInstructions: formVal.careInstructions,
       tags: formVal.tagsInput ? formVal.tagsInput.split(',').map((t: string) => t.trim()).filter(Boolean) : [],
-      variants: formVal.variants || [],
+      variants: (formVal.variants || []).map((v: any) => ({
+        sku: v.sku,
+        size: v.size || 'One Size',
+        color: v.color || 'Natural',
+        colorHex: v.colorHex || '#ede0d4',
+        stock: Number(v.stock || 0),
+      })),
       images: (formVal.images as any[] || []).filter((i: any) => !!i),
       isPublished: !!formVal.isPublished,
     };
-
-    console.log('DEBUG: Submitting product payload:', payload);
 
     const id = this.productId();
     const request$ = this.editMode()
@@ -632,12 +618,12 @@ export class ProductFormComponent implements OnInit, OnDestroy {
         this.submitting.set(false);
         this.successMessage.set(this.editMode() ? 'Product updated successfully.' : 'Product created successfully.');
         setTimeout(() => this.router.navigate(['/admin/products']), 1500);
-        this.cdr.markForCheck();
+        this.cdr.detectChanges();
       },
       error: (err) => {
         this.submitting.set(false);
         this.errorMessage.set(err.error?.message || 'Failed to save product details.');
-        this.cdr.markForCheck();
+        this.cdr.detectChanges();
       },
     });
   }

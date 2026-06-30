@@ -40,7 +40,7 @@ import { AuthStore } from '../../../../state/auth.store';
         <div class="relative">
           <input
             type="text"
-            placeholder="Search by name, phone or email..."
+            placeholder="Search by name or phone..."
             [ngModel]="searchTerm()"
             (ngModelChange)="searchTerm.set($event)"
             class="input-field py-2.5 pl-9 text-xs"
@@ -100,7 +100,6 @@ import { AuthStore } from '../../../../state/auth.store';
               <tr>
                 <th>Customer</th>
                 <th>Phone</th>
-                <th>Email</th>
                 <th>Joined</th>
                 <th>Last Order</th>
                 <th>Total Spent</th>
@@ -129,7 +128,6 @@ import { AuthStore } from '../../../../state/auth.store';
                     </div>
                   </td>
                   <td class="text-xs font-mono" style="color: var(--color-text-muted);">{{ c.phone || '—' }}</td>
-                  <td class="text-xs" style="color: var(--color-text-muted);">{{ c.email || '—' }}</td>
                   <td class="text-xs" style="color: var(--color-text-muted);">
                     {{ c.createdAt ? (c.createdAt | date:'dd MMM yyyy') : '—' }}
                   </td>
@@ -228,9 +226,9 @@ export class AdminCustomersComponent implements OnInit {
   exportCSV() {
     const rows = this.filtered();
     const csv  = [
-      ['Name','Phone','Email','Verified','Status','Joined'],
+      ['Name','Phone','Verified','Status','Joined'],
       ...rows.map(c => [
-        `${c.firstName} ${c.lastName}`, c.phone || '', c.email || '',
+        `${c.firstName} ${c.lastName}`, c.phone || '',
         c.isVerified ? 'Yes' : 'No', c.isActive ? 'Active' : 'Suspended',
         c.createdAt ? new Date(c.createdAt).toLocaleDateString() : ''
       ])

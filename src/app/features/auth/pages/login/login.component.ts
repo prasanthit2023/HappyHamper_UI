@@ -20,7 +20,7 @@ import { AuthStore } from '../../../../state/auth.store';
       <div class="flex border border-[var(--color-border)] mb-6 bg-[var(--color-bg-subtle)] p-1 rounded-xl">
         <button
           type="button"
-          (click)="loginMode.set('phone')"
+          (click)="switchMode('phone')"
           class="flex-1 py-2.5 text-xs font-bold rounded-lg transition-all duration-200"
           [class.bg-white]="loginMode() === 'phone'"
           [class.shadow-sm]="loginMode() === 'phone'"
@@ -33,7 +33,7 @@ import { AuthStore } from '../../../../state/auth.store';
         </button>
         <button
           type="button"
-          (click)="loginMode.set('password')"
+          (click)="switchMode('password')"
           class="flex-1 py-2.5 text-xs font-bold rounded-lg transition-all duration-200"
           [class.bg-white]="loginMode() === 'password'"
           [class.shadow-sm]="loginMode() === 'password'"
@@ -48,7 +48,7 @@ import { AuthStore } from '../../../../state/auth.store';
 
       <!-- Error alert -->
       @if (authStore.error()) {
-        <div class="bg-red-50 border border-red-200 text-red-650 px-4 py-3 rounded-xl text-xs font-semibold mb-6 animate-fade-in" role="alert">
+        <div class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl text-xs font-semibold mb-6 animate-fade-in" role="alert">
           {{ authStore.error() }}
         </div>
       }
@@ -65,6 +65,9 @@ import { AuthStore } from '../../../../state/auth.store';
                 placeholder=" "
                 class="floating-label-input"
                 autocomplete="tel"
+                inputmode="numeric"
+                maxlength="10"
+                (keypress)="allowOnlyDigits($event)"
                 [class.border-red-400]="isPhoneInvalid()"
               />
               <label
@@ -75,7 +78,7 @@ import { AuthStore } from '../../../../state/auth.store';
               </label>
               @if (isPhoneInvalid()) {
                 <p class="text-red-500 text-[10px] mt-1.5 flex items-center gap-1 font-semibold">
-                  Please enter a valid phone number (e.g. +919876543210).
+                Please enter a valid 10-digit mobile number.
                 </p>
               }
             </div>
@@ -175,12 +178,15 @@ import { AuthStore } from '../../../../state/auth.store';
         <form [formGroup]="phonePasswordForm" (ngSubmit)="onPhonePasswordLogin()" class="space-y-5" novalidate>
           <div class="floating-label-group">
             <input
-              id="phone-login"
+              id="phone"
               type="tel"
               formControlName="phone"
               placeholder=" "
               class="floating-label-input"
               autocomplete="tel"
+              inputmode="numeric"
+              maxlength="10"
+              (keypress)="allowOnlyDigits($event)"
               [class.border-red-400]="isPassPhoneInvalid()"
             />
             <label
@@ -259,7 +265,7 @@ export class LoginComponent {
   receivedDevOtp: string | null = null;
 
   phoneForm = this.fb.group({
-    phone: ['', [Validators.required, Validators.pattern(/^\+?[1-9]\d{6,14}$/)]],
+    phone: ['', [Validators.required, Validators.pattern(/^[6-9]\d{9}$/)]],
   });
 
   otpForm = this.fb.group({
@@ -267,9 +273,19 @@ export class LoginComponent {
   });
 
   phonePasswordForm = this.fb.group({
-    phone: ['', [Validators.required, Validators.pattern(/^\+?[1-9]\d{6,14}$/)]],
+    phone: ['', [Validators.required, Validators.pattern(/^[6-9]\d{9}$/)]],
     password: ['', [Validators.required]],
   });
+
+  switchMode(mode: 'phone' | 'password') {
+    this.loginMode.set(mode);
+    this.authStore.error.set(null);
+    this.step.set('phone');
+  }
+
+  allowOnlyDigits(event: KeyboardEvent): boolean {
+    return /[0-9]/.test(event.key);
+  }
 
   isPhoneInvalid(): boolean {
     const ctrl = this.phoneForm.get('phone');
@@ -300,7 +316,7 @@ export class LoginComponent {
     this.authStore.sendPhoneOtp(phone).subscribe((res: any) => {
       if (res) {
         this.step.set('otp');
-        const otpVal = res?.otp || res?.data?.otp;
+        const otpVal = res?.otp_dev || res?.data?.otp_dev || res?.otp || res?.data?.otp;
         if (otpVal) {
           this.receivedDevOtp = otpVal;
         }

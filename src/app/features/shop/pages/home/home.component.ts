@@ -93,12 +93,12 @@ import { environment } from '../../../../../environments/environment';
           <div class="relative hidden lg:flex items-center justify-center">
             <div class="relative w-full max-w-[440px]">
               @if (activeHero()?.imageUrl) {
-                <div class="relative rounded-3xl overflow-hidden shadow-float aspect-[4/5] bg-neutral-50 border border-beige transition-all duration-500 animate-fade-in">
+                <div class="relative rounded-3xl overflow-hidden shadow-float aspect-[4/5] bg-neutral-50 border border-beige transition-all duration-500 animate-fade-in" style="aspect-ratio: 4/5;">
                   <img [src]="activeHero()?.imageUrl" alt="Featured Happy Hamper Collection" class="w-full h-full object-cover rounded-3xl" />
                 </div>
               } @else {
                 <!-- Fallback premium layout visual -->
-                <div class="relative rounded-3xl overflow-hidden shadow-float aspect-[4/5] flex items-center justify-center bg-white border border-beige">
+                <div class="relative rounded-3xl overflow-hidden shadow-float aspect-[4/5] flex items-center justify-center bg-white border border-beige" style="aspect-ratio: 4/5;">
                   <div class="text-center space-y-4 px-8 w-full">
                     <div class="w-24 h-24 mx-auto rounded-2xl flex items-center justify-center bg-neutral-50 border border-beige shadow-sm">
                       <!-- Custom Bluebell Flower SVG -->
@@ -342,7 +342,7 @@ import { environment } from '../../../../../environments/environment';
               <div class="card p-5 bg-white border border-beige flex flex-col justify-between hover-lift relative overflow-hidden group">
                 <span class="absolute top-4 right-4 bg-primary text-white text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider z-10">Best Value</span>
                 
-                <a [routerLink]="['/products', p.slug]" class="block aspect-[4/3] rounded-xl overflow-hidden bg-neutral-50 mb-5 relative">
+                <a [routerLink]="['/products', p.slug]" class="block aspect-[4/3] rounded-xl overflow-hidden bg-neutral-50 mb-5 relative" style="aspect-ratio: 4/3;">
                   <img [src]="p.images?.[0]" [alt]="p.title" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                 </a>
 
@@ -497,7 +497,7 @@ import { environment } from '../../../../../environments/environment';
             @for (item of recentlyViewedService.items(); track $any(item)._id || $any(item).id) {
               <div class="flex-shrink-0 w-48 card p-3 bg-white flex flex-col justify-between hover-lift relative overflow-hidden group border" style="border-color: var(--color-border);">
                 <a [routerLink]="['/products', $any(item).slug]" class="block h-full">
-                  <div class="aspect-[4/3] rounded-xl overflow-hidden bg-neutral-50 mb-3 relative">
+                  <div class="aspect-[4/3] rounded-xl overflow-hidden bg-neutral-50 mb-3 relative" style="aspect-ratio: 4/3;">
                     <img [src]="$any(item).images?.[0] || '/assets/placeholder-product.jpg'" [alt]="$any(item).title" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                   </div>
                   <h3 class="font-semibold text-xs text-neutral-900 group-hover:text-primary transition-colors truncate mb-1">{{ $any(item).title }}</h3>

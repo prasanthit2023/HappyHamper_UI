@@ -235,7 +235,10 @@ export class CartDrawerComponent {
   readonly Math = Math;
 
   updateQty(item: any, qty: number) {
-    if (qty < 1) return;
+    if (qty < 1) {
+      this.removeItem(item.variantSku);
+      return;
+    }
     this.cartStore.updateQuantity(item.variantSku, qty).subscribe();
   }
 

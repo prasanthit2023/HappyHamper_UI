@@ -403,7 +403,10 @@ export class CartComponent {
   });
 
   updateQty(item: CartItem, quantity: number) {
-    if (quantity < 1) return;
+    if (quantity < 1) {
+      this.removeItem(item.variantSku);
+      return;
+    }
     this.cartStore.updateQuantity(item.variantSku, quantity).subscribe();
   }
 

@@ -50,7 +50,7 @@ import { environment } from '../../../../../environments/environment';
                 <i class="pi pi-times"></i>
               </button>
 
-              <a [routerLink]="['/products', p.slug]" class="block relative aspect-[4/5] bg-neutral-50 dark:bg-neutral-900">
+              <a [routerLink]="['/products', p.slug]" class="block relative aspect-[4/5] bg-neutral-50 dark:bg-neutral-900" style="aspect-ratio: 4/5;">
                 <img [src]="p.images?.[0]" class="w-full h-full object-cover" [alt]="p.title" />
               </a>
 

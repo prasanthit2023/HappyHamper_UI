@@ -16,7 +16,7 @@ import { ToastService } from '../../../core/services/toast.service';
       <div class="card-product group relative">
 
         <!-- Product Image -->
-        <a [routerLink]="['/products', product.slug]" class="block relative overflow-hidden aspect-[3/4]" [attr.aria-label]="product.title">
+        <a [routerLink]="['/products', product.slug]" class="block relative overflow-hidden aspect-[3/4]" style="aspect-ratio: 3/4;" [attr.aria-label]="product.title">
 
           <!-- Badges on top-left (stacked to prevent overlap with heart button) -->
           <div class="absolute top-3 left-3 z-10 flex flex-col gap-1.5 items-start pointer-events-none">

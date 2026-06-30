@@ -18,7 +18,7 @@ import { AuthStore } from '../../../../state/auth.store';
 
       <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-5" novalidate>
         @if (authStore.error()) {
-          <div class="bg-red-50 border border-red-200 text-red-655 px-4 py-3 rounded-xl text-xs font-semibold mb-2">
+          <div class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl text-xs font-semibold mb-2" role="alert">
             {{ authStore.error() }}
           </div>
         }
@@ -32,22 +32,24 @@ import { AuthStore } from '../../../../state/auth.store';
             placeholder=" "
             class="floating-label-input"
             autocomplete="name"
+            maxlength="100"
             [class.border-red-400]="isInvalid('name')"
           />
-          <label
-            for="name"
-            class="floating-label-text"
-          >
-            Full Name *
-          </label>
+          <label for="name" class="floating-label-text">Full Name *</label>
           @if (isInvalid('name')) {
             <p class="text-red-500 text-[10px] mt-1 flex items-center gap-1 font-semibold" role="alert">
-              Full name is required (max 100 characters).
+              @if (form.get('name')?.errors?.['required']) {
+                Full name is required.
+              } @else if (form.get('name')?.errors?.['maxlength']) {
+                Full name must be at most 100 characters.
+              } @else if (form.get('name')?.errors?.['pattern']) {
+                Full name must contain only letters and spaces (no special characters or numbers).
+              }
             </p>
           }
         </div>
 
-        <!-- Mobile Number -->
+        <!-- Mobile Number (10-digit numeric only) -->
         <div class="floating-label-group">
           <input
             id="phone"
@@ -56,17 +58,15 @@ import { AuthStore } from '../../../../state/auth.store';
             placeholder=" "
             class="floating-label-input"
             autocomplete="tel"
+            inputmode="numeric"
+            maxlength="10"
+            (keypress)="allowOnlyDigits($event)"
             [class.border-red-400]="isInvalid('phone')"
           />
-          <label
-            for="phone"
-            class="floating-label-text"
-          >
-            Mobile Number *
-          </label>
+          <label for="phone" class="floating-label-text">Mobile Number (10 digits) *</label>
           @if (isInvalid('phone')) {
             <p class="text-red-500 text-[10px] mt-1 flex items-center gap-1 font-semibold" role="alert">
-              Please enter a valid mobile number (e.g. +919876543210).
+              Please enter a valid 10-digit mobile number.
             </p>
           }
         </div>
@@ -82,12 +82,7 @@ import { AuthStore } from '../../../../state/auth.store';
             autocomplete="new-password"
             [class.border-red-400]="isInvalid('password')"
           />
-          <label
-            for="password"
-            class="floating-label-text"
-          >
-            Password *
-          </label>
+          <label for="password" class="floating-label-text">Password *</label>
           @if (isInvalid('password')) {
             <p class="text-red-500 text-[10px] mt-1 flex items-center gap-1 font-semibold" role="alert">
               Password must be at least 6 characters.
@@ -114,30 +109,6 @@ import { AuthStore } from '../../../../state/auth.store';
                 {{ passwordStrength() <= 2 ? 'Weak' : passwordStrength() === 3 ? 'Medium' : 'Strong' }} Password
               </span>
             </div>
-          }
-        </div>
-
-        <!-- Referral Code -->
-        <div class="floating-label-group">
-          <input
-            id="referralCode"
-            type="text"
-            formControlName="referralCode"
-            placeholder=" "
-            class="floating-label-input uppercase"
-            maxlength="8"
-            [class.border-red-400]="isInvalid('referralCode')"
-          />
-          <label
-            for="referralCode"
-            class="floating-label-text"
-          >
-            Referral Code (Optional)
-          </label>
-          @if (isInvalid('referralCode')) {
-            <p class="text-red-500 text-[10px] mt-1 flex items-center gap-1 font-semibold" role="alert">
-              Referral code must be at most 8 characters.
-            </p>
           }
         </div>
 
@@ -172,10 +143,22 @@ export class RegisterComponent implements OnInit {
   private readonly router = inject(Router);
 
   form = this.fb.group({
-    name: ['', [Validators.required, Validators.maxLength(100)]],
-    phone: ['', [Validators.required, Validators.pattern(/^\+?[1-9]\d{6,14}$/)]],
+    name: [
+      '',
+      [
+        Validators.required,
+        Validators.maxLength(100),
+        Validators.pattern(/^[a-zA-Z\s]+$/),
+      ],
+    ],
+    phone: [
+      '',
+      [
+        Validators.required,
+        Validators.pattern(/^[6-9]\d{9}$/),
+      ],
+    ],
     password: ['', [Validators.required, Validators.minLength(6)]],
-    referralCode: ['', [Validators.maxLength(8)]],
   });
 
   passwordVal = signal<string>('');
@@ -198,6 +181,11 @@ export class RegisterComponent implements OnInit {
     });
   }
 
+  /** Prevent non-digit characters from being typed into numeric-only fields */
+  allowOnlyDigits(event: KeyboardEvent): boolean {
+    return /[0-9]/.test(event.key);
+  }
+
   isInvalid(controlName: string) {
     const control = this.form.get(controlName);
     return !!control && control.invalid && (control.dirty || control.touched);
@@ -214,7 +202,6 @@ export class RegisterComponent implements OnInit {
       name: value.name!.trim(),
       phone: value.phone!.trim(),
       password: value.password!,
-      ...(value.referralCode?.trim() ? { referralCode: value.referralCode.trim().toUpperCase() } : {}),
     };
 
     this.authStore.register(payload).subscribe((result) => {

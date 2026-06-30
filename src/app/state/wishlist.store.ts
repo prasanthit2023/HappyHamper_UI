@@ -16,36 +16,37 @@ export class WishlistStore {
   loadWishlist() {
     return this.http.get<{ data: { products: any[] } }>(`${environment.apiUrl}/wishlist`).pipe(
       tap((res) => {
-        this.items.set(res.data.products.map((p) => p.id || p._id || p));
+        this.items.set(res.data.products.map((p) => String(p.id || p._id || p)));
       }),
     );
   }
 
   toggle(productId: string) {
-    const inWishlist = this.items().includes(productId);
+    const id = String(productId);
+    const inWishlist = this.items().includes(id);
     // Optimistic
     if (inWishlist) {
-      this.items.update((ids) => ids.filter((id) => id !== productId));
+      this.items.update((ids) => ids.filter((i) => i !== id));
     } else {
-      this.items.update((ids) => [...ids, productId]);
+      this.items.update((ids) => [...ids, id]);
     }
 
     return this.http
-      .post<{ inWishlist: boolean }>(`${environment.apiUrl}/wishlist/${productId}/toggle`, {})
+      .post<{ data: { inWishlist: boolean } }>(`${environment.apiUrl}/wishlist/${id}/toggle`, {})
       .pipe(
         tap((res) => {
-          const hasInWishlist = res.inWishlist;
+          const hasInWishlist = res.data?.inWishlist;
           // Sync with server response
-          if (hasInWishlist && !this.items().includes(productId)) {
-            this.items.update((ids) => [...ids, productId]);
+          if (hasInWishlist && !this.items().includes(id)) {
+            this.items.update((ids) => [...ids, id]);
           } else if (!hasInWishlist) {
-            this.items.update((ids) => ids.filter((id) => id !== productId));
+            this.items.update((ids) => ids.filter((i) => i !== id));
           }
         }),
       );
   }
 
   isInWishlist(productId: string): boolean {
-    return this.items().includes(productId);
+    return this.items().includes(String(productId));
   }
 }

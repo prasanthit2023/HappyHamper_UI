@@ -212,7 +212,7 @@ import { environment } from '../../../../../environments/environment';
               <!-- Main image with zoom -->
               <div #mainImageWrapper
                    class="relative overflow-hidden rounded-3xl border bg-neutral-50 aspect-square"
-                   style="border-color:var(--color-border)">
+                   style="border-color:var(--color-border); aspect-ratio: 1/1;">
                 <img
                   [src]="activeImage() || '/assets/placeholder-product.jpg'"
                   [alt]="p.title"
@@ -1004,7 +1004,7 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
   loadReviews(productId: string) {
     this.http.get<any>(`${environment.apiUrl}/reviews/product/${productId}`).subscribe({
       next: (res) => {
-        this.reviews.set(res.data || []);
+        this.reviews.set(res.data?.reviews || []);
         this.cdr.markForCheck();
       },
     });
@@ -1202,7 +1202,7 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
     const payload = {
       productId: prod._id || prod.id,
       rating: Number(this.reviewForm.value.rating),
-      comment: this.reviewForm.value.comment,
+      body: this.reviewForm.value.comment,
     };
     this.http.post<any>(`${environment.apiUrl}/reviews`, payload).subscribe({
       next: () => {
