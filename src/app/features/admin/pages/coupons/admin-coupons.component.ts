@@ -30,7 +30,7 @@ import { ConfirmService } from '../../../../core/services/confirm.service';
               <label class="block text-xs font-semibold text-neutral-400 mb-1.5">Discount Type</label>
               <select formControlName="discountType" class="input-field py-2 text-xs">
                 <option value="percentage">Percentage (%)</option>
-                <option value="fixed">Fixed Amount (₹)</option>
+                <option value="fixed">Fixed Amount (<i class="bi bi-currency-rupee"></i>)</option>
               </select>
             </div>
             <div>
@@ -39,7 +39,7 @@ import { ConfirmService } from '../../../../core/services/confirm.service';
             </div>
 
             <div>
-              <label class="block text-xs font-semibold text-neutral-400 mb-1.5">Min Order (₹)</label>
+              <label class="block text-xs font-semibold text-neutral-400 mb-1.5">Min Order (<i class="bi bi-currency-rupee"></i>)</label>
               <input type="number" formControlName="minOrderAmount" class="input-field py-2" />
             </div>
             <div>
@@ -104,12 +104,12 @@ import { ConfirmService } from '../../../../core/services/confirm.service';
                       </span>
                     </td>
                     <td class="font-semibold text-sm" style="color: var(--color-text);">
-                      {{ cop.discountValue }}{{ cop.discountType === 'percentage' ? '%' : ' ₹' }}
+                      {{ cop.discountValue }}@if (cop.discountType === 'percentage') { % } @else { <i class="bi bi-currency-rupee"></i> }
                       <span class="text-xs font-normal ml-1" style="color: var(--color-text-muted);">
                         {{ cop.discountType === 'percentage' ? 'off' : 'flat' }}
                       </span>
                     </td>
-                    <td class="text-xs" style="color: var(--color-text-muted);">₹{{ cop.minOrderAmount || 0 }}</td>
+                    <td class="text-xs" style="color: var(--color-text-muted);"><i class="bi bi-currency-rupee"></i>{{ cop.minOrderAmount || 0 }}</td>
                     <td>
                       <div class="flex flex-col gap-1 w-28">
                         <div class="flex justify-between text-[10px] text-neutral-500 font-semibold">

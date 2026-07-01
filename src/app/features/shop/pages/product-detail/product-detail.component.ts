@@ -266,11 +266,11 @@ import { environment } from '../../../../../environments/environment';
                    style="border-color:var(--color-border)">
                 <div class="flex items-baseline gap-2">
                   <span class="text-3xl font-extrabold" style="color:var(--color-text)">
-                    ₹{{ (selectedVariant()?.price || p.discountPrice || p.price) | number:'1.0-0' }}
+                    <i class="bi bi-currency-rupee"></i>{{ (selectedVariant()?.price || p.discountPrice || p.price) | number:'1.0-0' }}
                   </span>
                   @if (p.discountPrice && p.discountPrice < p.price && !selectedVariant()?.price) {
                     <span class="line-through text-lg" style="color:var(--color-text-muted)">
-                      ₹{{ p.price | number:'1.0-0' }}
+                      <i class="bi bi-currency-rupee"></i>{{ p.price | number:'1.0-0' }}
                     </span>
                     <span class="text-sm font-bold" style="color:var(--color-primary)">
                       ({{ Math.round(((p.price - p.discountPrice) / p.price) * 100) }}% OFF)
@@ -454,7 +454,7 @@ import { environment } from '../../../../../environments/environment';
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                           d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
                   </svg>
-                  <span>Free Shipping<br/>on ₹499+</span>
+                  <span>Free Shipping<br/>on \u20B9499+</span>
                 </div>
                 <!-- Easy Returns -->
                 <div class="trust-badge">
@@ -613,8 +613,37 @@ import { environment } from '../../../../../environments/environment';
                                   placeholder="Tell us about the fabric, fit, and style..."
                                   class="input-field resize-none"></textarea>
                       </div>
+
+                      <!-- Photos Upload -->
+                      <div>
+                        <label class="block text-xs font-semibold mb-1" style="color:var(--color-text-muted)">
+                          Upload Photos (Optional)
+                        </label>
+                        <div class="flex items-center gap-2">
+                          <input type="file" multiple accept="image/*" (change)="onReviewImagesSelected($event)" class="hidden" #fileInput />
+                          <button type="button" (click)="fileInput.click()" [disabled]="uploadingImages()" class="btn-secondary py-2 px-3 text-xs flex items-center gap-1.5 cursor-pointer">
+                            Choose Photos
+                          </button>
+                          @if (uploadingImages()) {
+                            <span class="text-xs text-neutral-400">Uploading...</span>
+                          }
+                        </div>
+                        @if (reviewImages().length > 0) {
+                          <div class="flex flex-wrap gap-2 mt-2">
+                            @for (img of reviewImages(); track img) {
+                              <div class="relative w-12 h-12 rounded-lg overflow-hidden border">
+                                <img [src]="img" class="w-full h-full object-cover" />
+                                <button type="button" (click)="removeReviewImage(img)" class="absolute top-0 right-0 w-4 h-4 bg-red-500 text-white rounded-full flex items-center justify-center text-[10px] hover:bg-red-600">
+                                  &times;
+                                </button>
+                              </div>
+                            }
+                          </div>
+                        }
+                      </div>
+
                       <button type="submit"
-                              [disabled]="reviewForm.invalid || submittingReview()"
+                              [disabled]="reviewForm.invalid || submittingReview() || uploadingImages()"
                               class="btn-primary w-full py-2.5 text-sm">
                         @if (submittingReview()) { Submitting… } @else { Submit Review }
                       </button>
@@ -623,7 +652,7 @@ import { environment } from '../../../../../environments/environment';
                 } @else {
                   <p class="text-xs" style="color:var(--color-text-muted)">
                     Please
-                    <a routerLink="/auth/login" class="font-bold hover:underline"
+                    <a routerLink="/login" class="font-bold hover:underline"
                        style="color:var(--color-primary)">sign in</a>
                     to leave a review.
                   </p>
@@ -667,6 +696,18 @@ import { environment } from '../../../../../environments/environment';
                       <p class="text-sm leading-relaxed italic" style="color:var(--color-text)">
                         "{{ rev.comment }}"
                       </p>
+
+                      <!-- Review Images -->
+                      @if (rev.images && rev.images.length > 0) {
+                        <div class="flex flex-wrap gap-2 mt-2">
+                          @for (img of rev.images; track img) {
+                            <a [href]="img" target="_blank" class="w-16 h-16 rounded-lg overflow-hidden border block hover:opacity-95 transition-opacity">
+                              <img [src]="img" class="w-full h-full object-cover" />
+                            </a>
+                          }
+                        </div>
+                      }
+
                       @if (rev.isVerifiedPurchase) {
                         <div class="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider"
                              style="color:var(--color-primary)">
@@ -712,11 +753,11 @@ import { environment } from '../../../../../environments/environment';
                          style="color:var(--color-text)">{{ rel.title }}</p>
                       <div class="flex items-baseline gap-1">
                         <span class="text-sm font-extrabold" style="color:var(--color-primary)">
-                          ₹{{ (rel.discountPrice || rel.price) | number:'1.0-0' }}
+                          <i class="bi bi-currency-rupee"></i>{{ (rel.discountPrice || rel.price) | number:'1.0-0' }}
                         </span>
                         @if (rel.discountPrice && rel.discountPrice < rel.price) {
                           <span class="text-xs line-through" style="color:var(--color-text-muted)">
-                            ₹{{ rel.price | number:'1.0-0' }}
+                            <i class="bi bi-currency-rupee"></i>{{ rel.price | number:'1.0-0' }}
                           </span>
                         }
                       </div>
@@ -751,11 +792,11 @@ import { environment } from '../../../../../environments/environment';
                          style="color:var(--color-text)">{{ item.title }}</p>
                       <div class="flex items-baseline gap-1">
                         <span class="text-sm font-extrabold" style="color:var(--color-primary)">
-                          ₹{{ (item.discountPrice || item.price) | number:'1.0-0' }}
+                          <i class="bi bi-currency-rupee"></i>{{ (item.discountPrice || item.price) | number:'1.0-0' }}
                         </span>
                         @if (item.discountPrice && item.discountPrice < item.price) {
                           <span class="text-xs line-through" style="color:var(--color-text-muted)">
-                            ₹{{ item.price | number:'1.0-0' }}
+                            <i class="bi bi-currency-rupee"></i>{{ item.price | number:'1.0-0' }}
                           </span>
                         }
                       </div>
@@ -785,7 +826,7 @@ import { environment } from '../../../../../environments/environment';
           <div class="flex-1 min-w-0">
             <p class="font-bold text-sm truncate" style="color:var(--color-text)">{{ p.title }}</p>
             <p class="text-sm font-extrabold" style="color:var(--color-primary)">
-              ₹{{ (selectedVariant()?.price || p.discountPrice || p.price) | number:'1.0-0' }}
+              <i class="bi bi-currency-rupee"></i>{{ (selectedVariant()?.price || p.discountPrice || p.price) | number:'1.0-0' }}
             </p>
           </div>
           <!-- CTA -->
@@ -913,6 +954,8 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
     comment: ['', [Validators.required, Validators.minLength(5)]],
   });
   submittingReview = signal<boolean>(false);
+  reviewImages = signal<string[]>([]);
+  uploadingImages = signal<boolean>(false);
 
   readonly Math = Math;
 
@@ -1124,7 +1167,7 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
     if (!prod) return;
     if (!this.authStore.isLoggedIn()) {
       this.toastService.warning('Please log in to add items to your wishlist.');
-      this.router.navigate(['/auth/login']);
+      this.router.navigate(['/login']);
       return;
     }
     this.wishlistStore.toggle(prod._id || prod.id).subscribe();
@@ -1203,19 +1246,60 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
       productId: prod._id || prod.id,
       rating: Number(this.reviewForm.value.rating),
       body: this.reviewForm.value.comment,
+      images: this.reviewImages(),
     };
     this.http.post<any>(`${environment.apiUrl}/reviews`, payload).subscribe({
       next: () => {
         this.submittingReview.set(false);
         this.reviewForm.reset({ rating: '5', comment: '' });
+        this.reviewImages.set([]);
+        this.toastService.success('Review submitted successfully!');
         this.loadReviews(prod._id || prod.id);
         this.cdr.markForCheck();
       },
-      error: () => {
+      error: (err) => {
         this.submittingReview.set(false);
+        const msg = err?.error?.message || 'Failed to submit review.';
+        this.toastService.error(msg);
         this.cdr.markForCheck();
       },
     });
+  }
+
+  onReviewImagesSelected(event: any) {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+
+    const formData = new FormData();
+    for (let i = 0; i < files.length; i++) {
+      formData.append('files', files[i]);
+    }
+
+    this.uploadingImages.set(true);
+    this.cdr.markForCheck();
+
+    this.http.post<any>(`${environment.apiUrl}/upload/multiple?folder=reviews`, formData).subscribe({
+      next: (res) => {
+        if (res.success && res.data?.urls) {
+          this.reviewImages.update((current) => [...current, ...res.data.urls]);
+          this.toastService.success('Photos uploaded successfully!');
+        } else {
+          this.toastService.error('Failed to upload photos.');
+        }
+        this.uploadingImages.set(false);
+        this.cdr.markForCheck();
+      },
+      error: (err) => {
+        this.uploadingImages.set(false);
+        const msg = err?.error?.message || 'Failed to upload photos.';
+        this.toastService.error(msg);
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  removeReviewImage(imgUrl: string) {
+    this.reviewImages.update((current) => current.filter((img) => img !== imgUrl));
   }
 
   // ── Navigate to related product ───────────────────────────────────────

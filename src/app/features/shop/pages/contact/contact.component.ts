@@ -300,7 +300,7 @@ export class ContactComponent {
     },
     {
       q: 'How long does shipping take?',
-      a: 'We process orders within 1-2 business days. Delivery typically takes 3-5 business days for major cities across India and 5-7 business days for other regions. Shipping is free on all orders above ₹499.',
+      a: 'We process orders within 1-2 business days. Delivery typically takes 3-5 business days for major cities across India and 5-7 business days for other regions. Shipping is free on all orders above \u20B9499.',
     },
     {
       q: 'What is your return and exchange policy?',

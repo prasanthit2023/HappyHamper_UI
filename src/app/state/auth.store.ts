@@ -58,7 +58,7 @@ export class AuthStore {
     this.error.set(null);
     return this.http
       .post<{ data: { accessToken: string; refreshToken: string; user: User } }>(
-        `${environment.apiUrl}/auth/login`,
+        `${environment.apiUrl}/login`,
         { phone, password },
         { withCredentials: true },
       )
@@ -80,7 +80,7 @@ export class AuthStore {
     this.loading.set(true);
     this.error.set(null);
     return this.http
-      .post<{ success: boolean; data: { message: string; otp?: string } }>(`${environment.apiUrl}/auth/phone-login`, { phone })
+      .post<{ success: boolean; data: { message: string; otp?: string } }>(`${environment.apiUrl}/phone-login`, { phone })
       .pipe(
         tap(() => this.loading.set(false)),
         catchError((err) => {
@@ -96,7 +96,7 @@ export class AuthStore {
     this.error.set(null);
     return this.http
       .post<{ data: { accessToken: string; refreshToken: string; user: User } }>(
-        `${environment.apiUrl}/auth/phone-verify`,
+        `${environment.apiUrl}/phone-verify`,
         { phone, otp },
         { withCredentials: true },
       )
@@ -118,7 +118,7 @@ export class AuthStore {
     this.loading.set(true);
     this.error.set(null);
     return this.http
-      .post<{ message: string; data?: unknown }>(`${environment.apiUrl}/auth/register`, data)
+      .post<{ message: string; data?: unknown }>(`${environment.apiUrl}/register`, data)
       .pipe(
         tap(() => this.loading.set(false)),
         catchError((err) => {
@@ -133,7 +133,7 @@ export class AuthStore {
     this.loading.set(true);
     this.error.set(null);
     return this.http
-      .post<{ message: string; data?: unknown }>(`${environment.apiUrl}/auth/verify-otp`, { phone, otp })
+      .post<{ message: string; data?: unknown }>(`${environment.apiUrl}/verify-otp`, { phone, otp })
       .pipe(
         tap(() => this.loading.set(false)),
         catchError((err) => {
@@ -148,7 +148,7 @@ export class AuthStore {
     this.loading.set(true);
     this.error.set(null);
     return this.http
-      .post<{ message: string; data?: unknown }>(`${environment.apiUrl}/auth/resend-otp`, { phone })
+      .post<{ message: string; data?: unknown }>(`${environment.apiUrl}/resend-otp`, { phone })
       .pipe(
         tap(() => this.loading.set(false)),
         catchError((err) => {
@@ -162,7 +162,7 @@ export class AuthStore {
   // ── Google Login ──────────────────────────────────────
   loginWithGoogle() {
     if (isPlatformBrowser(this.platformId)) {
-      globalThis.location.href = `${environment.apiUrl}/auth/google`;
+      globalThis.location.href = `${environment.apiUrl}/google`;
     }
   }
 
@@ -180,7 +180,7 @@ export class AuthStore {
 
   // ── Fetch Profile ─────────────────────────────────────
   fetchProfile() {
-    return this.http.get<{ data: User }>(`${environment.apiUrl}/auth/me`).pipe(
+    return this.http.get<{ data: User }>(`${environment.apiUrl}/me`).pipe(
       tap((res) => this.user.set(res.data)),
     );
   }
@@ -195,7 +195,7 @@ export class AuthStore {
 
     return this.http
       .post<{ data: { accessToken: string; refreshToken?: string } }>(
-        `${environment.apiUrl}/auth/refresh`,
+        `${environment.apiUrl}/refresh`,
         storedRefreshToken ? { refreshToken: storedRefreshToken } : {},
         { withCredentials: true },
       )
@@ -216,9 +216,9 @@ export class AuthStore {
 
   // ── Logout ────────────────────────────────────────────
   logout() {
-    this.http.post(`${environment.apiUrl}/auth/logout`, {}, { withCredentials: true }).subscribe();
+    this.http.post(`${environment.apiUrl}/logout`, {}, { withCredentials: true }).subscribe();
     this.clearSession();
-    this.router.navigate(['/auth/login']);
+    this.router.navigate(['/login']);
   }
 
   // ── Silent sign-out (no navigation) ──────────────────
@@ -291,7 +291,7 @@ export class AuthStore {
     // Bypass the regular refresh() to avoid interceptor interference
     this.http
       .post<{ data: { accessToken: string; refreshToken?: string } }>(
-        `${environment.apiUrl}/auth/refresh`,
+        `${environment.apiUrl}/refresh`,
         body,
         { withCredentials: true },
       )
@@ -372,7 +372,7 @@ export class AuthStore {
     this.loading.set(true);
     this.error.set(null);
     return this.http
-      .patch<{ message: string; data: User }>(`${environment.apiUrl}/auth/profile`, data)
+      .patch<{ message: string; data: User }>(`${environment.apiUrl}/profile`, data)
       .pipe(
         tap((res) => {
           this.user.set(res.data);
@@ -390,7 +390,7 @@ export class AuthStore {
     this.loading.set(true);
     this.error.set(null);
     return this.http
-      .post<{ message: string; data: any[] }>(`${environment.apiUrl}/auth/addresses`, address)
+      .post<{ message: string; data: any[] }>(`${environment.apiUrl}/addresses`, address)
       .pipe(
         tap((res) => {
           this.user.update((u) => u ? { ...u, addresses: res.data } : null);
@@ -408,7 +408,7 @@ export class AuthStore {
     this.loading.set(true);
     this.error.set(null);
     return this.http
-      .put<{ message: string; data: any[] }>(`${environment.apiUrl}/auth/addresses/${addressId}`, address)
+      .put<{ message: string; data: any[] }>(`${environment.apiUrl}/addresses/${addressId}`, address)
       .pipe(
         tap((res) => {
           this.user.update((u) => u ? { ...u, addresses: res.data } : null);
@@ -426,7 +426,7 @@ export class AuthStore {
     this.loading.set(true);
     this.error.set(null);
     return this.http
-      .delete<{ message: string; data: any[] }>(`${environment.apiUrl}/auth/addresses/${addressId}`)
+      .delete<{ message: string; data: any[] }>(`${environment.apiUrl}/addresses/${addressId}`)
       .pipe(
         tap((res) => {
           this.user.update((u) => u ? { ...u, addresses: res.data } : null);
@@ -444,7 +444,7 @@ export class AuthStore {
     this.loading.set(true);
     this.error.set(null);
     return this.http
-      .patch<{ message: string; data: any[] }>(`${environment.apiUrl}/auth/addresses/${addressId}/default`, {})
+      .patch<{ message: string; data: any[] }>(`${environment.apiUrl}/addresses/${addressId}/default`, {})
       .pipe(
         tap((res) => {
           this.user.update((u) => u ? { ...u, addresses: res.data } : null);

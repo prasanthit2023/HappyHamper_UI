@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, inject, signal, computed, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AuthStore } from '../../../../state/auth.store';
@@ -86,7 +86,7 @@ import { ConfirmService } from '../../../../core/services/confirm.service';
         </div>
       } @else {
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          @for (addr of addresses(); track (addr.id || addr._id)) {
+          @for (addr of addresses(); track addr.id) {
             <div
               class="group border-2 rounded-2xl p-5 relative space-y-3 bg-white transition-all duration-300 hover:shadow-md hover:border-[var(--color-sandal)]"
               [class]="addr.isDefault
@@ -137,10 +137,11 @@ import { ConfirmService } from '../../../../core/services/confirm.service';
 export class AddressesComponent implements OnInit {
   readonly authStore = inject(AuthStore);
   private fb = inject(FormBuilder);
-  private cdr = inject(ChangeDetectorRef);
   private confirmService = inject(ConfirmService);
 
-  addresses = signal<any[]>([]);
+  // Derived directly from the store — no manual sync needed, no duplicates
+  readonly addresses = computed(() => this.authStore.user()?.addresses ?? []);
+
   showForm = signal<boolean>(false);
   editAddressId = signal<string | null>(null);
 
@@ -157,15 +158,7 @@ export class AddressesComponent implements OnInit {
   });
 
   ngOnInit() {
-    this.loadAddresses();
-  }
-
-  loadAddresses() {
-    const user = this.authStore.user();
-    if (user && user.addresses) {
-      this.addresses.set(user.addresses);
-      this.cdr.markForCheck();
-    }
+    // Addresses are auto-derived from the store; nothing to do here
   }
 
   openAddForm() {
@@ -196,9 +189,7 @@ export class AddressesComponent implements OnInit {
   }
 
   setDefault(addressId: string) {
-    this.authStore.setDefaultAddress(addressId).subscribe(() => {
-      this.loadAddresses();
-    });
+    this.authStore.setDefaultAddress(addressId).subscribe();
   }
 
   deleteAddress(addressId: string) {
@@ -209,9 +200,7 @@ export class AddressesComponent implements OnInit {
       cancelLabel: 'Cancel'
     }).subscribe(confirmed => {
       if (confirmed) {
-        this.authStore.deleteAddress(addressId).subscribe(() => {
-          this.loadAddresses();
-        });
+        this.authStore.deleteAddress(addressId).subscribe();
       }
     });
   }
@@ -224,17 +213,11 @@ export class AddressesComponent implements OnInit {
 
     if (id) {
       this.authStore.updateAddress(id, data).subscribe({
-        next: () => {
-          this.showForm.set(false);
-          this.loadAddresses();
-        },
+        next: () => this.showForm.set(false),
       });
     } else {
       this.authStore.addAddress(data).subscribe({
-        next: () => {
-          this.showForm.set(false);
-          this.loadAddresses();
-        },
+        next: () => this.showForm.set(false),
       });
     }
   }

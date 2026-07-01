@@ -15,16 +15,16 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
   // Skip auth header for public auth routes
   if (
-    req.url.includes('/auth/login') ||
-    req.url.includes('/auth/register') ||
-    req.url.includes('/auth/phone-login') ||
-    req.url.includes('/auth/phone-verify') ||
-    req.url.includes('/auth/refresh') ||
-    req.url.includes('/auth/verify-otp') ||
-    req.url.includes('/auth/resend-otp') ||
-    req.url.includes('/auth/forgot-password') ||
-    req.url.includes('/auth/reset-password') ||
-    req.url.includes('/auth/google')
+    req.url.includes('/login') ||
+    req.url.includes('/register') ||
+    req.url.includes('/phone-login') ||
+    req.url.includes('/phone-verify') ||
+    req.url.includes('/refresh') ||
+    req.url.includes('/verify-otp') ||
+    req.url.includes('/resend-otp') ||
+    req.url.includes('/forgot-password') ||
+    req.url.includes('/reset-password') ||
+    req.url.includes('/google')
   ) {
     return next(req);
   }
@@ -34,7 +34,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   }
 
   // Bypass waiting if this is the profile fetch request during the hydration lifecycle
-  const isHydrationMeRequest = req.url.includes('/auth/me') && hydrationService.isHydrating();
+  const isHydrationMeRequest = req.url.includes('/me') && hydrationService.isHydrating();
   console.log(`[AuthInterceptor] Request for: ${req.url}. isHydrationMeRequest: ${isHydrationMeRequest}. isHydrating: ${hydrationService.isHydrating()}`);
 
   if (isHydrationMeRequest) {

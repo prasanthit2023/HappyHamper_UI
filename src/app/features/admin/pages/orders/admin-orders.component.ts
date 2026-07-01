@@ -143,7 +143,7 @@ import { environment } from '../../../../../environments/environment';
                     </span>
                     <span class="text-xs font-mono" style="color: var(--color-text-muted);">{{ order.shippingAddress?.phone }}</span>
                   </td>
-                  <td class="font-bold" style="color: var(--color-text);">₹{{ order.totalAmount | number:'1.0-0' }}</td>
+                  <td class="font-bold" style="color: var(--color-text);"><i class="bi bi-currency-rupee"></i>{{ order.totalAmount | number:'1.0-0' }}</td>
                   <td>
                     <span class="status-badge"
                           [class]="order.paymentStatus === 'paid' ? 'status-delivered' : order.paymentStatus === 'failed' ? 'status-cancelled' : 'status-pending'">

@@ -53,15 +53,15 @@ import { environment } from '../../../../../environments/environment';
           <div class="bg-[var(--color-bg-subtle)] border border-[var(--color-border)] p-6 rounded-2xl">
             <div class="flex items-center justify-between relative max-w-lg mx-auto">
               <!-- Background line -->
-              <div class="absolute left-0 right-0 top-5 -translate-y-1/2 h-0.5 bg-[var(--color-border)] -z-10 rounded"></div>
+              <div class="absolute left-0 right-0 top-5 -translate-y-1/2 h-0.5 bg-[var(--color-border)] z-0 rounded"></div>
               <!-- Active progress line -->
-              <div class="absolute left-0 top-5 -translate-y-1/2 h-0.5 -z-10 rounded transition-all duration-300"
+              <div class="absolute left-0 top-5 -translate-y-1/2 h-0.5 z-0 rounded transition-all duration-300"
                    [style.width]="o.orderStatus === 'placed' ? '0%' : o.orderStatus === 'shipped' ? '66%' : ['confirmed', 'processing'].includes(o.orderStatus) ? '33%' : '100%'"
                    [style.background]="'var(--gradient-primary)'">
               </div>
 
               <!-- Step 1: Placed -->
-              <div class="flex flex-col items-center">
+              <div class="flex flex-col items-center relative z-10">
                 <div class="w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold shadow-md transition-all duration-300 text-white"
                      [style.background]="'var(--gradient-primary)'">
                   ✓
@@ -70,7 +70,7 @@ import { environment } from '../../../../../environments/environment';
               </div>
 
               <!-- Step 2: Confirmed -->
-              <div class="flex flex-col items-center">
+              <div class="flex flex-col items-center relative z-10">
                 <div class="w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold shadow-md transition-all duration-300
                   {{ getStatusStep(o.orderStatus) >= 2 ? 'text-white' : 'bg-white border-2 border-[var(--color-border)] text-[var(--color-text-muted)]' }}"
                   [style]="getStatusStep(o.orderStatus) >= 2 ? 'background: var(--gradient-primary)' : ''">
@@ -80,7 +80,7 @@ import { environment } from '../../../../../environments/environment';
               </div>
 
               <!-- Step 3: Shipped -->
-              <div class="flex flex-col items-center">
+              <div class="flex flex-col items-center relative z-10">
                 <div class="w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold shadow-md transition-all duration-300
                   {{ getStatusStep(o.orderStatus) >= 3 ? 'text-white' : 'bg-white border-2 border-[var(--color-border)] text-[var(--color-text-muted)]' }}"
                   [style]="getStatusStep(o.orderStatus) >= 3 ? 'background: var(--gradient-primary)' : ''">
@@ -90,7 +90,7 @@ import { environment } from '../../../../../environments/environment';
               </div>
 
               <!-- Step 4: Delivered -->
-              <div class="flex flex-col items-center">
+              <div class="flex flex-col items-center relative z-10">
                 <div class="w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold shadow-md transition-all duration-300
                   {{ getStatusStep(o.orderStatus) >= 4 ? 'text-white' : 'bg-white border-2 border-[var(--color-border)] text-[var(--color-text-muted)]' }}"
                   [style]="getStatusStep(o.orderStatus) >= 4 ? 'background: var(--gradient-primary)' : ''">
@@ -129,7 +129,7 @@ import { environment } from '../../../../../environments/environment';
                     </div>
                     <div class="text-right">
                       <span class="text-sm font-bold text-[var(--color-text)] block">
-                        ₹{{ item.price | number:'1.0-0' }}
+                        <i class="bi bi-currency-rupee"></i>{{ item.price | number:'1.0-0' }}
                       </span>
                       <span class="text-xs text-[var(--color-text-muted)] font-medium">Qty: {{ item.quantity }}</span>
                     </div>
@@ -142,15 +142,19 @@ import { environment } from '../../../../../environments/environment';
             <div class="space-y-3">
               <h3 class="font-bold text-sm text-[var(--color-text)] uppercase tracking-wider">Shipping Address</h3>
               <div class="border border-[var(--color-border)] rounded-2xl p-4 text-sm bg-white leading-relaxed shadow-sm">
-                <p class="font-bold text-[var(--color-text)]">
-                  {{ o.shippingAddress.fullName || (o.shippingAddress.firstName + ' ' + o.shippingAddress.lastName) }}
-                </p>
-                <p class="text-xs text-[var(--color-text-muted)] mt-1 font-medium">
-                  {{ o.shippingAddress.street }}, {{ o.shippingAddress.city }}, {{ o.shippingAddress.state }}, {{ o.shippingAddress.country }} - {{ o.shippingAddress.zipCode }}
-                </p>
-                <p class="text-xs text-[var(--color-text-muted)] mt-2 font-bold flex items-center gap-1">
-                  <span>📞</span> {{ o.shippingAddress.phone }}
-                </p>
+                @if (o.shippingAddress) {
+                  <p class="font-bold text-[var(--color-text)]">
+                    {{ o.shippingAddress.fullName || (o.shippingAddress.firstName && o.shippingAddress.lastName ? o.shippingAddress.firstName + ' ' + o.shippingAddress.lastName : (o.shippingAddress.firstName || o.shippingAddress.lastName || 'N/A')) }}
+                  </p>
+                  <p class="text-xs text-[var(--color-text-muted)] mt-1 font-medium">
+                    {{ o.shippingAddress.street }}, {{ o.shippingAddress.city }}, {{ o.shippingAddress.state }}, {{ o.shippingAddress.country }} - {{ o.shippingAddress.zipCode }}
+                  </p>
+                  <p class="text-xs text-[var(--color-text-muted)] mt-2 font-bold flex items-center gap-1">
+                    <span>📞</span> {{ o.shippingAddress.phone }}
+                  </p>
+                } @else {
+                  <p class="text-xs text-[var(--color-text-muted)] italic">Address details not available</p>
+                }
               </div>
             </div>
 
@@ -179,28 +183,28 @@ import { environment } from '../../../../../environments/environment';
             <div class="border border-[var(--color-border)] rounded-2xl p-4 bg-[var(--color-bg-subtle)] text-sm space-y-2.5">
               <div class="flex justify-between text-[var(--color-text-muted)]">
                 <span>Subtotal</span>
-                <span class="font-semibold text-[var(--color-text)]">₹{{ o.subTotal | number:'1.0-0' }}</span>
+                <span class="font-semibold text-[var(--color-text)]"><i class="bi bi-currency-rupee"></i>{{ o.subTotal | number:'1.0-0' }}</span>
               </div>
               @if (o.discountAmount > 0) {
                 <div class="flex justify-between text-[var(--color-primary)] font-semibold">
                   <span>Discount</span>
-                  <span>-₹{{ o.discountAmount | number:'1.0-0' }}</span>
+                  <span>-<i class="bi bi-currency-rupee"></i>{{ o.discountAmount | number:'1.0-0' }}</span>
                 </div>
               }
               <div class="flex justify-between text-[var(--color-text-muted)]">
                 <span>Shipping</span>
-                <span class="font-semibold text-[var(--color-text)]">₹{{ o.shippingFee | number:'1.0-0' }}</span>
+                <span class="font-semibold text-[var(--color-text)]"><i class="bi bi-currency-rupee"></i>{{ o.shippingFee | number:'1.0-0' }}</span>
               </div>
               <div class="border-t border-[var(--color-border)] pt-2.5 flex justify-between items-baseline font-bold">
                 <span>Total Paid</span>
-                <span class="text-base text-[var(--color-primary)]">₹{{ o.totalAmount | number:'1.0-0' }}</span>
+                <span class="text-base text-[var(--color-primary)]"><i class="bi bi-currency-rupee"></i>{{ o.totalAmount | number:'1.0-0' }}</span>
               </div>
             </div>
 
             <!-- Status Timeline Tracker -->
             <div class="space-y-3">
               <h3 class="font-bold text-sm text-[var(--color-text)] uppercase tracking-wider">Tracking Timeline</h3>
-              <div class="relative pl-6 space-y-6 before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-[var(--color-border)]">
+              <div class="relative pl-6 space-y-6 before:content-[''] before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-[var(--color-border)]">
                 @for (hist of o.statusHistory; track hist.timestamp) {
                   <div class="relative">
                     <div class="absolute -left-6 top-1.5 w-3.5 h-3.5 rounded-full border-2 border-white bg-[var(--color-primary)] ring-2 ring-[var(--color-primary-light)]"></div>
@@ -297,9 +301,13 @@ export class OrderDetailComponent implements OnInit, OnDestroy {
 
     this.http.get<any>(`${environment.apiUrl}/orders/${id}`).subscribe({
       next: (res) => {
-        this.order.set(res.data);
+        const orderData = res.data;
+        if (orderData && !orderData.statusHistory) {
+          orderData.statusHistory = this.generateStatusHistory(orderData);
+        }
+        this.order.set(orderData);
         this.loading.set(false);
-        this.checkIfReturnRequested(res.data?._id || res.data?.id);
+        this.checkIfReturnRequested(orderData?._id || orderData?.id);
         this.cdr.markForCheck();
       },
       error: (err) => {
@@ -308,6 +316,53 @@ export class OrderDetailComponent implements OnInit, OnDestroy {
         this.cdr.markForCheck();
       },
     });
+  }
+
+  generateStatusHistory(order: any): any[] {
+    const history: any[] = [];
+    const status = (order.orderStatus || '').toLowerCase();
+    const created = new Date(order.createdAt).getTime();
+    const updated = new Date(order.updatedAt || order.createdAt).getTime();
+
+    // 1. Cancelled Status
+    if (status === 'cancelled') {
+      history.push({
+        status: 'Cancelled',
+        timestamp: updated,
+        note: order.notes || 'Order cancelled.'
+      });
+    }
+
+    // 2. Delivered Status
+    if (['delivered'].includes(status)) {
+      history.push({
+        status: 'Delivered',
+        timestamp: updated,
+        note: 'Package delivered successfully.'
+      });
+    }
+
+    // 3. Shipped Status
+    if (['shipped', 'delivered'].includes(status)) {
+      const shippedTime = status === 'delivered' ? (created + updated) / 2 : updated;
+      history.push({
+        status: 'Shipped',
+        timestamp: shippedTime,
+        note: order.trackingNumber ? `Shipped via courier. Tracking ID: ${order.trackingNumber}` : 'Package shipped.'
+      });
+    }
+
+    // 4. Confirmed Status (Processing / Confirmed)
+    if (['confirmed', 'processing', 'shipped', 'delivered'].includes(status)) {
+      const confirmedTime = ['confirmed', 'processing'].includes(status) ? updated : (created + 1000 * 60 * 30); // +30 mins
+      history.push({
+        status: 'Confirmed',
+        timestamp: confirmedTime,
+        note: 'Order confirmed and being prepared.'
+      });
+    }
+
+    return history;
   }
 
   checkIfReturnRequested(orderId: string) {

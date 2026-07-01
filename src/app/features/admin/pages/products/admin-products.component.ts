@@ -155,7 +155,7 @@ import { ConfirmService } from '../../../../core/services/confirm.service';
                     </div>
                   </td>
                   <td><span class="font-mono text-xs" style="color: var(--color-text-muted);">{{ p.sku || '—' }}</span></td>
-                  <td class="font-semibold text-sm" style="color: var(--color-text);">₹{{ p.price }}</td>
+                  <td class="font-semibold text-sm" style="color: var(--color-text);"><i class="bi bi-currency-rupee"></i>{{ p.price }}</td>
                   <td>
                     <span class="font-semibold text-sm" [ngClass]="getProductStock(p) === 0 ? 'text-red-600 font-bold' : getProductStock(p) <= 5 ? 'text-amber-600 font-semibold' : 'text-green-600'">
                       {{ getProductStock(p) }}

@@ -69,7 +69,7 @@ export class CartStore {
   addItem(productId: string, variantSku: string, quantity = 1) {
     if (!this.authStore.isLoggedIn()) {
       this.toastService.warning('Please log in to add items to your cart.');
-      this.router.navigate(['/auth/login']);
+      this.router.navigate(['/login']);
       return EMPTY;
     }
     this.loading.set(true);

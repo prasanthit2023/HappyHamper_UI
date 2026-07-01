@@ -11,12 +11,12 @@ export const serverUrlInterceptor: HttpInterceptorFn = (req, next) => {
 
   if (isPlatformServer(platformId) && (req.url.startsWith('/') || !req.url.startsWith('http'))) {
     // Read backend URL from environment variables, fallback to local default
-    const backendUrl = 'https://happyhamper-ayhnh0geczaretd8.centralindia-01.azurewebsites.net/';
-    
+    const backendUrl = 'https://happyhamper-ayhnh0geczaretd8.centralindia-01.azurewebsites.net';
+
     // Clean up slash transitions (e.g. backendUrl = http://localhost:3000, req.url = /api/v1 => http://localhost:3000/api/v1)
     const normalizedUrl = req.url.startsWith('/') ? req.url : `/${req.url}`;
     const absoluteUrl = `${backendUrl.replace(/\/+$/, '')}${normalizedUrl}`;
-    
+
     console.log(`[ServerUrlInterceptor] Transforming relative URL during SSR: ${req.url} -> ${absoluteUrl}`);
 
     const cloned = req.clone({

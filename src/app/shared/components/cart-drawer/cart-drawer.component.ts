@@ -62,7 +62,7 @@ import { CartStore } from '../../../state/cart.store';
               <svg class="w-4 h-4 inline-block" style="color: var(--color-primary);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0zM13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17h5m4 0h5"/>
               </svg>
-              <span>Add <strong style="color: var(--color-primary-dark);">₹{{ cartStore.remainingForFreeShipping() | number:'1.0-0' }}</strong> more for FREE shipping!</span>
+              <span>Add <strong style="color: var(--color-primary-dark);"><i class="bi bi-currency-rupee"></i>{{ cartStore.remainingForFreeShipping() | number:'1.0-0' }}</strong> more for FREE shipping!</span>
             </div>
           } @else {
             <div class="text-xs text-primary font-semibold mb-1.5 flex items-center gap-1.5">
@@ -102,9 +102,8 @@ import { CartStore } from '../../../state/cart.store';
         } @else {
           @for (item of cartStore.cart().items; track item.variantSku) {
             <div class="flex gap-3 py-3 animate-fade-in" style="border-bottom: 1px solid var(--color-border);">
-
               <!-- Product Image -->
-              <a [routerLink]="['/products']" (click)="cartStore.closeDrawer()" class="flex-shrink-0">
+              <a [routerLink]="['/products', item.productId]" (click)="cartStore.closeDrawer()" class="flex-shrink-0">
                 <img
                   [src]="item.image || '/assets/placeholder-product.jpg'"
                   [alt]="item.title"
@@ -114,9 +113,11 @@ import { CartStore } from '../../../state/cart.store';
 
               <!-- Item Details -->
               <div class="flex-1 min-w-0">
-                <h3 class="font-semibold text-sm text-neutral-800 truncate-2 leading-snug">
-                  {{ item.title }}
-                </h3>
+                <a [routerLink]="['/products', item.productId]" (click)="cartStore.closeDrawer()" class="hover:text-[var(--color-primary)] transition-colors">
+                  <h3 class="font-semibold text-sm text-neutral-800 truncate-2 leading-snug">
+                    {{ item.title }}
+                  </h3>
+                </a>
                 <div class="flex gap-2 mt-1">
                   @if (item.size) {
                     <span class="text-xs text-neutral-500 px-2 py-0.5 rounded" style="background: var(--color-bg-subtle);">{{ item.size }}</span>
@@ -128,7 +129,7 @@ import { CartStore } from '../../../state/cart.store';
 
                 <!-- Price -->
                 <p class="font-bold text-sm mt-1.5" style="color: var(--color-primary-dark);">
-                  ₹{{ item.price | number:'1.0-0' }}
+                  <i class="bi bi-currency-rupee"></i>{{ item.price | number:'1.0-0' }}
                 </p>
 
                 <!-- Qty Controls + Remove -->
@@ -179,24 +180,24 @@ import { CartStore } from '../../../state/cart.store';
           <div class="space-y-1.5">
             <div class="flex justify-between text-sm">
               <span class="text-neutral-500">Subtotal</span>
-              <span class="font-medium text-neutral-800">₹{{ cartStore.subTotal() | number:'1.0-0' }}</span>
+              <span class="font-medium text-neutral-800"><i class="bi bi-currency-rupee"></i>{{ cartStore.subTotal() | number:'1.0-0' }}</span>
             </div>
             @if (cartStore.cart().discountAmount > 0) {
               <div class="flex justify-between text-sm">
                 <span class="text-primary">Discount ({{ cartStore.cart().couponCode }})</span>
-                <span class="text-primary font-medium">-₹{{ cartStore.cart().discountAmount | number:'1.0-0' }}</span>
+                <span class="text-primary font-medium">-<i class="bi bi-currency-rupee"></i>{{ cartStore.cart().discountAmount | number:'1.0-0' }}</span>
               </div>
             }
             <div class="flex justify-between text-sm">
               <span class="text-neutral-500">Shipping</span>
               <span class="font-medium" [style.color]="cartStore.subTotal() >= 499 ? 'var(--color-primary)' : 'var(--color-text)'">
-                {{ cartStore.subTotal() >= 499 ? 'FREE' : '₹49' }}
+                @if (cartStore.subTotal() >= 499) { FREE } @else { <i class="bi bi-currency-rupee"></i>49 }
               </span>
             </div>
             <div class="divider"></div>
             <div class="flex justify-between">
               <span class="font-bold text-neutral-800">Total</span>
-              <span class="font-bold text-lg" style="color: var(--color-primary-dark);">₹{{ cartStore.totalAmount() | number:'1.0-0' }}</span>
+              <span class="font-bold text-lg" style="color: var(--color-primary-dark);"><i class="bi bi-currency-rupee"></i>{{ cartStore.totalAmount() | number:'1.0-0' }}</span>
             </div>
           </div>
 

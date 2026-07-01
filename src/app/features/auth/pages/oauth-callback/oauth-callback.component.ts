@@ -36,7 +36,7 @@ import { AuthStore } from '../../../../state/auth.store';
       <p class="text-neutral-500 mb-6">{{ message() }}</p>
 
       @if (status() === 'error') {
-        <button type="button" class="btn-primary w-full py-3.5" routerLink="/auth/login">
+        <button type="button" class="btn-primary w-full py-3.5" routerLink="/login">
           Back to Sign In
         </button>
       }

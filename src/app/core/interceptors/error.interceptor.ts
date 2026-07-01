@@ -12,17 +12,17 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
       // Only handle 401 errors for authenticated API calls
       // Do NOT intercept: login, register, OTP, refresh, forgot/reset-password, logout, google auth
       const isPublicAuthRoute =
-        req.url.includes('/auth/login') ||
-        req.url.includes('/auth/register') ||
-        req.url.includes('/auth/phone-login') ||
-        req.url.includes('/auth/phone-verify') ||
-        req.url.includes('/auth/verify-otp') ||
-        req.url.includes('/auth/resend-otp') ||
-        req.url.includes('/auth/refresh') ||
-        req.url.includes('/auth/forgot-password') ||
-        req.url.includes('/auth/reset-password') ||
-        req.url.includes('/auth/logout') ||
-        req.url.includes('/auth/google');
+        req.url.includes('/login') ||
+        req.url.includes('/register') ||
+        req.url.includes('/phone-login') ||
+        req.url.includes('/phone-verify') ||
+        req.url.includes('/verify-otp') ||
+        req.url.includes('/resend-otp') ||
+        req.url.includes('/refresh') ||
+        req.url.includes('/forgot-password') ||
+        req.url.includes('/reset-password') ||
+        req.url.includes('/logout') ||
+        req.url.includes('/google');
 
       // 401 on a protected route — try silent token refresh
       // 401 on a protected route — try silent token refresh (only if not currently hydrating)

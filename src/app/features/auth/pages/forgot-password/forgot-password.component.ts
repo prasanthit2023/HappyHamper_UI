@@ -75,7 +75,12 @@ import { environment } from '../../../../../environments/environment';
 
           <div>
             <label for="newPassword" class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1.5">New Password</label>
-            <input id="newPassword" type="password" formControlName="newPassword" placeholder="Minimum 8 characters" class="input-field" />
+            <div class="relative">
+              <input id="newPassword" [type]="showNewPassword() ? 'text' : 'password'" formControlName="newPassword" placeholder="Minimum 8 characters" class="input-field pr-10" />
+              <button type="button" (click)="showNewPassword.set(!showNewPassword())" class="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600 focus:outline-none">
+                <i class="pi" [class.pi-eye-slash]="showNewPassword()" [class.pi-eye]="!showNewPassword()"></i>
+              </button>
+            </div>
             @if (resetForm.get('newPassword')?.invalid && resetForm.get('newPassword')?.touched) {
               <p class="text-red-500 text-xs mt-1">Password must be at least 8 characters long.</p>
             }
@@ -97,7 +102,7 @@ import { environment } from '../../../../../environments/environment';
 
       <p class="text-center text-sm text-neutral-500 mt-6">
         Remember your password?
-        <a routerLink="/auth/login" class="text-primary-500 font-semibold hover:text-primary-600">Sign in</a>
+        <a routerLink="/login" class="text-primary-500 font-semibold hover:text-primary-600">Sign in</a>
       </p>
     </div>
   `,
@@ -111,6 +116,7 @@ export class ForgotPasswordComponent {
   loading = signal<boolean>(false);
   successMessage = signal<string>('');
   errorMessage = signal<string>('');
+  showNewPassword = signal<boolean>(false);
 
   requestForm = this.fb.group({
     phone: ['', [Validators.required, Validators.pattern(/^\+?[1-9]\d{6,14}$/)]],
@@ -129,7 +135,7 @@ export class ForgotPasswordComponent {
 
     const phone = this.requestForm.value.phone!.trim();
 
-    this.http.post<any>(`${environment.apiUrl}/auth/forgot-password`, { phone }).subscribe({
+    this.http.post<any>(`${environment.apiUrl}/forgot-password`, { phone }).subscribe({
       next: (res) => {
         this.loading.set(false);
         this.successMessage.set('A reset code has been sent via WhatsApp.');
@@ -152,11 +158,11 @@ export class ForgotPasswordComponent {
     const otp = this.resetForm.value.otp!.trim();
     const newPassword = this.resetForm.value.newPassword!;
 
-    this.http.post<any>(`${environment.apiUrl}/auth/reset-password`, { phone, otp, newPassword }).subscribe({
+    this.http.post<any>(`${environment.apiUrl}/reset-password`, { phone, otp, newPassword }).subscribe({
       next: (res) => {
         this.loading.set(false);
         this.successMessage.set('Password reset successful. Redirecting to sign in...');
-        setTimeout(() => this.router.navigate(['/auth/login']), 2000);
+        setTimeout(() => this.router.navigate(['/login']), 2000);
       },
       error: (err) => {
         this.loading.set(false);

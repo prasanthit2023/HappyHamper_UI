@@ -24,7 +24,7 @@ import { Subscription, Subject, of } from 'rxjs';
     @if (!announcementDismissed()) {
       <div class="announcement-bar">
         <i class="pi pi-truck text-white" style="font-size: 0.85rem;"></i>
-        &nbsp;Free Shipping on orders above ₹499 &nbsp;|&nbsp; Use code <strong>FIRST10</strong> for 10% off!
+        &nbsp;Free Shipping on orders above \u20B9499 &nbsp;|&nbsp; Use code <strong>FIRST10</strong> for 10% off!
         <button class="announcement-bar-close" (click)="announcementDismissed.set(true)" aria-label="Dismiss announcement">
           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/>
@@ -98,10 +98,10 @@ import { Subscription, Subject, of } from 'rxjs';
                           </p>
                           <div class="flex items-baseline gap-1.5 mt-0.5">
                             <span class="text-xs font-bold text-primary">
-                              ₹{{ (s.discountPrice || s.price) | number:'1.0-0' }}
+                              <i class="bi bi-currency-rupee"></i>{{ (s.discountPrice || s.price) | number:'1.0-0' }}
                             </span>
                             @if (s.discountPrice && s.discountPrice < s.price) {
-                              <span class="text-[10px] text-neutral-400 line-through">₹{{ s.price | number:'1.0-0' }}</span>
+                              <span class="text-[10px] text-neutral-400 line-through"><i class="bi bi-currency-rupee"></i>{{ s.price | number:'1.0-0' }}</span>
                             }
                           </div>
                         </div>
@@ -201,7 +201,7 @@ import { Subscription, Subject, of } from 'rxjs';
                 }
               </div>
             } @else {
-              <a routerLink="/auth/login" class="btn-primary hidden lg:inline-flex text-xs px-4 py-2">
+              <a routerLink="/login" class="btn-primary hidden lg:inline-flex text-xs px-4 py-2">
                 Sign In
               </a>
             }
@@ -226,24 +226,7 @@ import { Subscription, Subject, of } from 'rxjs';
         </div>
       </div>
 
-      <!-- Category Bar (desktop) -->
-      @if (showCategoryBar()) {
-        <div class="hidden lg:block border-t" style="border-color: var(--color-border); background: var(--color-bg-subtle);">
-          <div class="bb-container">
-            <div class="category-bar py-2.5 flex items-center gap-1">
-              @for (cat of categoryBar; track cat.label) {
-                <a
-                  [routerLink]="cat.path"
-                  [queryParams]="cat.query"
-                  class="flex-shrink-0 px-4 py-1.5 rounded-full text-xs font-medium text-neutral-600 transition-all duration-200 whitespace-nowrap category-link"
-                >
-                  {{ cat.label }}
-                </a>
-              }
-            </div>
-          </div>
-        </div>
-      }
+
 
       <!-- Mobile Menu -->
       @if (mobileMenuOpen()) {
@@ -284,10 +267,10 @@ import { Subscription, Subject, of } from 'rxjs';
                           </p>
                           <div class="flex items-baseline gap-1 mt-0.5">
                             <span class="text-[10px] font-bold text-primary">
-                              ₹{{ (s.discountPrice || s.price) | number:'1.0-0' }}
+                              <i class="bi bi-currency-rupee"></i>{{ (s.discountPrice || s.price) | number:'1.0-0' }}
                             </span>
                             @if (s.discountPrice && s.discountPrice < s.price) {
-                              <span class="text-[9px] text-neutral-400 line-through">₹{{ s.price | number:'1.0-0' }}</span>
+                              <span class="text-[9px] text-neutral-400 line-through"><i class="bi bi-currency-rupee"></i>{{ s.price | number:'1.0-0' }}</span>
                             }
                           </div>
                         </div>
@@ -326,7 +309,7 @@ import { Subscription, Subject, of } from 'rxjs';
                 <i class="pi pi-sign-out"></i> Sign Out
               </button>
             } @else {
-              <a routerLink="/auth/login" (click)="mobileMenuOpen.set(false)" class="btn-primary w-full mt-2">Sign In</a>
+              <a routerLink="/login" (click)="mobileMenuOpen.set(false)" class="btn-primary w-full mt-2">Sign In</a>
             }
           </div>
         </div>
@@ -379,7 +362,6 @@ export class NavbarComponent implements OnDestroy {
 
   readonly isScrolled        = signal(false);
   readonly mobileMenuOpen    = signal(false);
-  readonly showCategoryBar   = signal(false);
   readonly suggestions       = signal<any[]>([]);
   readonly showSuggestions   = signal(false);
   readonly announcementDismissed = signal(false);
@@ -396,11 +378,8 @@ export class NavbarComponent implements OnDestroy {
     ).subscribe(() => {
       const urlTree = this.router.parseUrl(this.router.url);
       this.searchQuery = urlTree.queryParams['q'] || '';
-      this.updateCategoryBarVisibility();
       this.showSuggestions.set(false);
     });
-
-    this.updateCategoryBarVisibility();
 
     // Setup debounced search suggestions
     this.searchSub = this.searchSubject.pipe(
@@ -417,11 +396,6 @@ export class NavbarComponent implements OnDestroy {
     ).subscribe((res) => {
       this.suggestions.set(res.data || []);
     });
-  }
-
-  private updateCategoryBarVisibility() {
-    const path = this.router.url.split('?')[0];
-    this.showCategoryBar.set(path === '/' || path === '/products' || path.startsWith('/category/'));
   }
 
   onSearchFocus() {
@@ -453,19 +427,6 @@ export class NavbarComponent implements OnDestroy {
       this.searchSub.unsubscribe();
     }
   }
-
-  categoryBar = [
-    { label: 'New Arrivals', path: '/products', query: { newArrival: true } },
-    { label: 'Best Sellers', path: '/products', query: { bestSeller: true } },
-    { label: 'Jablas', path: '/category/jablas', query: null },
-    { label: 'Nappies & Diapers', path: '/category/nappies-diapers', query: null },
-    { label: 'Swaddles & Blankets', path: '/category/swaddles-blankets', query: null },
-    { label: 'Accessories', path: '/category/accessories', query: null },
-    { label: 'Combo Packs', path: '/category/combos', query: null },
-    { label: '0-3 Months', path: '/products', query: { tags: '0-3months' } },
-    { label: '3-6 Months', path: '/products', query: { tags: '3-6months' } },
-    { label: '6-12 Months', path: '/products', query: { tags: '6-12months' } },
-  ];
 
   @HostListener('window:scroll')
   onScroll() {

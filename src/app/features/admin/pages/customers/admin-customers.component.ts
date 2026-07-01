@@ -135,7 +135,7 @@ import { AuthStore } from '../../../../state/auth.store';
                     {{ c.lastOrderDate ? (c.lastOrderDate | date:'dd MMM yyyy') : '—' }}
                   </td>
                   <td class="font-semibold text-sm" style="color: var(--color-text);">
-                    ₹{{ (c.totalSpent || 0) | number:'1.0-0' }}
+                    <i class="bi bi-currency-rupee"></i>{{ (c.totalSpent || 0) | number:'1.0-0' }}
                   </td>
                   <td>
                     <span class="status-badge" [class]="c.isVerified ? 'status-verified' : 'status-pending'">

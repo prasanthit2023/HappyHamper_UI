@@ -116,7 +116,7 @@ import { environment } from '../../../../../environments/environment';
                       "{{ ret.reason }}"
                     </p>
                   </td>
-                  <td class="font-bold text-xs text-neutral-800">₹{{ ret.refundAmount || 0 }}</td>
+                  <td class="font-bold text-xs text-neutral-800"><i class="bi bi-currency-rupee"></i>{{ ret.refundAmount || 0 }}</td>
                   <td>
                     <span class="status-badge"
                           [class]="ret.status === 'approved' ? 'status-delivered' : ret.status === 'rejected' ? 'status-cancelled' : 'status-return_requested'">
@@ -201,12 +201,12 @@ import { environment } from '../../../../../environments/environment';
                               </div>
                               <div class="flex justify-between">
                                 <span class="text-neutral-500">Suggested Refund:</span>
-                                <span class="font-bold text-neutral-800">₹{{ ret.refundAmount }}</span>
+                                <span class="font-bold text-neutral-800"><i class="bi bi-currency-rupee"></i>{{ ret.refundAmount }}</span>
                               </div>
                               @if (ret.status !== 'requested') {
                                 <div class="flex justify-between">
                                   <span class="text-neutral-500">Final Refund:</span>
-                                  <span class="font-bold text-neutral-800">₹{{ ret.refundAmount }}</span>
+                                  <span class="font-bold text-neutral-800"><i class="bi bi-currency-rupee"></i>{{ ret.refundAmount }}</span>
                                 </div>
                                 <div class="flex justify-between">
                                   <span class="text-neutral-500">Status:</span>
@@ -223,7 +223,7 @@ import { environment } from '../../../../../environments/environment';
                           <div class="border-t border-beige pt-4 space-y-3">
                             @if (ret.status === 'requested') {
                               <div>
-                                <label class="block text-[10px] font-bold text-neutral-400 uppercase mb-1">Adjust Refund Amount (₹)</label>
+                                <label class="block text-[10px] font-bold text-neutral-400 uppercase mb-1">Adjust Refund Amount (<i class="bi bi-currency-rupee"></i>)</label>
                                 <input type="number" 
                                        [(ngModel)]="ret.tempRefundAmount" 
                                        class="w-full px-3 py-1.5 text-xs border border-beige rounded-lg focus:outline-none focus:ring-1 focus:ring-primary" 

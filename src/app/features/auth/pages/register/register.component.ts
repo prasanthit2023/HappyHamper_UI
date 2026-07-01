@@ -71,46 +71,52 @@ import { AuthStore } from '../../../../state/auth.store';
           }
         </div>
 
-        <!-- Password -->
         <div class="floating-label-group">
           <input
             id="password"
-            type="password"
+            [type]="showPassword() ? 'text' : 'password'"
             formControlName="password"
             placeholder=" "
-            class="floating-label-input"
+            class="floating-label-input pr-10"
             autocomplete="new-password"
             [class.border-red-400]="isInvalid('password')"
           />
           <label for="password" class="floating-label-text">Password *</label>
-          @if (isInvalid('password')) {
-            <p class="text-red-500 text-[10px] mt-1 flex items-center gap-1 font-semibold" role="alert">
-              Password must be at least 6 characters.
-            </p>
-          }
-
-          <!-- Password Strength Indicator -->
-          @if (passwordVal()) {
-            <div class="mt-2 space-y-1.5 animate-fade-in">
-              <div class="flex gap-1 h-1.5">
-                @for (i of [1,2,3,4,5]; track i) {
-                  <div class="flex-1 rounded-full h-full transition-all duration-300"
-                       [class.bg-red-400]="i <= passwordStrength() && passwordStrength() <= 2"
-                       [class.bg-amber-400]="i <= passwordStrength() && passwordStrength() === 3"
-                       [class.bg-emerald-400]="i <= passwordStrength() && passwordStrength() >= 4"
-                       [class.bg-neutral-100]="i > passwordStrength()">
-                  </div>
-                }
-              </div>
-              <span class="text-[9px] font-bold uppercase tracking-wider block"
-                    [class.text-red-500]="passwordStrength() <= 2"
-                    [class.text-amber-500]="passwordStrength() === 3"
-                    [class.text-emerald-500]="passwordStrength() >= 4">
-                {{ passwordStrength() <= 2 ? 'Weak' : passwordStrength() === 3 ? 'Medium' : 'Strong' }} Password
-              </span>
-            </div>
-          }
+          <button
+            type="button"
+            (click)="showPassword.set(!showPassword())"
+            class="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600 focus:outline-none z-10"
+          >
+            <i class="pi" [class.pi-eye-slash]="showPassword()" [class.pi-eye]="!showPassword()"></i>
+          </button>
         </div>
+        @if (isInvalid('password')) {
+          <p class="text-red-500 text-[10px] mt-1 flex items-center gap-1 font-semibold" role="alert">
+            Password must be at least 6 characters.
+          </p>
+        }
+
+        <!-- Password Strength Indicator -->
+        @if (passwordVal()) {
+          <div class="mt-2 space-y-1.5 animate-fade-in">
+            <div class="flex gap-1 h-1.5">
+              @for (i of [1,2,3,4,5]; track i) {
+                <div class="flex-1 rounded-full h-full transition-all duration-300"
+                     [class.bg-red-400]="i <= passwordStrength() && passwordStrength() <= 2"
+                     [class.bg-amber-400]="i <= passwordStrength() && passwordStrength() === 3"
+                     [class.bg-emerald-400]="i <= passwordStrength() && passwordStrength() >= 4"
+                     [class.bg-neutral-100]="i > passwordStrength()">
+                </div>
+              }
+            </div>
+            <span class="text-[9px] font-bold uppercase tracking-wider block"
+                  [class.text-red-500]="passwordStrength() <= 2"
+                  [class.text-amber-500]="passwordStrength() === 3"
+                  [class.text-emerald-500]="passwordStrength() >= 4">
+              {{ passwordStrength() <= 2 ? 'Weak' : passwordStrength() === 3 ? 'Medium' : 'Strong' }} Password
+            </span>
+          </div>
+        }
 
         <button
           type="submit"
@@ -132,7 +138,7 @@ import { AuthStore } from '../../../../state/auth.store';
 
       <p class="text-center text-xs text-[var(--color-text-muted)] font-semibold mt-6">
         Already have an account?
-        <a routerLink="/auth/login" class="text-[var(--color-primary)] hover:underline ml-1">Sign in</a>
+        <a routerLink="/login" class="text-[var(--color-primary)] hover:underline ml-1">Sign in</a>
       </p>
     </div>
   `,
@@ -141,6 +147,7 @@ export class RegisterComponent implements OnInit {
   readonly authStore = inject(AuthStore);
   private readonly fb = inject(FormBuilder);
   private readonly router = inject(Router);
+  showPassword = signal<boolean>(false);
 
   form = this.fb.group({
     name: [
@@ -206,7 +213,7 @@ export class RegisterComponent implements OnInit {
 
     this.authStore.register(payload).subscribe((result) => {
       if (!result) return;
-      this.router.navigate(['/auth/verify-otp'], {
+      this.router.navigate(['/verify-otp'], {
         queryParams: { phone: payload.phone },
       });
     });

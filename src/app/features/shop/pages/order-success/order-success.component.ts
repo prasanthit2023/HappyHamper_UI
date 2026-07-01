@@ -262,7 +262,7 @@ import { environment } from '../../../../../environments/environment';
                       Qty: {{ item.quantity }} @if (item.size) { &bull; Size: {{ item.size }} } @if (item.color) { &bull; {{ item.color }} }
                     </p>
                   </div>
-                  <span class="text-xs font-bold text-[var(--color-text)] whitespace-nowrap">₹{{ (item.price * item.quantity) | number:'1.0-0' }}</span>
+                  <span class="text-xs font-bold text-[var(--color-text)] whitespace-nowrap"><i class="bi bi-currency-rupee"></i>{{ (item.price * item.quantity) | number:'1.0-0' }}</span>
                 </div>
               }
             </div>
@@ -271,25 +271,25 @@ import { environment } from '../../../../../environments/environment';
             <div class="space-y-2 text-xs text-[var(--color-text-muted)] mb-4">
               <div class="flex justify-between">
                 <span>Subtotal</span>
-                <span class="font-semibold text-[var(--color-text)]">₹{{ o.subTotal | number:'1.0-0' }}</span>
+                <span class="font-semibold text-[var(--color-text)]"><i class="bi bi-currency-rupee"></i>{{ o.subTotal | number:'1.0-0' }}</span>
               </div>
               @if (o.discountAmount > 0) {
                 <div class="flex justify-between text-green-600 font-semibold">
                   <span>Discount</span>
-                  <span>-₹{{ o.discountAmount | number:'1.0-0' }}</span>
+                  <span>-<i class="bi bi-currency-rupee"></i>{{ o.discountAmount | number:'1.0-0' }}</span>
                 </div>
               }
               <div class="flex justify-between">
                 <span>Shipping</span>
-                <span class="font-semibold text-[var(--color-text)]">₹{{ o.shippingFee | number:'1.0-0' }}</span>
+                <span class="font-semibold text-[var(--color-text)]"><i class="bi bi-currency-rupee"></i>{{ o.shippingFee | number:'1.0-0' }}</span>
               </div>
               <div class="flex justify-between">
                 <span>GST (5%)</span>
-                <span class="font-semibold text-[var(--color-text)]">₹{{ o.taxAmount | number:'1.0-0' }}</span>
+                <span class="font-semibold text-[var(--color-text)]"><i class="bi bi-currency-rupee"></i>{{ (o.subTotal * 0.05) | number:'1.0-0' }}</span>
               </div>
               <div class="border-t border-[var(--color-border)] pt-2.5 flex justify-between items-baseline text-sm font-bold text-[var(--color-text)]">
                 <span>Total Paid</span>
-                <span class="text-base font-extrabold text-[var(--color-primary)]">₹{{ o.totalAmount | number:'1.0-0' }}</span>
+                <span class="text-base font-extrabold text-[var(--color-primary)]"><i class="bi bi-currency-rupee"></i>{{ o.totalAmount | number:'1.0-0' }}</span>
               </div>
             </div>
             
@@ -297,11 +297,17 @@ import { environment } from '../../../../../environments/environment';
             <div class="border-t border-[var(--color-border)] pt-4 grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
               <div class="bg-[var(--color-bg-subtle)] p-3 rounded-xl">
                 <p class="font-bold text-[var(--color-text-muted)] mb-1 uppercase tracking-wider text-[10px]">Shipping Address</p>
-                <p class="font-bold text-[var(--color-text)]">{{ o.shippingAddressFullName }}</p>
-                <p class="text-[var(--color-text-muted)] mt-0.5 leading-relaxed text-[11px]">
-                  {{ o.shippingAddressStreet }}, {{ o.shippingAddressCity }}, {{ o.shippingAddressState }} - {{ o.shippingAddressZipCode }}
-                </p>
-                <p class="text-[var(--color-text-muted)] mt-1.5 font-semibold text-[11px]">📞 {{ o.shippingAddressPhone }}</p>
+                @if (o.shippingAddress) {
+                  <p class="font-bold text-[var(--color-text)]">
+                    {{ o.shippingAddress.fullName || (o.shippingAddress.firstName + ' ' + o.shippingAddress.lastName) | titlecase }}
+                  </p>
+                  <p class="text-[var(--color-text-muted)] mt-0.5 leading-relaxed text-[11px]">
+                    {{ o.shippingAddress.street }}, {{ o.shippingAddress.city }}, {{ o.shippingAddress.state }} - {{ o.shippingAddress.zipCode }}
+                  </p>
+                  <p class="text-[var(--color-text-muted)] mt-1.5 font-semibold text-[11px]">📞 {{ o.shippingAddress.phone }}</p>
+                } @else {
+                  <p class="text-[var(--color-text-muted)] text-[11px] italic">Address details not available</p>
+                }
               </div>
               <div class="bg-[var(--color-bg-subtle)] p-3 rounded-xl flex flex-col justify-between">
                 <div>

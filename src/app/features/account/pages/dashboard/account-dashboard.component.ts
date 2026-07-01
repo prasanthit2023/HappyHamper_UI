@@ -101,7 +101,7 @@ import { environment } from '../../../../../environments/environment';
                     <span class="text-xs text-[var(--color-text-muted)] block mt-0.5">Placed: {{ order.createdAt | date:'mediumDate' }}</span>
                   </div>
                   <div>
-                    <span class="font-bold text-[var(--color-text)] block">₹{{ order.totalAmount | number:'1.0-0' }}</span>
+                    <span class="font-bold text-[var(--color-text)] block"><i class="bi bi-currency-rupee"></i>{{ order.totalAmount | number:'1.0-0' }}</span>
                     <span class="text-xs text-[var(--color-text-muted)] block mt-0.5">{{ order.items?.length || 0 }} {{ order.items?.length === 1 ? 'item' : 'items' }}</span>
                   </div>
                   <div>

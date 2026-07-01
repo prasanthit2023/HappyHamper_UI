@@ -1,8 +1,10 @@
 import { Component, OnInit, inject, signal, ChangeDetectionStrategy, ChangeDetectorRef, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../../environments/environment';
+import { AuthStore } from '../../../../state/auth.store';
+import { CartStore } from '../../../../state/cart.store';
 
 @Component({
   selector: 'bb-orders-list',
@@ -50,6 +52,18 @@ import { environment } from '../../../../../environments/environment';
         </button>
       </div>
 
+      @if (retryError()) {
+        <div class="bg-red-50 border border-red-200 rounded-xl px-4 py-3 flex items-start gap-3" role="alert">
+          <svg class="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <div class="flex-1">
+            <p class="text-xs font-bold text-red-700">{{ retryError() }}</p>
+          </div>
+          <button (click)="retryError.set('')" class="text-red-400 hover:text-red-600 flex-shrink-0" aria-label="Dismiss">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+        </div>
+      }
+
       @if (loading()) {
         <div class="space-y-4">
           <div class="skeleton h-24 w-full rounded-2xl"></div>
@@ -80,7 +94,7 @@ import { environment } from '../../../../../environments/environment';
                   </div>
                   <div>
                     <span class="text-[10px] font-bold text-[var(--color-text-muted)] uppercase tracking-wider block">Total Amount</span>
-                    <span class="font-bold text-[var(--color-text)]">₹{{ order.totalAmount | number:'1.0-0' }}</span>
+                    <span class="font-bold text-[var(--color-text)]"><i class="bi bi-currency-rupee"></i>{{ order.totalAmount | number:'1.0-0' }}</span>
                   </div>
                   <div>
                     <span class="text-[10px] font-bold text-[var(--color-text-muted)] uppercase tracking-wider block">Order ID</span>
@@ -132,7 +146,23 @@ import { environment } from '../../../../../environments/environment';
                   </div>
                 </div>
 
-                <div class="w-full sm:w-auto">
+                <div class="w-full sm:w-auto flex gap-2">
+                  <!-- Retry Payment button for unpaid orders -->
+                  @if (order.paymentStatus !== 'paid' && order.orderStatus !== 'cancelled') {
+                    <button
+                      (click)="retryPayment(order)"
+                      [disabled]="retryingOrderId() === (order._id || order.id)"
+                      class="w-full sm:w-auto px-4 py-2 text-xs font-bold rounded-xl border-2 border-[var(--color-primary)] text-[var(--color-primary)] bg-white hover:bg-[var(--color-primary)] hover:text-white transition-all flex items-center justify-center gap-1.5"
+                    >
+                      @if (retryingOrderId() === (order._id || order.id)) {
+                        <svg class="w-3.5 h-3.5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" style="opacity:.25"></circle><path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" style="opacity:.75"></path></svg>
+                        Processing…
+                      } @else {
+                        <i class="bi bi-credit-card"></i>
+                        Pay Now
+                      }
+                    </button>
+                  }
                   <a [routerLink]="['/account/orders', order._id || order.id]" class="btn-secondary w-full sm:w-auto px-4 py-2 text-xs font-bold text-center">
                     View Details
                   </a>
@@ -148,10 +178,15 @@ import { environment } from '../../../../../environments/environment';
 export class OrdersComponent implements OnInit {
   private http = inject(HttpClient);
   private cdr = inject(ChangeDetectorRef);
+  private router = inject(Router);
+  readonly authStore = inject(AuthStore);
+  readonly cartStore = inject(CartStore);
 
   orders = signal<any[]>([]);
   loading = signal<boolean>(true);
   activeTab = signal<string>('all');
+  retryingOrderId = signal<string | null>(null);
+  retryError = signal<string>('');
 
   filteredOrders = computed(() => {
     const list = this.orders();
@@ -168,6 +203,17 @@ export class OrdersComponent implements OnInit {
 
   ngOnInit() {
     this.fetchOrders();
+    this.loadRazorpayScript();
+  }
+
+  private loadRazorpayScript() {
+    if ((window as any)['Razorpay']) return;
+    if (document.getElementById('razorpay-script')) return;
+    const script = document.createElement('script');
+    script.id = 'razorpay-script';
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.async = true;
+    document.head.appendChild(script);
   }
 
   fetchOrders() {
@@ -182,6 +228,137 @@ export class OrdersComponent implements OnInit {
         this.orders.set([]);
         this.loading.set(false);
         this.cdr.markForCheck();
+      },
+    });
+  }
+
+  retryPayment(order: any) {
+    const orderId = order.id || order._id;
+    this.retryingOrderId.set(orderId);
+    this.retryError.set('');
+    this.cdr.markForCheck();
+
+    // Re-create (or reuse) the Razorpay order for this DB order
+    this.http.post<any>(`${environment.apiUrl}/payments/razorpay/create-order/${orderId}`, {}).subscribe({
+      next: (res) => {
+        this.retryingOrderId.set(null);
+        this.cdr.markForCheck();
+        this.openRazorpayPopup(res.data, order.orderNumber, orderId);
+      },
+      error: (err) => {
+        this.retryingOrderId.set(null);
+        this.retryError.set(err.error?.message || 'Failed to initialise payment. Please try again.');
+        this.cdr.markForCheck();
+      },
+    });
+  }
+
+  private openRazorpayPopup(paymentData: any, orderNumber: string, orderId: any) {
+    const RazorpayClass = (window as any)['Razorpay'];
+    if (!RazorpayClass) {
+      this.retryError.set('Payment gateway not loaded. Please refresh the page and try again.');
+      this.cdr.markForCheck();
+      return;
+    }
+
+    const user = this.authStore.user();
+    const options = {
+      key: paymentData.razorpayKeyId,
+      amount: paymentData.amount,
+      currency: 'INR',
+      name: 'Happy Hamper',
+      description: `Order #${orderNumber}`,
+      order_id: paymentData.razorpayOrderId,
+      prefill: {
+        name: user ? `${user.firstName} ${user.lastName}`.trim() : '',
+        email: (user as any)?.email ?? '',
+        contact: user?.phone ?? '',
+      },
+      // Restrict to INR-compatible domestic payment methods only
+      config: {
+        display: {
+          blocks: {
+            banks: {
+              name: 'Pay via UPI / Cards / Net Banking',
+              instruments: [
+                { method: 'upi' },
+                { method: 'card', issuers: ['HDFC', 'ICICI', 'SBI', 'AXIS', 'KOTAK'] },
+                { method: 'netbanking' },
+                { method: 'wallet' },
+              ],
+            },
+          },
+          sequence: ['block.banks'],
+          preferences: { show_default_blocks: true },
+        },
+      },
+      theme: { color: '#7C3AED' },
+      modal: {
+        backdropclose: false,
+        ondismiss: () => {
+          this.retryError.set('Payment cancelled. You can retry anytime from your Orders page.');
+          this.cdr.markForCheck();
+        },
+      },
+      'payment.failed': (response: any) => {
+        const errCode = response?.error?.code ?? '';
+        const errDesc = response?.error?.description ?? '';
+        const errReason = response?.error?.reason ?? '';
+
+        let userMessage: string;
+        if (
+          errReason === 'payment_failed' &&
+          (errDesc.toLowerCase().includes('international') || errCode === 'BAD_REQUEST_ERROR')
+        ) {
+          userMessage = 'International cards are not supported. Please use UPI (GPay / PhonePe), a domestic Visa/Mastercard, or Net Banking.';
+        } else if (errDesc) {
+          userMessage = `Payment failed: ${errDesc}. Please try a different payment method.`;
+        } else {
+          userMessage = 'Payment failed. Please try again using UPI, a domestic card, or Net Banking.';
+        }
+        this.retryError.set(userMessage);
+        this.cdr.markForCheck();
+      },
+      handler: (response: any) => {
+        this.verifyAndComplete(
+          response.razorpay_order_id,
+          response.razorpay_payment_id,
+          response.razorpay_signature,
+          orderId,
+          orderNumber
+        );
+      },
+    };
+
+    const rzp = new RazorpayClass(options);
+    rzp.open();
+  }
+
+  private verifyAndComplete(
+    razorpayOrderId: string,
+    razorpayPaymentId: string,
+    razorpaySignature: string,
+    orderId: any,
+    orderNumber: string
+  ) {
+    this.http.post<any>(`${environment.apiUrl}/payments/razorpay/verify`, {
+      razorpayOrderId,
+      razorpayPaymentId,
+      razorpaySignature,
+    }).subscribe({
+      next: () => {
+        this.cartStore.clearCart();
+        this.router.navigate(['/checkout/success'], {
+          queryParams: { orderId, orderNumber }
+        });
+      },
+      error: (err) => {
+        this.retryError.set(
+          err.error?.message || 'Payment received but verification failed. Contact support with order: ' + orderNumber
+        );
+        this.cdr.markForCheck();
+        // Still refresh orders so status reflects latest state
+        this.fetchOrders();
       },
     });
   }

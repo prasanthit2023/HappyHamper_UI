@@ -86,10 +86,10 @@ import { ToastService } from '../../../core/services/toast.service';
           <div class="flex items-center justify-between mt-2">
             <div class="flex items-baseline gap-1.5">
               <span class="price-current">
-                ₹{{ (product.discountPrice || product.price) | number:'1.0-0' }}
+                <i class="bi bi-currency-rupee"></i>{{ (product.discountPrice || product.price) | number:'1.0-0' }}
               </span>
               @if (product.discountPrice && product.discountPrice < product.price) {
-                <span class="price-original">₹{{ product.price | number:'1.0-0' }}</span>
+                <span class="price-original"><i class="bi bi-currency-rupee"></i>{{ product.price | number:'1.0-0' }}</span>
               }
             </div>
 
@@ -177,10 +177,10 @@ import { ToastService } from '../../../core/services/toast.service';
           <div class="flex items-center justify-between mt-3">
             <div class="flex items-baseline gap-1.5">
               <span class="price-current text-base sm:text-lg">
-                ₹{{ (product.discountPrice || product.price) | number:'1.0-0' }}
+                <i class="bi bi-currency-rupee"></i>{{ (product.discountPrice || product.price) | number:'1.0-0' }}
               </span>
               @if (product.discountPrice && product.discountPrice < product.price) {
-                <span class="price-original text-xs sm:text-sm">₹{{ product.price | number:'1.0-0' }}</span>
+                <span class="price-original text-xs sm:text-sm"><i class="bi bi-currency-rupee"></i>{{ product.price | number:'1.0-0' }}</span>
               }
             </div>
 
@@ -220,13 +220,13 @@ import { ToastService } from '../../../core/services/toast.service';
 export class ProductCardComponent {
   @Input({ required: true }) product!: any;
   @Input() viewMode: 'grid' | 'list' = 'grid';
-  @Output() quickAdd       = new EventEmitter<any>();
+  @Output() quickAdd = new EventEmitter<any>();
   @Output() wishlistToggle = new EventEmitter<string>();
 
-  readonly authStore     = inject(AuthStore);
+  readonly authStore = inject(AuthStore);
   readonly wishlistStore = inject(WishlistStore);
-  private toastService   = inject(ToastService);
-  private router         = inject(Router);
+  private toastService = inject(ToastService);
+  private router = inject(Router);
 
   readonly Math = Math;
 
@@ -252,7 +252,7 @@ export class ProductCardComponent {
     event.stopPropagation();
     if (!this.authStore.isLoggedIn()) {
       this.toastService.warning('Please log in to add items to your wishlist.');
-      this.router.navigate(['/auth/login']);
+      this.router.navigate(['/login']);
       return;
     }
     this.wishlistStore.toggle(this.product._id || this.product.id).subscribe();

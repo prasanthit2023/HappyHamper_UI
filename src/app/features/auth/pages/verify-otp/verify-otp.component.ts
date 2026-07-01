@@ -70,7 +70,7 @@ import { AuthStore } from '../../../../state/auth.store';
 
       <p class="text-center text-sm text-neutral-500 mt-6">
         Already verified?
-        <a routerLink="/auth/login" class="text-primary-500 font-semibold hover:text-primary-600">Sign in</a>
+        <a routerLink="/login" class="text-primary-500 font-semibold hover:text-primary-600">Sign in</a>
       </p>
     </div>
   `,
@@ -121,7 +121,7 @@ export class VerifyOtpComponent implements OnInit {
     this.authStore.verifyOtp(phone, otp).subscribe((result) => {
       if (!result) return;
       this.successMessage.set('Mobile number verified. Redirecting to sign in...');
-      setTimeout(() => this.router.navigate(['/auth/login']), 800);
+      setTimeout(() => this.router.navigate(['/login']), 800);
     });
   }
 

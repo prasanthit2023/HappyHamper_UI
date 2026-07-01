@@ -205,10 +205,10 @@ import { AuthStore } from '../../../../state/auth.store';
           <div class="floating-label-group">
             <input
               id="password"
-              type="password"
+              [type]="showPassword() ? 'text' : 'password'"
               formControlName="password"
               placeholder=" "
-              class="floating-label-input"
+              class="floating-label-input pr-10"
               autocomplete="current-password"
               [class.border-red-400]="isPasswordInvalid()"
             />
@@ -218,15 +218,22 @@ import { AuthStore } from '../../../../state/auth.store';
             >
               Password *
             </label>
-            @if (isPasswordInvalid()) {
-              <p class="text-red-500 text-[10px] mt-1.5 flex items-center gap-1 font-semibold">
-                Password is required.
-              </p>
-            }
+            <button
+              type="button"
+              (click)="showPassword.set(!showPassword())"
+              class="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600 focus:outline-none z-10"
+            >
+              <i class="pi" [class.pi-eye-slash]="showPassword()" [class.pi-eye]="!showPassword()"></i>
+            </button>
           </div>
+          @if (isPasswordInvalid()) {
+            <p class="text-red-500 text-[10px] mt-1.5 flex items-center gap-1 font-semibold">
+              Password is required.
+            </p>
+          }
 
           <div class="flex justify-end text-xs">
-            <a routerLink="/auth/forgot-password" class="font-bold text-[var(--color-primary)] hover:underline">Forgot Password?</a>
+            <a routerLink="/forgot-password" class="font-bold text-[var(--color-primary)] hover:underline">Forgot Password?</a>
           </div>
 
           <button
@@ -250,7 +257,7 @@ import { AuthStore } from '../../../../state/auth.store';
 
       <div class="mt-6 text-center text-xs text-[var(--color-text-muted)] font-semibold">
         Don't have an account?
-        <a routerLink="/auth/register" class="text-[var(--color-primary)] hover:underline ml-1">Register here</a>
+        <a routerLink="/register" class="text-[var(--color-primary)] hover:underline ml-1">Register here</a>
       </div>
     </div>
   `,
@@ -263,6 +270,7 @@ export class LoginComponent {
   loginMode = signal<'phone' | 'password'>('phone');
   step = signal<'phone' | 'otp'>('phone');
   receivedDevOtp: string | null = null;
+  showPassword = signal<boolean>(false);
 
   phoneForm = this.fb.group({
     phone: ['', [Validators.required, Validators.pattern(/^[6-9]\d{9}$/)]],

@@ -300,7 +300,7 @@ export class AdminLayoutComponent implements OnInit {
 
   logout() {
     this.authStore.logout();
-    this.router.navigate(['/auth/login']);
+    this.router.navigate(['/login']);
   }
 
   private updateBreadcrumbs(url: string) {

@@ -3,8 +3,8 @@ import { ServerRoute, RenderMode } from '@angular/ssr';
 export const serverRoutes: ServerRoute[] = [
   // Runtime SSR for public pages so production content stays dynamic.
   { path: '', renderMode: RenderMode.Server },
-  { path: 'auth/login', renderMode: RenderMode.Server },
-  { path: 'auth/register', renderMode: RenderMode.Server },
+  { path: 'login', renderMode: RenderMode.Server },
+  { path: 'register', renderMode: RenderMode.Server },
 
   // SSR for dynamic product/category pages.
   { path: 'products', renderMode: RenderMode.Server },

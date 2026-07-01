@@ -59,9 +59,9 @@ import { environment } from '../../../../../environments/environment';
                   <h4 class="font-bold text-xs text-neutral-800 dark:text-neutral-250 truncate">{{ p.title }}</h4>
                 </a>
                 <div class="flex justify-between items-baseline">
-                  <span class="text-sm font-extrabold text-neutral-900 dark:text-white">₹{{ (p.discountPrice || p.price) | number:'1.0-0' }}</span>
+                  <span class="text-sm font-extrabold text-neutral-900 dark:text-white"><i class="bi bi-currency-rupee"></i>{{ (p.discountPrice || p.price) | number:'1.0-0' }}</span>
                   @if (p.discountPrice && p.discountPrice < p.price) {
-                    <span class="text-[10px] text-neutral-400 line-through">₹{{ p.price | number:'1.0-0' }}</span>
+                    <span class="text-[10px] text-neutral-400 line-through"><i class="bi bi-currency-rupee"></i>{{ p.price | number:'1.0-0' }}</span>
                   }
                 </div>
 

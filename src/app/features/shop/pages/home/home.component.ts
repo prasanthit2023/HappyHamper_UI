@@ -354,9 +354,9 @@ import { environment } from '../../../../../environments/environment';
                   
                   <div class="flex items-center justify-between pt-4 border-t border-beige">
                     <div>
-                      <span class="text-lg font-bold text-neutral-800">₹{{ p.discountPrice || p.price }}</span>
+                      <span class="text-lg font-bold text-neutral-800"><i class="bi bi-currency-rupee"></i>{{ p.discountPrice || p.price }}</span>
                       @if (p.discountPrice && p.price > p.discountPrice) {
-                        <span class="text-xs text-neutral-400 line-through ml-2">₹{{ p.price }}</span>
+                        <span class="text-xs text-neutral-400 line-through ml-2"><i class="bi bi-currency-rupee"></i>{{ p.price }}</span>
                       }
                     </div>
                     
@@ -502,9 +502,9 @@ import { environment } from '../../../../../environments/environment';
                   </div>
                   <h3 class="font-semibold text-xs text-neutral-900 group-hover:text-primary transition-colors truncate mb-1">{{ $any(item).title }}</h3>
                   <div class="flex items-baseline gap-1.5">
-                    <span class="text-sm font-extrabold" style="color: var(--color-primary);">₹{{ ($any(item).discountPrice || $any(item).price) | number:'1.0-0' }}</span>
+                    <span class="text-sm font-extrabold" style="color: var(--color-primary);"><i class="bi bi-currency-rupee"></i>{{ ($any(item).discountPrice || $any(item).price) | number:'1.0-0' }}</span>
                     @if ($any(item).discountPrice && $any(item).price > $any(item).discountPrice) {
-                      <span class="text-[10px] text-neutral-400 line-through">₹{{ $any(item).price | number:'1.0-0' }}</span>
+                      <span class="text-[10px] text-neutral-400 line-through"><i class="bi bi-currency-rupee"></i>{{ $any(item).price | number:'1.0-0' }}</span>
                     }
                   </div>
                 </a>
@@ -623,7 +623,7 @@ export class HomeComponent implements OnInit {
 
   trustBadges = [
     { label: '100% Organic', sub: 'Certified cotton', color: 'var(--color-primary)', svgPath: 'M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707M14 12a2 2 0 11-4 0 2 2 0 014 0z' },
-    { label: 'Free Shipping', sub: 'Orders ₹499+', color: 'var(--color-accent)', svgPath: 'M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0zM13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17h5m4 0h5' },
+    { label: 'Free Shipping', sub: 'Orders \u20B9499+', color: 'var(--color-accent)', svgPath: 'M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0zM13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17h5m4 0h5' },
     { label: 'Easy Returns', sub: '7-day hassle-free', color: 'var(--color-accent)', svgPath: 'M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15' },
     { label: 'Secure Payments', sub: 'SSL encrypted', color: 'var(--color-primary)', svgPath: 'M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z' },
   ];
@@ -695,7 +695,7 @@ export class HomeComponent implements OnInit {
 
   private setupSEO() {
     this.titleService.setTitle('Happy Hamper – Premium Organic Baby & Kids Clothing');
-    this.meta.updateTag({ name: 'description', content: 'Shop adorable, organic, and safe clothing for babies and kids. Free shipping on orders above ₹499.' });
+    this.meta.updateTag({ name: 'description', content: 'Shop adorable, organic, and safe clothing for babies and kids. Free shipping on orders above \u20B9499.' });
     this.meta.updateTag({ property: 'og:title', content: 'Happy Hamper – Premium Baby & Kids Clothing' });
     this.meta.updateTag({ property: 'og:type', content: 'website' });
   }
@@ -834,7 +834,7 @@ export class HomeComponent implements OnInit {
     event.stopPropagation();
     if (!this.authStore.isLoggedIn()) {
       this.toastService.warning('Please log in to add items to your wishlist.');
-      this.router.navigate(['/auth/login']);
+      this.router.navigate(['/login']);
       return;
     }
     this.wishlistStore.toggle(product._id || product.id).subscribe();

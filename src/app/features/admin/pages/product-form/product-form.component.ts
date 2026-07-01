@@ -61,11 +61,11 @@ import { environment } from '../../../../../environments/environment';
 
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div>
-            <label class="block text-xs font-semibold text-neutral-400 mb-1.5">Base Price (₹)</label>
+            <label class="block text-xs font-semibold text-neutral-400 mb-1.5">Base Price (<i class="bi bi-currency-rupee"></i>)</label>
             <input type="number" formControlName="price" class="input-field py-2" />
           </div>
           <div>
-            <label class="block text-xs font-semibold text-neutral-400 mb-1.5">Discount Price (₹)</label>
+            <label class="block text-xs font-semibold text-neutral-400 mb-1.5">Discount Price (<i class="bi bi-currency-rupee"></i>)</label>
             <input type="number" formControlName="discountPrice" class="input-field py-2" />
           </div>
           <div>

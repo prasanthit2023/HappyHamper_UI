@@ -87,7 +87,7 @@ import { CartStore, CartItem } from '../../../../state/cart.store';
               <svg class="w-3.5 h-3.5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8l1.6 12h10.8L19 8"/>
               </svg>
-              Free Delivery ₹499+
+              Free Delivery <i class="bi bi-currency-rupee"></i>499+
             </span>
             <span class="text-xs text-[var(--color-text-muted)] flex items-center gap-1.5">
               <svg class="w-3.5 h-3.5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -127,9 +127,9 @@ import { CartStore, CartItem } from '../../../../state/cart.store';
                     <svg class="w-4 h-4 text-[var(--color-primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8l1.6 12h10.8L19 8"/>
                     </svg>
-                    Add <span class="text-[var(--color-primary)] font-bold mx-1">₹{{ cartStore.remainingForFreeShipping() | number:'1.0-0' }}</span> more for FREE shipping!
+                    Add <span class="text-[var(--color-primary)] font-bold mx-1"><i class="bi bi-currency-rupee"></i>{{ cartStore.remainingForFreeShipping() | number:'1.0-0' }}</span> more for FREE shipping!
                   </span>
-                  <span class="text-[var(--color-text-muted)]">₹{{ cartStore.subTotal() | number:'1.0-0' }} / ₹{{ cartStore.freeShippingThreshold }}</span>
+                  <span class="text-[var(--color-text-muted)]"><i class="bi bi-currency-rupee"></i>{{ cartStore.subTotal() | number:'1.0-0' }} / <i class="bi bi-currency-rupee"></i>{{ cartStore.freeShippingThreshold }}</span>
                 </div>
                 <div class="w-full bg-[var(--color-border)] rounded-full h-2.5 overflow-hidden">
                   <div
@@ -194,9 +194,9 @@ import { CartStore, CartItem } from '../../../../state/cart.store';
                 <div class="flex items-center justify-between sm:justify-end gap-5 w-full sm:w-auto">
                   <div class="text-right">
                     <span class="font-bold text-base text-[var(--color-text)]">
-                      ₹{{ (item.price * item.quantity) | number:'1.0-0' }}
+                      <i class="bi bi-currency-rupee"></i>{{ (item.price * item.quantity) | number:'1.0-0' }}
                     </span>
-                    <span class="text-xs text-[var(--color-text-muted)] block">₹{{ item.price | number:'1.0-0' }} each</span>
+                    <span class="text-xs text-[var(--color-text-muted)] block"><i class="bi bi-currency-rupee"></i>{{ item.price | number:'1.0-0' }} each</span>
                   </div>
 
                   <!-- Quantity Incrementor -->
@@ -242,7 +242,7 @@ import { CartStore, CartItem } from '../../../../state/cart.store';
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                   </svg>
                   <p class="text-sm font-bold text-green-700">
-                    🎉 You saved ₹{{ cartStore.cart().discountAmount | number:'1.0-0' }}!
+                    🎉 You saved <i class="bi bi-currency-rupee"></i>{{ cartStore.cart().discountAmount | number:'1.0-0' }}!
                   </p>
                 </div>
               }
@@ -250,7 +250,7 @@ import { CartStore, CartItem } from '../../../../state/cart.store';
               <div class="space-y-2.5 text-sm">
                 <div class="flex justify-between text-[var(--color-text-muted)]">
                   <span>Subtotal ({{ cartStore.itemCount() }} items)</span>
-                  <span class="font-semibold text-[var(--color-text)]">₹{{ cartStore.subTotal() | number:'1.0-0' }}</span>
+                  <span class="font-semibold text-[var(--color-text)]"><i class="bi bi-currency-rupee"></i>{{ cartStore.subTotal() | number:'1.0-0' }}</span>
                 </div>
 
                 @if (cartStore.cart().discountAmount > 0) {
@@ -259,7 +259,7 @@ import { CartStore, CartItem } from '../../../../state/cart.store';
                       <span class="badge badge-discount text-[10px] py-0.5 px-1.5">{{ cartStore.cart().couponCode }}</span>
                       Discount
                     </span>
-                    <span>-₹{{ cartStore.cart().discountAmount | number:'1.0-0' }}</span>
+                    <span>-<i class="bi bi-currency-rupee"></i>{{ cartStore.cart().discountAmount | number:'1.0-0' }}</span>
                   </div>
                 }
 
@@ -268,13 +268,13 @@ import { CartStore, CartItem } from '../../../../state/cart.store';
                   @if (cartStore.subTotal() >= cartStore.freeShippingThreshold) {
                     <span class="font-bold text-green-600">FREE</span>
                   } @else {
-                    <span class="font-semibold text-[var(--color-text)]">₹49</span>
+                    <span class="font-semibold text-[var(--color-text)]"><i class="bi bi-currency-rupee"></i>49</span>
                   }
                 </div>
 
                 <div class="flex justify-between text-[var(--color-text-muted)]">
                   <span>GST (5%)</span>
-                  <span class="font-semibold text-[var(--color-text)]">₹{{ (cartStore.subTotal() * 0.05) | number:'1.0-0' }}</span>
+                  <span class="font-semibold text-[var(--color-text)]"><i class="bi bi-currency-rupee"></i>{{ (cartStore.subTotal() * 0.05) | number:'1.0-0' }}</span>
                 </div>
               </div>
 
@@ -318,7 +318,7 @@ import { CartStore, CartItem } from '../../../../state/cart.store';
               <div class="border-t border-[var(--color-border)] pt-4 flex justify-between items-baseline">
                 <span class="font-bold text-base text-[var(--color-text)]">Total</span>
                 <span class="text-2xl font-black" style="color: var(--color-primary)">
-                  ₹{{ grandTotal() | number:'1.0-0' }}
+                  <i class="bi bi-currency-rupee"></i>{{ grandTotal() | number:'1.0-0' }}
                 </span>
               </div>
 
@@ -361,7 +361,7 @@ import { CartStore, CartItem } from '../../../../state/cart.store';
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8l1.6 12h10.8L19 8"/>
                       </svg>
                     </div>
-                    <span class="text-[9px] font-semibold text-[var(--color-text-muted)] leading-tight">Free Delivery ₹499+</span>
+                    <span class="text-[9px] font-semibold text-[var(--color-text-muted)] leading-tight">Free Delivery <i class="bi bi-currency-rupee"></i>499+</span>
                   </div>
                   <div class="flex flex-col items-center gap-1 px-1">
                     <div class="w-8 h-8 rounded-full bg-purple-50 flex items-center justify-center">

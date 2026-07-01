@@ -145,7 +145,7 @@ import { environment } from '../../../../../environments/environment';
                   class="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold text-white transition-all hover:opacity-90"
                   style="background: var(--gradient-accent);"
                 >
-                  Price: ₹{{ minPrice ?? 0 }} – ₹{{ maxPrice ?? '∞' }}
+                  Price: <i class="bi bi-currency-rupee"></i>{{ minPrice ?? 0 }} – <i class="bi bi-currency-rupee"></i>{{ maxPrice ?? '∞' }}
                   <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
               }
@@ -233,11 +233,11 @@ import { environment } from '../../../../../environments/environment';
                   <!-- Custom range -->
                   <div class="grid grid-cols-2 gap-2">
                     <div>
-                      <label class="text-[10px] font-semibold uppercase block mb-1" style="color: var(--color-text-muted);">Min (₹)</label>
+                      <label class="text-[10px] font-semibold uppercase block mb-1" style="color: var(--color-text-muted);">Min (<i class="bi bi-currency-rupee"></i>)</label>
                       <input type="number" [(ngModel)]="minPrice" placeholder="0" class="input-field py-2 text-xs" />
                     </div>
                     <div>
-                      <label class="text-[10px] font-semibold uppercase block mb-1" style="color: var(--color-text-muted);">Max (₹)</label>
+                      <label class="text-[10px] font-semibold uppercase block mb-1" style="color: var(--color-text-muted);">Max (<i class="bi bi-currency-rupee"></i>)</label>
                       <input type="number" [(ngModel)]="maxPrice" placeholder="5000" class="input-field py-2 text-xs" />
                     </div>
                   </div>
@@ -477,8 +477,8 @@ import { environment } from '../../../../../environments/environment';
                 }
               </div>
               <div class="grid grid-cols-2 gap-2">
-                <input type="number" [(ngModel)]="minPrice" placeholder="Min ₹" class="input-field py-2 text-sm" />
-                <input type="number" [(ngModel)]="maxPrice" placeholder="Max ₹" class="input-field py-2 text-sm" />
+                <input type="number" [(ngModel)]="minPrice" [placeholder]="'Min ' + '\u20B9'" class="input-field py-2 text-sm" />
+                <input type="number" [(ngModel)]="maxPrice" [placeholder]="'Max ' + '\u20B9'" class="input-field py-2 text-sm" />
               </div>
             </div>
 
@@ -576,10 +576,10 @@ export class ProductListingComponent implements OnInit, OnDestroy {
   };
 
   priceBuckets = [
-    { label: 'Under ₹299', min: null, max: 299 },
-    { label: '₹299–₹599', min: 299, max: 599 },
-    { label: '₹599–₹999', min: 599, max: 999 },
-    { label: '₹999+', min: 999, max: null },
+    { label: 'Under \u20B9299', min: null, max: 299 },
+    { label: '\u20B9299–\u20B9599', min: 299, max: 599 },
+    { label: '\u20B9599–\u20B9999', min: 599, max: 999 },
+    { label: '\u20B9999+', min: 999, max: null },
   ];
 
   specialFilters = [
