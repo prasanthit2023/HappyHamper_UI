@@ -96,7 +96,7 @@ import { environment } from '../../../../../environments/environment';
                     <div class="flex flex-col gap-0.5">
                       <span class="font-mono font-bold text-xs px-1.5 py-0.5 rounded inline-block w-fit"
                             style="background: var(--color-bg-subtle); color: var(--color-text-muted);">
-                        RET-{{ ret.id?.slice(-6)?.toUpperCase() }}
+                        RET-{{ ret.id?.toString()?.slice(-6)?.toUpperCase() }}
                       </span>
                       <span class="text-xs font-semibold text-neutral-600">
                         Order #{{ ret.orderId?.orderNumber || 'N/A' }}

@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AuthStore } from '../../../../state/auth.store';
 import { ConfirmService } from '../../../../core/services/confirm.service';
+import { ToastService } from '../../../../core/services/toast.service';
 
 @Component({
   selector: 'bb-addresses-manager',
@@ -138,6 +139,7 @@ export class AddressesComponent implements OnInit {
   readonly authStore = inject(AuthStore);
   private fb = inject(FormBuilder);
   private confirmService = inject(ConfirmService);
+  private toastService = inject(ToastService);
 
   // Derived directly from the store — no manual sync needed, no duplicates
   readonly addresses = computed(() => this.authStore.user()?.addresses ?? []);
@@ -189,7 +191,15 @@ export class AddressesComponent implements OnInit {
   }
 
   setDefault(addressId: string) {
-    this.authStore.setDefaultAddress(addressId).subscribe();
+    this.authStore.setDefaultAddress(addressId).subscribe({
+      next: () => {
+        this.toastService.success('Default address updated');
+        this.authStore.fetchProfile().subscribe();
+      },
+      error: (err) => {
+        this.toastService.error(err?.message || 'Failed to set default address');
+      }
+    });
   }
 
   deleteAddress(addressId: string) {
@@ -200,7 +210,15 @@ export class AddressesComponent implements OnInit {
       cancelLabel: 'Cancel'
     }).subscribe(confirmed => {
       if (confirmed) {
-        this.authStore.deleteAddress(addressId).subscribe();
+        this.authStore.deleteAddress(addressId).subscribe({
+          next: () => {
+            this.toastService.success('Address deleted successfully');
+            this.authStore.fetchProfile().subscribe();
+          },
+          error: (err) => {
+            this.toastService.error(err?.message || 'Failed to delete address');
+          }
+        });
       }
     });
   }
@@ -213,11 +231,25 @@ export class AddressesComponent implements OnInit {
 
     if (id) {
       this.authStore.updateAddress(id, data).subscribe({
-        next: () => this.showForm.set(false),
+        next: () => {
+          this.showForm.set(false);
+          this.toastService.success('Address updated successfully');
+          this.authStore.fetchProfile().subscribe();
+        },
+        error: (err) => {
+          this.toastService.error(err?.message || 'Failed to update address');
+        }
       });
     } else {
       this.authStore.addAddress(data).subscribe({
-        next: () => this.showForm.set(false),
+        next: () => {
+          this.showForm.set(false);
+          this.toastService.success('Address added successfully');
+          this.authStore.fetchProfile().subscribe();
+        },
+        error: (err) => {
+          this.toastService.error(err?.message || 'Failed to add address');
+        }
       });
     }
   }

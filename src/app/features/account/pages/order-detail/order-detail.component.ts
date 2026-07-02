@@ -49,14 +49,14 @@ import { environment } from '../../../../../environments/environment';
         @if (order(); as o) {
         
         <!-- Horizontal Status Tracker -->
-        @if (o.orderStatus !== 'cancelled') {
+        @if (o.orderStatus !== 'cancelled' && o.orderStatus !== 'returned') {
           <div class="bg-[var(--color-bg-subtle)] border border-[var(--color-border)] p-6 rounded-2xl">
             <div class="flex items-center justify-between relative max-w-lg mx-auto">
               <!-- Background line -->
               <div class="absolute left-0 right-0 top-5 -translate-y-1/2 h-0.5 bg-[var(--color-border)] z-0 rounded"></div>
               <!-- Active progress line -->
               <div class="absolute left-0 top-5 -translate-y-1/2 h-0.5 z-0 rounded transition-all duration-300"
-                   [style.width]="o.orderStatus === 'placed' ? '0%' : o.orderStatus === 'shipped' ? '66%' : ['confirmed', 'processing'].includes(o.orderStatus) ? '33%' : '100%'"
+                   [style.width]="o.orderStatus === 'placed' ? '0%' : ['shipped', 'out_for_delivery'].includes(o.orderStatus) ? '66%' : ['confirmed', 'processing'].includes(o.orderStatus) ? '33%' : '100%'"
                    [style.background]="'var(--gradient-primary)'">
               </div>
 
@@ -100,10 +100,15 @@ import { environment } from '../../../../../environments/environment';
               </div>
             </div>
           </div>
-        } @else {
+        } @else if (o.orderStatus === 'cancelled') {
           <!-- Cancelled Banner -->
           <div class="bg-red-50 border border-red-200 text-[var(--color-error)] p-4 rounded-2xl text-center font-bold flex items-center justify-center gap-2">
              ⚠️ This order has been Cancelled.
+          </div>
+        } @else if (o.orderStatus === 'returned') {
+          <!-- Returned Banner -->
+          <div class="bg-blue-50 border border-blue-200 text-blue-700 p-4 rounded-2xl text-center font-bold flex items-center justify-center gap-2">
+             ↩️ This order has been Returned.
           </div>
         }
 
@@ -209,7 +214,7 @@ import { environment } from '../../../../../environments/environment';
                   <div class="relative">
                     <div class="absolute -left-6 top-1.5 w-3.5 h-3.5 rounded-full border-2 border-white bg-[var(--color-primary)] ring-2 ring-[var(--color-primary-light)]"></div>
                     <div>
-                      <span class="text-xs font-bold text-[var(--color-text)] capitalize block">{{ hist.status }}</span>
+                      <span class="text-xs font-bold text-[var(--color-text)] capitalize block">{{ formatStatus(hist.status) }}</span>
                       <span class="text-[10px] text-[var(--color-text-muted)] block">{{ hist.timestamp | date:'medium' }}</span>
                       @if (hist.note) {
                         <p class="text-xs text-[var(--color-text-muted)] mt-1.5 italic bg-[var(--color-bg-subtle)] px-2 py-1 rounded border border-[var(--color-border)] inline-block">"{{ hist.note }}"</p>
@@ -287,11 +292,17 @@ export class OrderDetailComponent implements OnInit, OnDestroy {
       case 'placed': return 1;
       case 'confirmed':
       case 'processing': return 2;
-      case 'shipped': return 3;
+      case 'shipped':
+      case 'out_for_delivery': return 3;
       case 'delivered': return 4;
       case 'cancelled': return -1;
       default: return 1;
     }
+  }
+
+  formatStatus(status: string): string {
+    if (!status) return 'Placed';
+    return status.replace(/_/g, ' ');
   }
 
   fetchOrderDetails(id: string) {
@@ -327,36 +338,51 @@ export class OrderDetailComponent implements OnInit, OnDestroy {
     // 1. Cancelled Status
     if (status === 'cancelled') {
       history.push({
-        status: 'Cancelled',
+        status: 'cancelled',
         timestamp: updated,
         note: order.notes || 'Order cancelled.'
       });
     }
 
     // 2. Delivered Status
-    if (['delivered'].includes(status)) {
+    if (status === 'delivered') {
       history.push({
-        status: 'Delivered',
+        status: 'delivered',
         timestamp: updated,
         note: 'Package delivered successfully.'
       });
     }
 
-    // 3. Shipped Status
-    if (['shipped', 'delivered'].includes(status)) {
-      const shippedTime = status === 'delivered' ? (created + updated) / 2 : updated;
+    // 3. Out for Delivery Status
+    if (['out_for_delivery', 'delivered'].includes(status)) {
+      const outTime = status === 'delivered' ? updated - 1000 * 60 * 60 * 2 : updated; // 2 hours before delivery
       history.push({
-        status: 'Shipped',
+        status: 'out_for_delivery',
+        timestamp: outTime,
+        note: 'Package is out for delivery with our delivery partner.'
+      });
+    }
+
+    // 4. Shipped Status
+    if (['shipped', 'out_for_delivery', 'delivered'].includes(status)) {
+      let shippedTime = updated;
+      if (status === 'out_for_delivery') {
+        shippedTime = (created + updated) / 2;
+      } else if (status === 'delivered') {
+        shippedTime = created + (updated - created) * 0.5;
+      }
+      history.push({
+        status: 'shipped',
         timestamp: shippedTime,
         note: order.trackingNumber ? `Shipped via courier. Tracking ID: ${order.trackingNumber}` : 'Package shipped.'
       });
     }
 
-    // 4. Confirmed Status (Processing / Confirmed)
-    if (['confirmed', 'processing', 'shipped', 'delivered'].includes(status)) {
+    // 5. Confirmed Status (Processing / Confirmed)
+    if (['confirmed', 'processing', 'shipped', 'out_for_delivery', 'delivered'].includes(status)) {
       const confirmedTime = ['confirmed', 'processing'].includes(status) ? updated : (created + 1000 * 60 * 30); // +30 mins
       history.push({
-        status: 'Confirmed',
+        status: 'confirmed',
         timestamp: confirmedTime,
         note: 'Order confirmed and being prepared.'
       });

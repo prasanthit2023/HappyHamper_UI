@@ -1023,6 +1023,9 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
           this.selectedVariant.set(defaultVariant);
           if (defaultVariant.size) this.selectedSize.set(defaultVariant.size);
           if (defaultVariant.color) this.selectedColor.set(defaultVariant.color);
+          if (defaultVariant.imageUrl) {
+            this.activeImage.set(defaultVariant.imageUrl);
+          }
         }
 
         this.loading.set(false);
@@ -1176,12 +1179,66 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
   // ── Variant selection ─────────────────────────────────────────────────
   selectSize(size: string) {
     this.selectedSize.set(size);
+    
+    // Auto-adjust color if current color is not available for this size
+    const prod = this.product();
+    if (prod?.variants) {
+      const color = this.selectedColor();
+      const hasCombo = prod.variants.some((v: any) => v.color === color && v.size === size);
+      if (!hasCombo) {
+        const anyVariantForSize = prod.variants.find((v: any) => v.size === size);
+        if (anyVariantForSize && anyVariantForSize.color) {
+          this.selectedColor.set(anyVariantForSize.color);
+        }
+      }
+    }
+    
     this.resolveVariant();
   }
 
   selectColor(color: string) {
     this.selectedColor.set(color);
+    
+    // Auto-adjust size if current size is not available for this color
+    const prod = this.product();
+    if (prod?.variants) {
+      const size = this.selectedSize();
+      const hasCombo = prod.variants.some((v: any) => v.color === color && v.size === size);
+      if (!hasCombo) {
+        const anyVariantForColor = prod.variants.find((v: any) => v.color === color);
+        if (anyVariantForColor && anyVariantForColor.size) {
+          this.selectedSize.set(anyVariantForColor.size);
+        }
+      }
+    }
+    
     this.resolveVariant();
+  }
+
+  syncImageForSelectedColor(color: string) {
+    const prod = this.product();
+    if (!prod || !prod.images || prod.images.length === 0) return;
+    
+    const colorLower = color.trim().toLowerCase();
+    
+    // 1. Try filename matching (e.g. image name contains color name)
+    const matchedImg = prod.images.find((img: string) => {
+      const filename = img.substring(img.lastIndexOf('/') + 1).toLowerCase();
+      return filename.includes(colorLower);
+    });
+    
+    if (matchedImg) {
+      this.activeImage.set(matchedImg);
+      this.cdr.markForCheck();
+      return;
+    }
+    
+    // 2. Try index-based matching (color index matches image index)
+    const colorIdx = this.availableColors().findIndex(c => c.name.trim().toLowerCase() === colorLower);
+    if (colorIdx >= 0 && colorIdx < prod.images.length) {
+      this.activeImage.set(prod.images[colorIdx]);
+      this.cdr.markForCheck();
+    }
   }
 
   resolveVariant() {
@@ -1196,7 +1253,26 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
     });
     if (variant) {
       this.selectedVariant.set(variant);
-      if (variant.image) this.activeImage.set(variant.image);
+      if (variant.imageUrl) {
+        this.activeImage.set(variant.imageUrl);
+      } else if (variant.image) {
+        this.activeImage.set(variant.image);
+      } else if (color) {
+        this.syncImageForSelectedColor(color);
+      }
+    } else {
+      // Fallback: If no exact variant matches the combined size + color,
+      // let's still change the active image to the first variant matching this color.
+      const colorVariant = prod.variants.find((v: any) => v.color === color);
+      if (colorVariant) {
+        if (colorVariant.imageUrl) {
+          this.activeImage.set(colorVariant.imageUrl);
+        } else if (colorVariant.image) {
+          this.activeImage.set(colorVariant.image);
+        } else if (color) {
+          this.syncImageForSelectedColor(color);
+        }
+      }
     }
   }
 

@@ -1,7 +1,7 @@
 import { Component, OnInit, inject, signal, ChangeDetectionStrategy, ChangeDetectorRef, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
-import { FormBuilder, ReactiveFormsModule, Validators, AbstractControl } from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule, Validators, AbstractControl, FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { AuthStore } from '../../../../state/auth.store';
 import { CartStore } from '../../../../state/cart.store';
@@ -11,7 +11,7 @@ import { environment } from '../../../../../environments/environment';
   selector: 'bb-checkout',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, RouterModule, ReactiveFormsModule],
+  imports: [CommonModule, RouterModule, ReactiveFormsModule, FormsModule],
   template: `
   <style>
     .checkout-page { background: linear-gradient(135deg,#f8f4ff 0%,#fef9f0 50%,#f0f9ff 100%); min-height: 100vh; }
@@ -241,6 +241,33 @@ import { environment } from '../../../../../environments/environment';
                            style="width:16px;height:16px;accent-color:#7c3aed;cursor:pointer">
                     <label for="isDefault" style="font-size:13px;color:#374151;cursor:pointer;font-weight:500">Save as default shipping address</label>
                   </div>
+
+                  <!-- Save and Action buttons -->
+                  <div style="grid-column:1/-1; display:flex; gap:12px; margin-top:8px">
+                    <button type="button" 
+                            (click)="saveNewAddress()"
+                            [disabled]="savingAddress()"
+                            class="btn-primary"
+                            style="background: linear-gradient(135deg,#7c3aed,#6366f1); color: #fff; border: none; cursor: pointer; padding: 10px 20px; font-weight: 700; font-size: 13px; border-radius: 10px; transition: opacity 0.2s; display: flex; align-items: center; gap: 8px">
+                      @if (savingAddress()) {
+                        <svg style="width:14px;height:14px;animation:spin 1s linear infinite" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                          <circle style="opacity:.25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                          <path style="opacity:.75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                        </svg>
+                        Saving Address...
+                      } @else {
+                        Save Address
+                      }
+                    </button>
+                    @if (savedAddresses().length > 0) {
+                      <button type="button" 
+                              (click)="toggleNewAddressForm()"
+                              class="btn-secondary"
+                              style="background: #f3f4f6; color: #4b5563; border: none; cursor: pointer; padding: 10px 20px; font-weight: 700; font-size: 13px; border-radius: 10px;">
+                        Cancel
+                      </button>
+                    }
+                  </div>
                 </form>
               }
             </div>
@@ -411,6 +438,44 @@ import { environment } from '../../../../../environments/environment';
                   </div>
                 </div>
 
+                <!-- Coupon Code Section -->
+                <div style="border-top:1px solid #f3f4f6;padding-top:16px;margin-bottom:16px">
+                  <label style="display:block;font-size:11px;font-weight:800;color:#374151;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Have a Promo Coupon?</label>
+                  @if (cartStore.cart().couponCode) {
+                    <div style="display:flex;justify-content:space-between;align-items:center;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:10px 14px;font-size:13px">
+                      <span style="font-weight:700;color:#15803d;display:flex;align-items:center;gap:6px">
+                        <svg style="width:16px;height:16px;color:#16a34a" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+                        </svg>
+                        {{ cartStore.cart().couponCode }} Applied
+                      </span>
+                      <button (click)="removeCoupon()" style="font-size:12px;color:#ef4444;font-weight:700;background:none;border:none;cursor:pointer;padding:0" aria-label="Remove coupon">Remove</button>
+                    </div>
+                  } @else {
+                    <div style="display:flex;gap:8px">
+                      <input type="text"
+                             [ngModel]="couponCode()"
+                             (ngModelChange)="couponCode.set($event)"
+                             placeholder="Enter code (e.g. FIRST10)"
+                             style="flex:1;border:2px solid #e5e7eb;border-radius:10px;padding:8px 12px;font-size:13px;color:#1a1a2e;background:#fff;outline:none"
+                             (keyup.enter)="applyCoupon()"
+                             aria-label="Coupon code input">
+                      <button (click)="applyCoupon()"
+                              style="background:linear-gradient(135deg,#7c3aed,#6366f1);color:#fff;border:none;border-radius:10px;padding:8px 16px;font-size:12px;font-weight:700;cursor:pointer;transition:opacity 0.2s"
+                              class="hover:opacity-90"
+                              aria-label="Apply coupon">
+                        Apply
+                      </button>
+                    </div>
+                    @if (couponError()) {
+                      <p style="color:#ef4444;font-size:11px;font-weight:600;margin:6px 0 0;display:flex;align-items:center;gap:4px" role="alert">
+                        <svg style="width:12px;height:12px;flex-shrink:0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        {{ couponError() }}
+                      </p>
+                    }
+                  }
+                </div>
+
                 <!-- Grand Total -->
                 <div style="background:linear-gradient(135deg,rgba(124,58,237,.08),rgba(99,102,241,.05));border:1px solid rgba(124,58,237,.15);border-radius:14px;padding:16px;display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
                   <div>
@@ -522,6 +587,9 @@ export class CheckoutComponent implements OnInit {
   errorMessage = signal<string>('');
   currentStep = signal<number>(1);
   paymentStep = signal<string>('');
+  couponCode = signal<string>('');
+  couponError = signal<string>('');
+  savingAddress = signal<boolean>(false);
 
   grandTotal = computed(() => {
     const sub = this.cartStore.subTotal();
@@ -530,6 +598,84 @@ export class CheckoutComponent implements OnInit {
     const gst = sub * 0.05;
     return sub - discount + shipping + gst;
   });
+
+  applyCoupon() {
+    const code = this.couponCode().trim();
+    if (!code) return;
+    this.couponError.set('');
+    this.cartStore.applyCoupon(code.toUpperCase()).subscribe({
+      next: () => {
+        this.couponCode.set('');
+        this.cdr.markForCheck();
+      },
+      error: (err) => {
+        this.couponError.set(err.error?.message || 'Invalid coupon code. Please try again.');
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  removeCoupon() {
+    this.cartStore.removeCoupon().subscribe({
+      next: () => {
+        this.couponError.set('');
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  saveNewAddress() {
+    if (this.addressForm.invalid) {
+      this.addressForm.markAllAsTouched();
+      return;
+    }
+
+    this.savingAddress.set(true);
+    this.errorMessage.set('');
+
+    const addressData = this.addressForm.value;
+    this.authStore.addAddress(addressData).subscribe({
+      next: (res: any) => {
+        this.savingAddress.set(false);
+        if (!res) {
+          this.errorMessage.set('Failed to save address. Please try again.');
+          this.cdr.markForCheck();
+          return;
+        }
+
+        // Reload addresses
+        this.loadUserAddresses();
+
+        // Find the newly added address to select it
+        const latestAddresses = res.data || [];
+        const newAddr = latestAddresses[latestAddresses.length - 1];
+        if (newAddr) {
+          this.selectedAddressId.set(newAddr.id || newAddr._id);
+        }
+
+        // Close form and transition to Step 2 (Payment)
+        this.showNewAddressForm.set(false);
+        this.addressForm.reset({
+          fullName: '',
+          street: '',
+          city: '',
+          state: '',
+          country: 'India',
+          zipCode: '',
+          phone: '',
+          label: 'Home',
+          isDefault: false
+        });
+        this.currentStep.set(2);
+        this.cdr.markForCheck();
+      },
+      error: (err: any) => {
+        this.savingAddress.set(false);
+        this.errorMessage.set(err.error?.message || 'Failed to save address details.');
+        this.cdr.markForCheck();
+      }
+    });
+  }
 
   addressForm = this.fb.group({
     fullName: ['', [Validators.required]],

@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy, inject, signal, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute, Router } from '@angular/router';
-import { FormBuilder, ReactiveFormsModule, Validators, FormArray } from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule, Validators, FormArray, FormGroup } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { Subscription } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
@@ -46,7 +46,7 @@ import { environment } from '../../../../../environments/environment';
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label class="block text-xs font-semibold text-neutral-400 mb-1.5">SKU</label>
-            <input type="text" formControlName="sku" class="input-field py-2" placeholder="e.g. PR-001" />
+            <input type="text" formControlName="sku" class="input-field py-2" placeholder="Leave blank to auto-generate" />
           </div>
           <div>
             <label class="block text-xs font-semibold text-neutral-400 mb-1.5">Category</label>
@@ -79,9 +79,15 @@ import { environment } from '../../../../../environments/environment';
           <input type="text" formControlName="shortDescription" class="input-field py-2" />
         </div>
 
-        <div class="flex items-center gap-2 py-2">
-          <input type="checkbox" id="isPublished" formControlName="isPublished" class="rounded text-primary-500 focus:ring-primary-500 w-4 h-4 cursor-pointer" />
-          <label for="isPublished" class="text-xs font-semibold text-neutral-700 dark:text-neutral-300 cursor-pointer select-none">Publish immediately (visible in shop)</label>
+        <div class="flex flex-wrap gap-6 py-2">
+          <div class="flex items-center gap-2">
+            <input type="checkbox" id="isPublished" formControlName="isPublished" class="rounded text-primary-500 focus:ring-primary-500 w-4 h-4 cursor-pointer" />
+            <label for="isPublished" class="text-xs font-semibold text-neutral-700 dark:text-neutral-300 cursor-pointer select-none">Publish immediately (visible in shop)</label>
+          </div>
+          <div class="flex items-center gap-2">
+            <input type="checkbox" id="isComboOffer" formControlName="isComboOffer" class="rounded text-primary-500 focus:ring-primary-500 w-4 h-4 cursor-pointer" />
+            <label for="isComboOffer" class="text-xs font-semibold text-neutral-700 dark:text-neutral-300 cursor-pointer select-none">Combo Offer</label>
+          </div>
         </div>
 
         <div>
@@ -104,42 +110,6 @@ import { environment } from '../../../../../environments/environment';
         <div>
           <label class="block text-xs font-semibold text-neutral-400 mb-1.5">Tags (comma separated)</label>
           <input type="text" formControlName="tagsInput" class="input-field py-2" placeholder="cotton, organic, baby, girls" />
-        </div>
-
-        <!-- Add Variant / Stock fields -->
-        <div class="border-t pt-4 space-y-3">
-          <div class="flex items-center justify-between">
-            <h3 class="font-bold text-xs uppercase tracking-wider text-neutral-400">Product Variants</h3>
-            <button type="button" (click)="addVariant()" class="text-xs font-bold hover:underline" style="color: var(--color-primary);">+ Add Variant</button>
-          </div>
-
-          <div formArrayName="variants" class="space-y-3">
-            @for (vCtrl of variantsFormArray.controls; track $index) {
-              <div [formGroupName]="$index" class="grid grid-cols-1 sm:grid-cols-5 gap-3 p-3 border rounded-xl bg-neutral-50/20 relative">
-                <div>
-                  <label class="text-[10px] block font-bold mb-1">SKU</label>
-                  <input type="text" formControlName="sku" class="input-field py-1 text-xs" />
-                </div>
-                <div>
-                  <label class="text-[10px] block font-bold mb-1">Size</label>
-                  <input type="text" formControlName="size" class="input-field py-1 text-xs" />
-                </div>
-                <div>
-                  <label class="text-[10px] block font-bold mb-1">Color Name</label>
-                  <input type="text" formControlName="color" class="input-field py-1 text-xs" />
-                </div>
-                <div>
-                  <label class="text-[10px] block font-bold mb-1">Color Hex</label>
-                  <input type="text" formControlName="colorHex" class="input-field py-1 text-xs" />
-                </div>
-                <div>
-                  <label class="text-[10px] block font-bold mb-1">Stock Qty</label>
-                  <input type="number" formControlName="stock" class="input-field py-1 text-xs" />
-                </div>
-                <button type="button" (click)="removeVariant($index)" class="absolute top-1 right-1 text-red-500 text-xs font-bold hover:scale-105 transition-transform" aria-label="Remove variant"><i class="pi pi-times"></i></button>
-              </div>
-            }
-          </div>
         </div>
 
         <!-- Add Image files dynamically via drag & drop / multi-upload -->
@@ -207,6 +177,87 @@ import { environment } from '../../../../../environments/environment';
               }
             </div>
           }
+        </div>
+
+        <!-- Add Variant / Stock fields -->
+        <div class="border-t pt-4 space-y-3">
+          <div class="flex items-center justify-between">
+            <h3 class="font-bold text-xs uppercase tracking-wider text-neutral-400">Product Variants</h3>
+            <button type="button" (click)="addVariant()" class="text-xs font-bold hover:underline" style="color: var(--color-primary);">+ Add Variant</button>
+          </div>
+
+          <div formArrayName="variants" class="space-y-3">
+            @for (vCtrl of variantsFormArray.controls; track $index) {
+              <div [formGroupName]="$index" class="grid grid-cols-2 sm:grid-cols-6 gap-3 p-3 border rounded-xl bg-neutral-50/20 relative">
+                <div>
+                  <label class="text-[10px] block font-bold mb-1">SKU</label>
+                  <input type="text" formControlName="sku" class="input-field py-1 text-xs" />
+                </div>
+                <div>
+                  <label class="text-[10px] block font-bold mb-1">Size</label>
+                  <input type="text" formControlName="size" class="input-field py-1 text-xs" />
+                </div>
+                <!-- Image Picker Column -->
+                <div class="relative">
+                  <label class="text-[10px] block font-bold mb-1">Image</label>
+                  <div (click)="toggleImageSelector($index)" 
+                       class="w-full h-8 rounded-xl border border-neutral-200 cursor-pointer flex items-center justify-center bg-white overflow-hidden hover:bg-neutral-50 transition-colors">
+                    @if (vCtrl.get('imageUrl')?.value; as imgUrl) {
+                      <img [src]="imgUrl" class="w-full h-full object-cover" />
+                    } @else {
+                      <span class="text-neutral-400 text-[10px]"><i class="pi pi-image"></i></span>
+                    }
+                  </div>
+                  
+                  <!-- Dropdown Popover -->
+                  @if (activeImageSelectorIdx() === $index) {
+                    <div class="absolute z-30 left-0 mt-1 p-2 bg-white border border-neutral-200 rounded-xl shadow-xl w-48 space-y-2">
+                      <div class="flex items-center justify-between border-b pb-1">
+                        <span class="text-[10px] font-bold text-neutral-400">Select Image</span>
+                        <button type="button" (click)="activeImageSelectorIdx.set(null)" class="text-neutral-400 hover:text-neutral-600"><i class="pi pi-times text-[10px]"></i></button>
+                      </div>
+                      
+                      @if (productImagesList.length === 0) {
+                        <div class="text-[10px] text-neutral-400 py-1 text-center">No images uploaded yet.</div>
+                      } @else {
+                        <div class="grid grid-cols-4 gap-1.5 max-h-24 overflow-y-auto">
+                          @for (img of productImagesList; track img) {
+                            <button type="button" 
+                                    (click)="selectVariantImage($index, img)"
+                                    class="w-8 h-8 rounded-lg overflow-hidden border border-neutral-100 hover:border-primary-500 transition-colors">
+                              <img [src]="img" class="w-full h-full object-cover" />
+                            </button>
+                          }
+                        </div>
+                      }
+                      
+                      <div class="border-t pt-1.5 flex justify-end">
+                        <button type="button" 
+                                (click)="selectVariantImage($index, '')"
+                                class="text-[10px] text-red-500 font-bold hover:underline">Clear Image</button>
+                      </div>
+                    </div>
+                    
+                    <!-- Backdrop overlay to close when clicking outside -->
+                    <div class="fixed inset-0 z-20" (click)="activeImageSelectorIdx.set(null)"></div>
+                  }
+                </div>
+                <div>
+                  <label class="text-[10px] block font-bold mb-1">Color Picker</label>
+                  <input type="color" formControlName="colorHex" class="w-full h-8 rounded-xl border border-neutral-200 cursor-pointer p-0 bg-transparent overflow-hidden" />
+                </div>
+                <div>
+                  <label class="text-[10px] block font-bold mb-1">Color Name</label>
+                  <input type="text" formControlName="color" class="input-field py-1 text-xs" placeholder="e.g. White" />
+                </div>
+                <div>
+                  <label class="text-[10px] block font-bold mb-1">Stock Qty</label>
+                  <input type="number" formControlName="stock" class="input-field py-1 text-xs" />
+                </div>
+                <button type="button" (click)="removeVariant($index)" class="absolute top-1 right-1 text-red-500 text-xs font-bold hover:scale-105 transition-transform" aria-label="Remove variant"><i class="pi pi-times"></i></button>
+              </div>
+            }
+          </div>
         </div>
 
         <div class="pt-6 border-t border-neutral-100 dark:border-neutral-700 flex justify-end gap-3">
@@ -301,6 +352,98 @@ export class ProductFormComponent implements OnInit, OnDestroy {
     return sku;
   }
 
+  getColorNameFromHex(hex: string): string {
+    if (!hex) return 'Custom';
+    const cleanHex = hex.trim().toUpperCase();
+    
+    // Exact match
+    for (const [name, value] of Object.entries(this.colorHexMap)) {
+      if (value.toUpperCase() === cleanHex) {
+        return name.charAt(0).toUpperCase() + name.slice(1);
+      }
+    }
+    
+    // Parse target hex
+    if (!cleanHex.startsWith('#') || cleanHex.length !== 7) return 'Custom';
+    const r = parseInt(cleanHex.substring(1, 3), 16);
+    const g = parseInt(cleanHex.substring(3, 5), 16);
+    const b = parseInt(cleanHex.substring(5, 7), 16);
+    
+    if (isNaN(r) || isNaN(g) || isNaN(b)) return 'Custom';
+
+    let closestName = 'Custom';
+    let minDistance = Infinity;
+    
+    for (const [name, value] of Object.entries(this.colorHexMap)) {
+      const vr = parseInt(value.substring(1, 3), 16);
+      const vg = parseInt(value.substring(3, 5), 16);
+      const vb = parseInt(value.substring(5, 7), 16);
+      
+      const distance = Math.sqrt(
+        Math.pow(r - vr, 2) + 
+        Math.pow(g - vg, 2) + 
+        Math.pow(b - vb, 2)
+      );
+      
+      if (distance < minDistance) {
+        minDistance = distance;
+        closestName = name.charAt(0).toUpperCase() + name.slice(1);
+      }
+    }
+    
+    return closestName;
+  }
+
+  setupVariantControl(group: FormGroup) {
+    const updateSkuAndHex = () => {
+      const size = group.get('size')?.value || '';
+      const color = group.get('color')?.value || '';
+      const baseSku = this.form.get('sku')?.value || '';
+      
+      const colorLower = color.trim().toLowerCase();
+      const matchedHex = this.colorHexMap[colorLower] || this.colorHexMap[colorLower.split(/\s+/)[0]];
+      if (matchedHex) {
+        group.get('colorHex')?.setValue(matchedHex, { emitEvent: false });
+      }
+      
+      const genSku = this.generateVariantSku(baseSku, size, color);
+      if (genSku) {
+        group.get('sku')?.setValue(genSku, { emitEvent: false });
+      }
+    };
+
+    group.get('size')?.valueChanges.subscribe(() => updateSkuAndHex());
+    
+    group.get('color')?.valueChanges.subscribe((colorName) => {
+      const colorLower = (colorName || '').trim().toLowerCase();
+      const matchedHex = this.colorHexMap[colorLower] || this.colorHexMap[colorLower.split(/\s+/)[0]];
+      if (matchedHex) {
+        group.get('colorHex')?.setValue(matchedHex, { emitEvent: false });
+      }
+      
+      const size = group.get('size')?.value || '';
+      const baseSku = this.form.get('sku')?.value || '';
+      const genSku = this.generateVariantSku(baseSku, size, colorName);
+      if (genSku) {
+        group.get('sku')?.setValue(genSku, { emitEvent: false });
+      }
+    });
+
+    group.get('colorHex')?.valueChanges.subscribe((hex) => {
+      if (hex) {
+        const colorName = this.getColorNameFromHex(hex);
+        group.get('color')?.setValue(colorName, { emitEvent: false });
+        
+        const size = group.get('size')?.value || '';
+        const baseSku = this.form.get('sku')?.value || '';
+        const genSku = this.generateVariantSku(baseSku, size, colorName);
+        if (genSku) {
+          group.get('sku')?.setValue(genSku, { emitEvent: false });
+        }
+      }
+    });
+  }
+
   uiLogs = signal<string[]>([]);
 
   addUiLog(msg: string) {
@@ -314,9 +457,29 @@ export class ProductFormComponent implements OnInit, OnDestroy {
     this.cdr.detectChanges();
   }
 
+  activeImageSelectorIdx = signal<number | null>(null);
+
+  get productImagesList(): string[] {
+    return (this.imagesFormArray.value || []).filter(Boolean);
+  }
+
+  toggleImageSelector(index: number) {
+    this.activeImageSelectorIdx.set(this.activeImageSelectorIdx() === index ? null : index);
+    this.cdr.detectChanges();
+  }
+
+  selectVariantImage(index: number, imgUrl: string) {
+    const ctrl = this.variantsFormArray.at(index);
+    if (ctrl) {
+      ctrl.get('imageUrl')?.setValue(imgUrl);
+    }
+    this.activeImageSelectorIdx.set(null);
+    this.cdr.detectChanges();
+  }
+
   form = this.fb.group({
     title: ['', [Validators.required]],
-    sku: ['', [Validators.required]],
+    sku: [''],
     categoryId: ['', [Validators.required]],
     price: [299, [Validators.required, Validators.min(0)]],
     discountPrice: [null],
@@ -327,6 +490,7 @@ export class ProductFormComponent implements OnInit, OnDestroy {
     careInstructions: [''],
     tagsInput: [''],
     isPublished: [true],
+    isComboOffer: [false],
     variants: this.fb.array([]),
     images: this.fb.array([]),
   });
@@ -337,6 +501,22 @@ export class ProductFormComponent implements OnInit, OnDestroy {
 
   get imagesFormArray() {
     return this.form.get('images') as FormArray;
+  }
+
+  checkAndSetComboOfferState(categoryId: any) {
+    const catIdStr = String(categoryId?._id || categoryId?.id || categoryId || '');
+    const combosCat = this.categories().find(c => c.slug === 'combos');
+    const isCombo = (combosCat && String(combosCat.id) === catIdStr) || 
+                    (categoryId && categoryId.slug === 'combos');
+                    
+    if (isCombo) {
+      this.form.get('isComboOffer')?.setValue(true, { emitEvent: false });
+      this.form.get('categoryId')?.setValue(catIdStr);
+      this.form.get('categoryId')?.disable();
+    } else {
+      this.form.get('isComboOffer')?.setValue(false, { emitEvent: false });
+      this.form.get('categoryId')?.enable();
+    }
   }
 
   ngOnInit() {
@@ -365,6 +545,20 @@ export class ProductFormComponent implements OnInit, OnDestroy {
       });
       this.cdr.detectChanges();
     });
+
+    // Combo Offer value change logic
+    this.form.get('isComboOffer')?.valueChanges.subscribe((isCombo) => {
+      if (isCombo) {
+        const combosCat = this.categories().find((c) => c.slug === 'combos');
+        if (combosCat) {
+          this.form.get('categoryId')?.setValue(String(combosCat.id));
+          this.form.get('categoryId')?.disable();
+        }
+      } else {
+        this.form.get('categoryId')?.enable();
+      }
+      this.cdr.detectChanges();
+    });
   }
 
   ngOnDestroy() {
@@ -375,6 +569,13 @@ export class ProductFormComponent implements OnInit, OnDestroy {
     this.http.get<any>(`${environment.apiUrl}/categories`).subscribe({
       next: (res) => {
         this.categories.set(res.data || []);
+        if (this.form.get('isComboOffer')?.value) {
+          const combosCat = this.categories().find((c) => c.slug === 'combos');
+          if (combosCat) {
+            this.form.get('categoryId')?.setValue(String(combosCat.id));
+            this.form.get('categoryId')?.disable();
+          }
+        }
         this.cdr.detectChanges();
       },
     });
@@ -422,36 +623,21 @@ export class ProductFormComponent implements OnInit, OnDestroy {
         if (prod.variants?.length > 0) {
           prod.variants.forEach((v: any) => {
             const group = this.fb.group({
-              sku: [v.sku, Validators.required],
+              sku: [v.sku],
               size: [v.size || ''],
               color: [v.color || ''],
-              colorHex: [v.colorHex || ''],
+              colorHex: [v.colorHex || '#ffffff'],
+              imageUrl: [v.imageUrl || ''],
               stock: [v.stock || 0, Validators.required],
             });
 
-            const updateSkuAndHex = () => {
-              const size = group.get('size')?.value || '';
-              const color = group.get('color')?.value || '';
-              const baseSku = this.form.get('sku')?.value || '';
-              
-              const colorLower = color.trim().toLowerCase();
-              const matchedHex = this.colorHexMap[colorLower] || this.colorHexMap[colorLower.split(/\s+/)[0]];
-              if (matchedHex) {
-                group.get('colorHex')?.setValue(matchedHex, { emitEvent: false });
-              }
-              
-              const genSku = this.generateVariantSku(baseSku, size, color);
-              if (genSku) {
-                group.get('sku')?.setValue(genSku, { emitEvent: false });
-              }
-            };
-
-            group.get('size')?.valueChanges.subscribe(updateSkuAndHex);
-            group.get('color')?.valueChanges.subscribe(updateSkuAndHex);
-
+            this.setupVariantControl(group);
             this.variantsFormArray.push(group);
           });
         }
+
+        // Handle category selection for Combo Offers
+        this.checkAndSetComboOfferState(prod.categoryId);
 
         this.cdr.detectChanges();
         this.addUiLog('[DEBUG] Completed loadProductDetails and triggered change detection.');
@@ -464,35 +650,28 @@ export class ProductFormComponent implements OnInit, OnDestroy {
 
   addVariant() {
     const group = this.fb.group({
-      sku: ['', Validators.required],
+      sku: [''],
       size: ['M'],
       color: ['White'],
       colorHex: ['#ffffff'],
+      imageUrl: [''],
       stock: [10, Validators.required],
     });
 
-    const updateSkuAndHex = () => {
-      const size = group.get('size')?.value || '';
-      const color = group.get('color')?.value || '';
-      const baseSku = this.form.get('sku')?.value || '';
-      
-      const colorLower = color.trim().toLowerCase();
-      const matchedHex = this.colorHexMap[colorLower] || this.colorHexMap[colorLower.split(/\s+/)[0]];
-      if (matchedHex) {
-        group.get('colorHex')?.setValue(matchedHex, { emitEvent: false });
-      }
-      
-      const genSku = this.generateVariantSku(baseSku, size, color);
-      if (genSku) {
-        group.get('sku')?.setValue(genSku, { emitEvent: false });
-      }
-    };
-
-    group.get('size')?.valueChanges.subscribe(() => updateSkuAndHex());
-    group.get('color')?.valueChanges.subscribe(() => updateSkuAndHex());
-
+    this.setupVariantControl(group);
     this.variantsFormArray.push(group);
-    updateSkuAndHex();
+    
+    // Trigger initial values
+    const size = group.get('size')?.value || '';
+    const color = group.get('color')?.value || '';
+    const baseSku = this.form.get('sku')?.value || '';
+    const colorLower = color.trim().toLowerCase();
+    const matchedHex = this.colorHexMap[colorLower] || '#ffffff';
+    group.get('colorHex')?.setValue(matchedHex, { emitEvent: false });
+    const genSku = this.generateVariantSku(baseSku, size, color);
+    if (genSku) {
+      group.get('sku')?.setValue(genSku, { emitEvent: false });
+    }
   }
 
   removeVariant(index: number) {
@@ -582,7 +761,7 @@ export class ProductFormComponent implements OnInit, OnDestroy {
     this.successMessage.set('');
     this.errorMessage.set('');
 
-    const formVal = this.form.value;
+    const formVal = this.form.getRawValue();
 
     // Build payload matching backend schemas
     const payload = {
@@ -602,6 +781,7 @@ export class ProductFormComponent implements OnInit, OnDestroy {
         size: v.size || 'One Size',
         color: v.color || 'Natural',
         colorHex: v.colorHex || '#ede0d4',
+        imageUrl: v.imageUrl || null,
         stock: Number(v.stock || 0),
       })),
       images: (formVal.images as any[] || []).filter((i: any) => !!i),

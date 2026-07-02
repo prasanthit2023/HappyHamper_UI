@@ -106,15 +106,17 @@ import { CartStore } from '../../../../state/cart.store';
                   <span
                     [class.bg-[var(--color-primary-light)]]="order.orderStatus === 'placed'"
                     [class.text-[var(--color-primary)]]="order.orderStatus === 'placed'"
-                    [class.bg-[var(--color-accent-light)]]="['confirmed', 'processing', 'shipped'].includes(order.orderStatus)"
-                    [class.text-[var(--color-accent)]]="['confirmed', 'processing', 'shipped'].includes(order.orderStatus)"
+                    [class.bg-[var(--color-accent-light)]]="['confirmed', 'processing', 'shipped', 'out_for_delivery'].includes(order.orderStatus)"
+                    [class.text-[var(--color-accent)]]="['confirmed', 'processing', 'shipped', 'out_for_delivery'].includes(order.orderStatus)"
                     [class.bg-green-50]="order.orderStatus === 'delivered'"
                     [class.text-green-700]="order.orderStatus === 'delivered'"
                     [class.bg-red-50]="order.orderStatus === 'cancelled'"
                     [class.text-red-700]="order.orderStatus === 'cancelled'"
+                    [class.bg-blue-50]="order.orderStatus === 'returned'"
+                    [class.text-blue-700]="order.orderStatus === 'returned'"
                     class="px-2.5 py-1 rounded-full text-xs font-bold capitalize inline-block"
                   >
-                    {{ order.orderStatus }}
+                    {{ formatStatus(order.orderStatus) }}
                   </span>
                 </div>
               </div>
@@ -192,7 +194,7 @@ export class OrdersComponent implements OnInit {
     const list = this.orders();
     const tab = this.activeTab();
     if (tab === 'progress') {
-      return list.filter(o => ['placed', 'confirmed', 'processing', 'shipped'].includes(o.orderStatus));
+      return list.filter(o => ['placed', 'confirmed', 'processing', 'shipped', 'out_for_delivery'].includes(o.orderStatus));
     } else if (tab === 'delivered') {
       return list.filter(o => o.orderStatus === 'delivered');
     } else if (tab === 'cancelled') {
@@ -200,6 +202,11 @@ export class OrdersComponent implements OnInit {
     }
     return list;
   });
+
+  formatStatus(status: string): string {
+    if (!status) return 'Placed';
+    return status.replace(/_/g, ' ');
+  }
 
   ngOnInit() {
     this.fetchOrders();

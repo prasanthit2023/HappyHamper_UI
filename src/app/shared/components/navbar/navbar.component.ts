@@ -121,7 +121,7 @@ import { Subscription, Subject, of } from 'rxjs';
 
             <!-- Contact -->
             <a routerLink="/contact" class="btn-icon relative hidden lg:flex" aria-label="Customer Care" routerLinkActive="text-primary">
-              <i class="pi pi-headphones text-lg"></i>
+              <i class="fa-solid fa-headset text-lg"></i>
             </a>
 
             <!-- Wishlist -->
@@ -286,7 +286,7 @@ import { Subscription, Subject, of } from 'rxjs';
               <i class="pi pi-tag text-neutral-400"></i> Products
             </a>
             <a routerLink="/contact" (click)="mobileMenuOpen.set(false)" class="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium text-neutral-700 transition-colors mobile-link">
-              <i class="pi pi-headphones text-neutral-400"></i> Contact
+              <i class="fa-solid fa-headset text-neutral-400"></i> Contact
             </a>
 
             @if (authStore.isLoggedIn()) {

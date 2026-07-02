@@ -13,11 +13,11 @@ import { ConfirmService } from '../../../../core/services/confirm.service';
   template: `
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 page-enter animate-fade-in bg-neutral-50/20 p-1">
       
-      <!-- Create Banner (Left column) -->
+      <!-- Create / Edit Banner (Left column) -->
       <div class="card p-6 h-fit space-y-5 bg-white border border-beige">
         <h2 class="font-bold text-sm text-neutral-800 uppercase tracking-wider border-b border-beige pb-3 flex items-center gap-2">
           <i class="pi pi-plus-circle text-primary"></i>
-          Create Banner
+          {{ editingId() ? 'Edit Banner' : 'Create Banner' }}
         </h2>
         <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-4">
           <div>
@@ -45,12 +45,19 @@ import { ConfirmService } from '../../../../core/services/confirm.service';
               <option value="middle_banner">Promo Strip</option>
             </select>
           </div>
-          <button type="submit" [disabled]="form.invalid || actionLoading()" class="btn-primary w-full py-2.5 text-xs font-bold shadow-pink flex items-center justify-center gap-2">
-            @if (actionLoading()) {
-              <i class="pi pi-spinner animate-spin"></i>
+          <div class="flex gap-2">
+            <button type="submit" [disabled]="form.invalid || actionLoading()" class="btn-primary flex-1 py-2.5 text-xs font-bold shadow-pink flex items-center justify-center gap-2">
+              @if (actionLoading()) {
+                <i class="pi pi-spinner animate-spin"></i>
+              }
+              {{ editingId() ? 'Update Banner' : 'Create Banner' }}
+            </button>
+            @if (editingId()) {
+              <button type="button" (click)="cancelEdit()" class="btn-secondary py-2.5 px-4 text-xs font-bold">
+                Cancel
+              </button>
             }
-            Create Banner
-          </button>
+          </div>
         </form>
       </div>
 
@@ -128,9 +135,14 @@ import { ConfirmService } from '../../../../core/services/confirm.service';
                       </span>
                     </div>
 
-                    <button (click)="deleteBanner(ban._id || ban.id)" class="text-neutral-400 hover:text-red-500 transition-colors p-1" title="Delete Banner">
-                      <i class="pi pi-trash text-sm"></i>
-                    </button>
+                    <div class="flex items-center gap-1">
+                      <button (click)="startEdit(ban)" class="text-neutral-400 hover:text-blue-500 transition-colors p-1" title="Edit Banner">
+                        <i class="pi pi-pencil text-sm"></i>
+                      </button>
+                      <button (click)="deleteBanner(ban._id || ban.id)" class="text-neutral-400 hover:text-red-500 transition-colors p-1" title="Delete Banner">
+                        <i class="pi pi-trash text-sm"></i>
+                      </button>
+                    </div>
                   </div>
                 </div>
 
@@ -152,6 +164,7 @@ export class AdminBannersComponent implements OnInit {
   banners = signal<any[]>([]);
   loading = signal<boolean>(true);
   actionLoading = signal<boolean>(false);
+  editingId = signal<any | null>(null);
 
   form = this.fb.group({
     title: ['', [Validators.required]],
@@ -191,6 +204,26 @@ export class AdminBannersComponent implements OnInit {
     });
   }
 
+  startEdit(ban: any) {
+    this.editingId.set(ban.id || ban._id);
+    this.form.patchValue({
+      title: ban.title,
+      imageUrl: ban.imageUrl,
+      link: ban.link || '/',
+      position: ban.position || 'hero',
+    });
+  }
+
+  cancelEdit() {
+    this.editingId.set(null);
+    this.form.reset({
+      title: '',
+      imageUrl: '',
+      link: '/',
+      position: 'hero',
+    });
+  }
+
   deleteBanner(id: string) {
     this.confirmService.confirm({
       message: 'Are you sure you want to delete this banner?',
@@ -217,25 +250,41 @@ export class AdminBannersComponent implements OnInit {
       title: this.form.value.title!.trim(),
       imageUrl: this.form.value.imageUrl!.trim(),
       link: this.form.value.link!.trim() || '/',
+      linkUrl: this.form.value.link!.trim() || '/',
       position: this.form.value.position!,
       isActive: true,
     };
 
-    this.http.post<any>(`${environment.apiUrl}/banners`, payload).subscribe({
-      next: () => {
-        this.actionLoading.set(false);
-        this.form.reset({
-          title: '',
-          imageUrl: '',
-          link: '/',
-          position: 'hero',
-        });
-        this.fetchBanners();
-      },
-      error: () => {
-        this.actionLoading.set(false);
-        this.cdr.markForCheck();
-      },
-    });
+    const editId = this.editingId();
+    if (editId) {
+      this.http.put<any>(`${environment.apiUrl}/banners/${editId}`, payload).subscribe({
+        next: () => {
+          this.actionLoading.set(false);
+          this.cancelEdit();
+          this.fetchBanners();
+        },
+        error: () => {
+          this.actionLoading.set(false);
+          this.cdr.markForCheck();
+        },
+      });
+    } else {
+      this.http.post<any>(`${environment.apiUrl}/banners`, payload).subscribe({
+        next: () => {
+          this.actionLoading.set(false);
+          this.form.reset({
+            title: '',
+            imageUrl: '',
+            link: '/',
+            position: 'hero',
+          });
+          this.fetchBanners();
+        },
+        error: () => {
+          this.actionLoading.set(false);
+          this.cdr.markForCheck();
+        },
+      });
+    }
   }
 }
