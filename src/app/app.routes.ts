@@ -1,6 +1,10 @@
-import { Routes } from '@angular/router';
+import { inject } from '@angular/core';
+import { Routes, Router } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
 import { adminGuard } from './core/guards/admin.guard';
+import { permissionGuard } from './core/guards/permission.guard';
+import { AuthStore } from './state/auth.store';
+import { PermissionStore } from './state/permission.store';
 
 export const routes: Routes = [
   // ─── Public Shop Routes ────────────────────────────────
@@ -223,6 +227,7 @@ export const routes: Routes = [
       {
         path: 'products',
         title: 'Products – Admin',
+        canActivate: [permissionGuard('Products', 'view')],
         loadComponent: () =>
           import('./features/admin/pages/products/admin-products.component').then(
             (m) => m.AdminProductsComponent,
@@ -231,6 +236,7 @@ export const routes: Routes = [
       {
         path: 'products/new',
         title: 'Add Product – Admin',
+        canActivate: [permissionGuard('Products', 'add')],
         loadComponent: () =>
           import('./features/admin/pages/product-form/product-form.component').then(
             (m) => m.ProductFormComponent,
@@ -239,22 +245,46 @@ export const routes: Routes = [
       {
         path: 'products/:id/edit',
         title: 'Edit Product – Admin',
+        canActivate: [permissionGuard('Products', 'edit')],
         loadComponent: () =>
           import('./features/admin/pages/product-form/product-form.component').then(
             (m) => m.ProductFormComponent,
           ),
       },
       {
-        path: 'categories',
-        title: 'Categories – Admin',
+        path: 'product-masters',
+        title: 'Product Masters – Admin',
+        canActivate: [
+          async () => {
+            const authStore = inject(AuthStore);
+            const permissionStore = inject(PermissionStore);
+            const router = inject(Router);
+            await authStore.hydrationComplete;
+            if (!authStore.isLoggedIn() || !authStore.isAdmin()) return router.createUrlTree(['/']);
+            if (authStore.isSuperAdmin()) return true;
+            if (!permissionStore.loaded()) await permissionStore.load();
+            if (
+              permissionStore.canAccess('Categories', 'view') ||
+              permissionStore.canAccess('Brands', 'view') ||
+              permissionStore.canAccess('Sizes', 'view')
+            ) {
+              return true;
+            }
+            return router.createUrlTree(['/admin/dashboard'], { queryParams: { denied: 'Product Masters' } });
+          }
+        ],
         loadComponent: () =>
-          import('./features/admin/pages/categories/admin-categories.component').then(
-            (m) => m.AdminCategoriesComponent,
+          import('./features/admin/pages/product-masters/product-masters.component').then(
+            (m) => m.ProductMastersComponent,
           ),
       },
+      { path: 'categories', redirectTo: 'product-masters', pathMatch: 'full' },
+      { path: 'brands', redirectTo: 'product-masters', pathMatch: 'full' },
+      { path: 'sizes', redirectTo: 'product-masters', pathMatch: 'full' },
       {
         path: 'orders',
         title: 'Orders – Admin',
+        canActivate: [permissionGuard('Orders', 'view')],
         loadComponent: () =>
           import('./features/admin/pages/orders/admin-orders.component').then(
             (m) => m.AdminOrdersComponent,
@@ -263,6 +293,7 @@ export const routes: Routes = [
       {
         path: 'inventory',
         title: 'Inventory – Admin',
+        canActivate: [permissionGuard('Inventory', 'view')],
         loadComponent: () =>
           import('./features/admin/pages/inventory/admin-inventory.component').then(
             (m) => m.AdminInventoryComponent,
@@ -271,6 +302,7 @@ export const routes: Routes = [
       {
         path: 'customers',
         title: 'Customers – Admin',
+        canActivate: [permissionGuard('Customers', 'view')],
         loadComponent: () =>
           import('./features/admin/pages/customers/admin-customers.component').then(
             (m) => m.AdminCustomersComponent,
@@ -279,6 +311,7 @@ export const routes: Routes = [
       {
         path: 'coupons',
         title: 'Coupons – Admin',
+        canActivate: [permissionGuard('Coupons', 'view')],
         loadComponent: () =>
           import('./features/admin/pages/coupons/admin-coupons.component').then(
             (m) => m.AdminCouponsComponent,
@@ -287,6 +320,7 @@ export const routes: Routes = [
       {
         path: 'banners',
         title: 'Banners – Admin',
+        canActivate: [permissionGuard('Banners', 'view')],
         loadComponent: () =>
           import('./features/admin/pages/banners/admin-banners.component').then(
             (m) => m.AdminBannersComponent,
@@ -295,9 +329,18 @@ export const routes: Routes = [
       {
         path: 'returns',
         title: 'Returns – Admin',
+        canActivate: [permissionGuard('Returns', 'view')],
         loadComponent: () =>
           import('./features/admin/pages/returns/admin-returns.component').then(
             (m) => m.AdminReturnsComponent,
+          ),
+      },
+      {
+        path: 'user-access',
+        title: 'User Access – Admin',
+        loadComponent: () =>
+          import('./features/admin/pages/user-access/user-access.component').then(
+            (m) => m.UserAccessComponent,
           ),
       },
     ],

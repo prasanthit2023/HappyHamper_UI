@@ -28,10 +28,58 @@ import { ConfirmService } from '../../../../core/services/confirm.service';
             }
           </div>
           <div>
-            <label class="block text-xs font-bold text-neutral-500 mb-1.5">Image URL</label>
-            <input type="text" formControlName="imageUrl" class="input-field py-2" placeholder="https://images.unsplash.com/photo-..." />
+            <label class="block text-xs font-bold text-neutral-500 mb-1.5">Call to Action Text</label>
+            <input type="text" formControlName="ctaText" class="input-field py-2" placeholder="e.g. Discover Collection" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-neutral-500 mb-1.5">Banner Image</label>
+            
+            @if (form.get('imageUrl')?.value) {
+              <!-- Banner Image Preview Card -->
+              <div class="relative group rounded-2xl overflow-hidden border border-neutral-200 bg-neutral-50 shadow-sm aspect-[16/9] w-full mb-2">
+                <img [src]="form.get('imageUrl')?.value" class="w-full h-full object-cover" />
+                <button
+                  type="button"
+                  (click)="removeImage()"
+                  class="absolute inset-0 bg-black/55 text-white flex items-center justify-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200 font-semibold text-xs rounded-2xl"
+                >
+                  <i class="pi pi-trash"></i> Change / Delete Image
+                </button>
+              </div>
+            } @else {
+              <!-- Drag and Drop Dropzone -->
+              <div
+                (click)="fileInput.click()"
+                (dragover)="onDragOver($event)"
+                (dragleave)="onDragLeave($event)"
+                (drop)="onDrop($event)"
+                [class.border-primary]="isDragging()"
+                [class.bg-primary-50]="isDragging()"
+                class="border-2 border-dashed border-neutral-300 rounded-2xl p-6 text-center cursor-pointer transition-all flex flex-col items-center justify-center gap-2 bg-neutral-50 hover:bg-neutral-100 hover:border-neutral-400 min-h-[140px]"
+              >
+                @if (uploadingImages()) {
+                  <svg class="animate-spin h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  <div class="text-xs font-semibold text-neutral-600">Uploading banner image...</div>
+                } @else {
+                  <i class="pi pi-cloud-upload text-2xl text-neutral-400"></i>
+                  <div class="text-xs font-semibold text-neutral-700">Drag & drop image or click to browse</div>
+                  <div class="text-[10px] text-neutral-400">Supports JPG, PNG, GIF, WebP (Max 5MB)</div>
+                }
+                <input
+                  #fileInput
+                  type="file"
+                  accept="image/*"
+                  class="hidden"
+                  (change)="onFileSelected($event)"
+                />
+              </div>
+            }
+            <input type="hidden" formControlName="imageUrl" />
             @if (form.get('imageUrl')?.invalid && form.get('imageUrl')?.touched) {
-              <p class="text-red-500 text-[10px] mt-1">Image URL is required.</p>
+              <p class="text-red-500 text-[10px] mt-1">Banner image is required.</p>
             }
           </div>
           <div>
@@ -46,7 +94,7 @@ import { ConfirmService } from '../../../../core/services/confirm.service';
             </select>
           </div>
           <div class="flex gap-2">
-            <button type="submit" [disabled]="form.invalid || actionLoading()" class="btn-primary flex-1 py-2.5 text-xs font-bold shadow-pink flex items-center justify-center gap-2">
+            <button type="submit" [disabled]="form.invalid || actionLoading() || uploadingImages()" class="btn-primary flex-1 py-2.5 text-xs font-bold shadow-pink flex items-center justify-center gap-2">
               @if (actionLoading()) {
                 <i class="pi pi-spinner animate-spin"></i>
               }
@@ -166,12 +214,74 @@ export class AdminBannersComponent implements OnInit {
   actionLoading = signal<boolean>(false);
   editingId = signal<any | null>(null);
 
+  isDragging = signal<boolean>(false);
+  uploadingImages = signal<boolean>(false);
+
   form = this.fb.group({
     title: ['', [Validators.required]],
+    ctaText: ['Discover Collection', [Validators.required]],
     imageUrl: ['', [Validators.required]],
     link: ['/'],
     position: ['hero', [Validators.required]],
   });
+
+  removeImage() {
+    this.form.patchValue({ imageUrl: '' });
+    this.cdr.markForCheck();
+  }
+
+  onFileSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      this.uploadFile(input.files[0]);
+      input.value = '';
+    }
+  }
+
+  onDragOver(event: DragEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragging.set(true);
+  }
+
+  onDragLeave(event: DragEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragging.set(false);
+  }
+
+  onDrop(event: DragEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragging.set(false);
+    if (event.dataTransfer?.files && event.dataTransfer.files.length > 0) {
+      this.uploadFile(event.dataTransfer.files[0]);
+    }
+  }
+
+  uploadFile(file: File) {
+    this.uploadingImages.set(true);
+    this.cdr.markForCheck();
+
+    const formData = new FormData();
+    formData.append('files', file);
+
+    this.http.post<any>(`${environment.apiUrl}/upload/multiple?folder=banners`, formData).subscribe({
+      next: (res) => {
+        const urls: string[] = res.urls || res.data?.urls || res.data?.urls?.[0] || (Array.isArray(res.data) ? res.data : []);
+        const actualUrl = urls[0] || (res.data?.urls ? res.data.urls[0] : null);
+        if (actualUrl) {
+          this.form.patchValue({ imageUrl: actualUrl });
+        }
+        this.uploadingImages.set(false);
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.uploadingImages.set(false);
+        this.cdr.markForCheck();
+      }
+    });
+  }
 
   ngOnInit() {
     this.fetchBanners();
@@ -208,6 +318,7 @@ export class AdminBannersComponent implements OnInit {
     this.editingId.set(ban.id || ban._id);
     this.form.patchValue({
       title: ban.title,
+      ctaText: ban.ctaText || 'Discover Collection',
       imageUrl: ban.imageUrl,
       link: ban.link || '/',
       position: ban.position || 'hero',
@@ -218,6 +329,7 @@ export class AdminBannersComponent implements OnInit {
     this.editingId.set(null);
     this.form.reset({
       title: '',
+      ctaText: 'Discover Collection',
       imageUrl: '',
       link: '/',
       position: 'hero',
@@ -248,6 +360,7 @@ export class AdminBannersComponent implements OnInit {
 
     const payload = {
       title: this.form.value.title!.trim(),
+      ctaText: this.form.value.ctaText!.trim() || 'Discover Collection',
       imageUrl: this.form.value.imageUrl!.trim(),
       link: this.form.value.link!.trim() || '/',
       linkUrl: this.form.value.link!.trim() || '/',
@@ -274,6 +387,7 @@ export class AdminBannersComponent implements OnInit {
           this.actionLoading.set(false);
           this.form.reset({
             title: '',
+            ctaText: 'Discover Collection',
             imageUrl: '',
             link: '/',
             position: 'hero',

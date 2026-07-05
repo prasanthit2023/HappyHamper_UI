@@ -25,10 +25,6 @@ import { ConfirmService } from '../../../../core/services/confirm.service';
               <p class="text-red-500 text-[10px] mt-1">Name is required.</p>
             }
           </div>
-          <div class="flex-[2] w-full">
-            <label class="block text-xs font-semibold text-neutral-400 mb-1.5">Description</label>
-            <input type="text" formControlName="description" class="input-field py-2" placeholder="Describe category..." />
-          </div>
           <div class="flex flex-col sm:flex-row gap-2 w-full md:w-auto flex-shrink-0">
             <button type="submit" [disabled]="form.invalid || actionLoading()" class="btn-primary py-2 px-6 text-xs font-bold w-full sm:w-auto flex-shrink-0" style="height: 38px;">
               {{ editingId() ? 'Update Category' : 'Create Category' }}
@@ -65,8 +61,6 @@ import { ConfirmService } from '../../../../core/services/confirm.service';
               <thead>
                 <tr>
                   <th>Category Name</th>
-                  <th>Slug Reference</th>
-                  <th>Description</th>
                   <th class="w-32 text-center">Actions</th>
                 </tr>
               </thead>
@@ -75,14 +69,6 @@ import { ConfirmService } from '../../../../core/services/confirm.service';
                   <tr class="hover:bg-neutral-50 transition-colors duration-150">
                     <td>
                       <span class="font-bold text-neutral-800">{{ cat.name }}</span>
-                    </td>
-                    <td>
-                      <span class="font-mono text-xs px-2 py-0.5 rounded bg-neutral-100 text-neutral-500 border border-neutral-200">
-                        {{ cat.slug }}
-                      </span>
-                    </td>
-                    <td class="text-neutral-600 max-w-xs truncate" [title]="cat.description || ''">
-                      {{ cat.description || '-' }}
                     </td>
                     <td class="text-center">
                       <div class="flex items-center justify-center gap-2">
@@ -125,7 +111,6 @@ export class AdminCategoriesComponent implements OnInit {
  
   form = this.fb.group({
     name: ['', [Validators.required]],
-    description: [''],
   });
  
   ngOnInit() {
@@ -151,7 +136,6 @@ export class AdminCategoriesComponent implements OnInit {
     this.editingId.set(cat._id || cat.id);
     this.form.patchValue({
       name: cat.name,
-      description: cat.description || '',
     });
   }
 
@@ -159,7 +143,6 @@ export class AdminCategoriesComponent implements OnInit {
     this.editingId.set(null);
     this.form.reset({
       name: '',
-      description: '',
     });
   }
  
@@ -187,7 +170,6 @@ export class AdminCategoriesComponent implements OnInit {
  
     const payload = {
       name: this.form.value.name!.trim(),
-      description: this.form.value.description?.trim() || '',
     };
  
     const editId = this.editingId();
@@ -209,7 +191,6 @@ export class AdminCategoriesComponent implements OnInit {
           this.actionLoading.set(false);
           this.form.reset({
             name: '',
-            description: '',
           });
           this.fetchCategories();
         },

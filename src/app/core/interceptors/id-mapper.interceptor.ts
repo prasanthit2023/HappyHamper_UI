@@ -63,7 +63,6 @@ export const idMapperInterceptor: HttpInterceptorFn = (req, next) => {
         }
 
         const mappedBody = mapIdKeys(body);
-        console.log(`[IdMapperInterceptor] URL: ${req.url} | Original keys: ${body && typeof event.body === 'object' ? Object.keys(event.body).join(', ') : 'none'} | Mapped keys: ${mappedBody && typeof mappedBody === 'object' ? Object.keys(mappedBody).join(', ') : 'none'}`);
         return event.clone({ body: mappedBody });
       }
       return event;

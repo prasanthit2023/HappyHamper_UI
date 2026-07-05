@@ -412,7 +412,7 @@ import { environment } from '../../../../../environments/environment';
                 <!-- Price breakdown -->
                 <div style="background:#f9fafb;border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:8px;margin-bottom:16px">
                   <div style="display:flex;justify-content:space-between;font-size:13px;color:#6b7280">
-                    <span>Subtotal ({{ cartStore.cart().items?.length || 0 }} items)</span>
+                    <span>Subtotal ({{ cartStore.cart().items.length || 0 }} items)</span>
                     <span style="font-weight:600;color:#374151"><i class="bi bi-currency-rupee"></i>{{ cartStore.subTotal() | number:'1.0-0' }}</span>
                   </div>
                   @if (cartStore.cart().discountAmount > 0) {

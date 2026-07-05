@@ -12,7 +12,7 @@ import { environment } from '../../../../../environments/environment';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule, RouterModule, ReactiveFormsModule],
   template: `
-    <div class="card p-6 space-y-6 page-enter max-w-2xl mx-auto">
+    <div class="card p-6 space-y-6 page-enter max-w-7xl mx-auto">
       <div class="flex items-center justify-between border-b pb-4">
         <div>
           <h2 class="font-bold text-xl text-neutral-900 dark:text-white font-display">
@@ -39,17 +39,14 @@ import { environment } from '../../../../../environments/environment';
 
       <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-4">
         <div>
-          <label class="block text-xs font-semibold text-neutral-400 mb-1.5">Product Title</label>
+          <label class="block text-xs font-semibold text-neutral-400 mb-1.5">Product Title <span class="text-red-500">*</span></label>
           <input type="text" formControlName="title" class="input-field py-2" placeholder="e.g. Premium Cotton Romper" />
         </div>
 
+        <!-- Category & Brand side by side -->
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label class="block text-xs font-semibold text-neutral-400 mb-1.5">SKU</label>
-            <input type="text" formControlName="sku" class="input-field py-2" placeholder="Leave blank to auto-generate" />
-          </div>
-          <div>
-            <label class="block text-xs font-semibold text-neutral-400 mb-1.5">Category</label>
+            <label class="block text-xs font-semibold text-neutral-400 mb-1.5">Category <span class="text-red-500">*</span></label>
             <select formControlName="categoryId" class="input-field py-2">
               <option value="">Select Category</option>
               @for (cat of categories(); track cat.id) {
@@ -57,36 +54,30 @@ import { environment } from '../../../../../environments/environment';
               }
             </select>
           </div>
-        </div>
-
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div>
-            <label class="block text-xs font-semibold text-neutral-400 mb-1.5">Base Price (<i class="bi bi-currency-rupee"></i>)</label>
-            <input type="number" formControlName="price" class="input-field py-2" />
-          </div>
-          <div>
-            <label class="block text-xs font-semibold text-neutral-400 mb-1.5">Discount Price (<i class="bi bi-currency-rupee"></i>)</label>
-            <input type="number" formControlName="discountPrice" class="input-field py-2" />
-          </div>
           <div>
             <label class="block text-xs font-semibold text-neutral-400 mb-1.5">Brand</label>
-            <input type="text" formControlName="brand" class="input-field py-2" />
+            <select formControlName="brand" class="input-field py-2 bg-white">
+              <option value="">Select Brand...</option>
+              @for (b of brands(); track b.brandId) {
+                <option [value]="b.brandName">{{ b.brandName }}</option>
+              }
+            </select>
           </div>
         </div>
 
-        <div>
-          <label class="block text-xs font-semibold text-neutral-400 mb-1.5">Short Description</label>
-          <input type="text" formControlName="shortDescription" class="input-field py-2" />
-        </div>
+        @if (editMode() && form.get('sku')?.value) {
+          <div>
+            <label class="block text-xs font-semibold text-neutral-400 mb-1.5">SKU (Auto-Generated)</label>
+            <div class="py-2.5 px-3.5 bg-neutral-50 dark:bg-neutral-800/40 border border-neutral-200 dark:border-neutral-700/60 rounded-xl text-xs font-mono font-bold text-neutral-600 dark:text-neutral-300">
+              {{ form.get('sku')?.value }}
+            </div>
+          </div>
+        }
 
         <div class="flex flex-wrap gap-6 py-2">
           <div class="flex items-center gap-2">
             <input type="checkbox" id="isPublished" formControlName="isPublished" class="rounded text-primary-500 focus:ring-primary-500 w-4 h-4 cursor-pointer" />
             <label for="isPublished" class="text-xs font-semibold text-neutral-700 dark:text-neutral-300 cursor-pointer select-none">Publish immediately (visible in shop)</label>
-          </div>
-          <div class="flex items-center gap-2">
-            <input type="checkbox" id="isComboOffer" formControlName="isComboOffer" class="rounded text-primary-500 focus:ring-primary-500 w-4 h-4 cursor-pointer" />
-            <label for="isComboOffer" class="text-xs font-semibold text-neutral-700 dark:text-neutral-300 cursor-pointer select-none">Combo Offer</label>
           </div>
         </div>
 
@@ -106,163 +97,135 @@ import { environment } from '../../../../../environments/environment';
           </div>
         </div>
 
-        <!-- Semicolon split tags -->
-        <div>
-          <label class="block text-xs font-semibold text-neutral-400 mb-1.5">Tags (comma separated)</label>
-          <input type="text" formControlName="tagsInput" class="input-field py-2" placeholder="cotton, organic, baby, girls" />
-        </div>
-
-        <!-- Add Image files dynamically via drag & drop / multi-upload -->
-        <div class="border-t pt-4 space-y-3">
+        <!-- Product Variants Section -->
+        <div class="border-t pt-5 space-y-4">
           <div class="flex items-center justify-between">
-            <h3 class="font-bold text-xs uppercase tracking-wider text-neutral-400">Product Images</h3>
-            @if (uploadingImages()) {
-              <span class="text-xs text-neutral-500 flex items-center gap-1.5">
-                <svg class="animate-spin h-3.5 w-3.5" style="color: var(--color-primary);" fill="none" viewBox="0 0 24 24">
-                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                Uploading...
-              </span>
-            }
-          </div>
-
-          <!-- Drag and drop zone -->
-          <div
-            (click)="fileInput.click()"
-            (dragover)="onDragOver($event)"
-            (dragleave)="onDragLeave($event)"
-            (drop)="onDrop($event)"
-            [class.drag-active]="isDragging()"
-            class="border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition-colors flex flex-col items-center justify-center gap-2 drag-zone"
-          >
-            <svg class="w-8 h-8 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-            </svg>
-            <div class="text-sm font-semibold text-neutral-700">Drag & drop files here or click to browse</div>
-            <div class="text-xs text-neutral-400">Supports JPG, PNG, GIF, WebP (Max 10 files)</div>
-            <input
-              #fileInput
-              type="file"
-              multiple
-              accept="image/*"
-              class="hidden"
-              (change)="onFileSelected($event)"
-            />
-          </div>
-
-          <!-- Thumbnails grid -->
-          @if (imagesFormArray.controls.length > 0) {
-            <div class="text-xs text-neutral-500 font-semibold mb-1">
-              Uploaded Images ({{ imagesFormArray.controls.length }}):
+            <div>
+              <h3 class="font-bold text-sm text-neutral-700 dark:text-white">Product Variants</h3>
+              <p class="text-neutral-400 text-[11px] mt-0.5">Each variant has its own size, color, pricing, stock and images</p>
             </div>
-            <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 pt-2">
-              @for (imgCtrl of imagesFormArray.controls; track $index) {
-                <div class="flex flex-col items-center">
-                  <div class="relative group rounded-xl overflow-hidden border border-neutral-200 bg-neutral-50 shadow-sm w-full" style="aspect-ratio: 1/1; min-height: 100px;">
-                    <img [src]="imgCtrl.value" class="w-full h-full object-cover" alt="Product image preview" />
-                    <button
-                      type="button"
-                      (click)="removeImageLink($index)"
-                      class="absolute top-1 right-1 w-6 h-6 rounded-full bg-red-500/90 text-white flex items-center justify-center shadow-sm opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:scale-105"
-                      title="Remove Image"
-                    >
-                      <i class="pi pi-times text-[10px]"></i>
-                    </button>
-                  </div>
-                  <div class="text-[9px] text-neutral-400 truncate w-full mt-1 text-center" [title]="imgCtrl.value">
-                    {{ imgCtrl.value }}
-                  </div>
-                </div>
-              }
-            </div>
-          }
-        </div>
-
-        <!-- Add Variant / Stock fields -->
-        <div class="border-t pt-4 space-y-3">
-          <div class="flex items-center justify-between">
-            <h3 class="font-bold text-xs uppercase tracking-wider text-neutral-400">Product Variants</h3>
-            <button type="button" (click)="addVariant()" class="text-xs font-bold hover:underline" style="color: var(--color-primary);">+ Add Variant</button>
+            <button type="button" (click)="addVariant()" class="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-xl transition-all hover:opacity-80" style="background: var(--color-primary-light); color: var(--color-primary);">
+              <i class="pi pi-plus text-[10px]"></i> Add Variant
+            </button>
           </div>
 
-          <div formArrayName="variants" class="space-y-3">
+          <div formArrayName="variants" class="space-y-4">
             @for (vCtrl of variantsFormArray.controls; track $index) {
-              <div [formGroupName]="$index" class="grid grid-cols-2 sm:grid-cols-6 gap-3 p-3 border rounded-xl bg-neutral-50/20 relative">
-                <div>
-                  <label class="text-[10px] block font-bold mb-1">SKU</label>
-                  <input type="text" formControlName="sku" class="input-field py-1 text-xs" />
-                </div>
-                <div>
-                  <label class="text-[10px] block font-bold mb-1">Size</label>
-                  <input type="text" formControlName="size" class="input-field py-1 text-xs" />
-                </div>
-                <!-- Image Picker Column -->
-                <div class="relative">
-                  <label class="text-[10px] block font-bold mb-1">Image</label>
-                  <div (click)="toggleImageSelector($index)" 
-                       class="w-full h-8 rounded-xl border border-neutral-200 cursor-pointer flex items-center justify-center bg-white overflow-hidden hover:bg-neutral-50 transition-colors">
-                    @if (vCtrl.get('imageUrl')?.value; as imgUrl) {
-                      <img [src]="imgUrl" class="w-full h-full object-cover" />
-                    } @else {
-                      <span class="text-neutral-400 text-[10px]"><i class="pi pi-image"></i></span>
-                    }
+              <div [formGroupName]="$index" class="variant-card rounded-2xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800/30 overflow-hidden shadow-sm">
+                <!-- Card Header -->
+                <div class="flex items-center justify-between px-4 py-2.5 bg-neutral-50 dark:bg-neutral-800/60 border-b border-neutral-100 dark:border-neutral-700">
+                  <div class="flex items-center gap-2">
+                    <div class="w-3.5 h-3.5 rounded-full border border-neutral-200 flex-shrink-0" [style.background]="vCtrl.get('colorHex')?.value || '#ccc'"></div>
+                    <span class="text-[11px] font-bold text-neutral-600 dark:text-neutral-300">
+                      Variant #{{ $index + 1 }}
+                      @if (vCtrl.get('size')?.value) { &mdash; {{ vCtrl.get('size')?.value }} }
+                      @if (vCtrl.get('color')?.value) { / {{ vCtrl.get('color')?.value }} }
+                    </span>
                   </div>
-                  
-                  <!-- Dropdown Popover -->
-                  @if (activeImageSelectorIdx() === $index) {
-                    <div class="absolute z-30 left-0 mt-1 p-2 bg-white border border-neutral-200 rounded-xl shadow-xl w-48 space-y-2">
-                      <div class="flex items-center justify-between border-b pb-1">
-                        <span class="text-[10px] font-bold text-neutral-400">Select Image</span>
-                        <button type="button" (click)="activeImageSelectorIdx.set(null)" class="text-neutral-400 hover:text-neutral-600"><i class="pi pi-times text-[10px]"></i></button>
-                      </div>
-                      
-                      @if (productImagesList.length === 0) {
-                        <div class="text-[10px] text-neutral-400 py-1 text-center">No images uploaded yet.</div>
-                      } @else {
-                        <div class="grid grid-cols-4 gap-1.5 max-h-24 overflow-y-auto">
-                          @for (img of productImagesList; track img) {
-                            <button type="button" 
-                                    (click)="selectVariantImage($index, img)"
-                                    class="w-8 h-8 rounded-lg overflow-hidden border border-neutral-100 hover:border-primary-500 transition-colors">
-                              <img [src]="img" class="w-full h-full object-cover" />
-                            </button>
-                          }
-                        </div>
-                      }
-                      
-                      <div class="border-t pt-1.5 flex justify-end">
-                        <button type="button" 
-                                (click)="selectVariantImage($index, '')"
-                                class="text-[10px] text-red-500 font-bold hover:underline">Clear Image</button>
+                  <button type="button" (click)="removeVariant($index)" class="w-6 h-6 rounded-full bg-red-50 hover:bg-red-100 text-red-500 flex items-center justify-center transition-colors" aria-label="Remove variant">
+                    <i class="pi pi-times text-[10px]"></i>
+                  </button>
+                </div>
+
+                <div class="p-4 space-y-4">
+                  <!-- Fields row: Size | Color (picker + name) | Price | Disc. Price | Stock -->
+                  <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                    <div>
+                      <label class="variant-label">Size</label>
+                      <select formControlName="size" class="input-field py-1.5 text-xs bg-white">
+                        <option value="">Select...</option>
+                        @for (s of sizes(); track s.sizeId) {
+                          <option [value]="s.sizeName">{{ s.sizeName }}</option>
+                        }
+                      </select>
+                    </div>
+                    <div>
+                      <label class="variant-label">Color</label>
+                      <div class="flex gap-1.5">
+                        <input type="color" formControlName="colorHex" class="w-9 h-9 rounded-lg border border-neutral-200 cursor-pointer p-0.5 bg-transparent flex-shrink-0" title="Pick color" />
+                        <input type="text" formControlName="color" class="input-field py-1.5 text-xs flex-1 min-w-0" placeholder="e.g. White" />
                       </div>
                     </div>
-                    
-                    <!-- Backdrop overlay to close when clicking outside -->
-                    <div class="fixed inset-0 z-20" (click)="activeImageSelectorIdx.set(null)"></div>
-                  }
+                    <div>
+                      <label class="variant-label">Price (&#8377;) <span class="text-red-500">*</span></label>
+                      <input type="number" formControlName="price" class="input-field py-1.5 text-xs" placeholder="0" />
+                    </div>
+                    <div>
+                      <label class="variant-label">Disc. Price (&#8377;)</label>
+                      <input type="number" formControlName="discountPrice" class="input-field py-1.5 text-xs" placeholder="None" />
+                    </div>
+                    <div>
+                      <label class="variant-label">Stock Qty <span class="text-red-500">*</span></label>
+                      <input type="number" formControlName="stock" class="input-field py-1.5 text-xs" />
+                    </div>
+                  </div>
+
+                  <!-- Images upload row -->
+                  <div>
+                    <label class="variant-label mb-2">Variant Images</label>
+                    <div class="flex flex-wrap items-start gap-3">
+                      <!-- Uploaded thumbnails -->
+                      @for (imgUrl of (vCtrl.get('images')?.value || []); track imgUrl) {
+                        <div class="relative group flex-shrink-0">
+                          <div class="w-16 h-16 rounded-xl overflow-hidden border-2 border-neutral-200 shadow-sm bg-neutral-100">
+                            <img [src]="imgUrl" class="w-full h-full object-cover" alt="Variant image" />
+                          </div>
+                          <button type="button"
+                                  (click)="removeVariantImage($index, imgUrl)"
+                                  class="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-red-500 text-white flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 transition-all duration-150 hover:scale-110">
+                            <i class="pi pi-times text-[9px]"></i>
+                          </button>
+                        </div>
+                      }
+
+                      <!-- Per-variant upload trigger -->
+                      <label class="flex-shrink-0 cursor-pointer">
+                        <input type="file" multiple accept="image/*" class="hidden"
+                               (change)="uploadVariantImages($index, $event)" />
+                        @if (uploadingVariantIdx() === $index) {
+                          <div class="w-16 h-16 rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-1" style="border-color: var(--color-primary); background: var(--color-primary-light);">
+                            <svg class="animate-spin w-4 h-4" style="color: var(--color-primary);" fill="none" viewBox="0 0 24 24">
+                              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <span class="text-[9px] font-bold" style="color: var(--color-primary);">Uploading</span>
+                          </div>
+                        } @else {
+                          <div class="w-16 h-16 rounded-xl border-2 border-dashed border-neutral-200 hover:border-primary bg-neutral-50 hover:bg-neutral-100 flex flex-col items-center justify-center gap-1 transition-all duration-200">
+                            <i class="pi pi-cloud-upload text-neutral-400 text-base"></i>
+                            <span class="text-[9px] font-bold text-neutral-400">Upload</span>
+                          </div>
+                        }
+                      </label>
+                    </div>
+                    @if ((vCtrl.get('images')?.value || []).length === 0 && uploadingVariantIdx() !== $index) {
+                      <p class="text-[10px] text-neutral-400 mt-1.5 italic">Click the upload box to add images for this variant</p>
+                    }
+                  </div>
                 </div>
-                <div>
-                  <label class="text-[10px] block font-bold mb-1">Color Picker</label>
-                  <input type="color" formControlName="colorHex" class="w-full h-8 rounded-xl border border-neutral-200 cursor-pointer p-0 bg-transparent overflow-hidden" />
-                </div>
-                <div>
-                  <label class="text-[10px] block font-bold mb-1">Color Name</label>
-                  <input type="text" formControlName="color" class="input-field py-1 text-xs" placeholder="e.g. White" />
-                </div>
-                <div>
-                  <label class="text-[10px] block font-bold mb-1">Stock Qty</label>
-                  <input type="number" formControlName="stock" class="input-field py-1 text-xs" />
-                </div>
-                <button type="button" (click)="removeVariant($index)" class="absolute top-1 right-1 text-red-500 text-xs font-bold hover:scale-105 transition-transform" aria-label="Remove variant"><i class="pi pi-times"></i></button>
+              </div>
+            }
+
+            @if (variantsFormArray.controls.length === 0) {
+              <div class="text-center py-10 rounded-2xl border-2 border-dashed border-neutral-200 dark:border-neutral-700">
+                <i class="pi pi-box text-4xl text-neutral-300"></i>
+                <p class="text-sm font-bold text-neutral-400 mt-2">No variants added yet</p>
+                <p class="text-xs text-neutral-300 mt-0.5">Click "Add Variant" above to get started</p>
               </div>
             }
           </div>
         </div>
 
+        <!-- Form actions -->
         <div class="pt-6 border-t border-neutral-100 dark:border-neutral-700 flex justify-end gap-3">
           <a routerLink="/admin/products" class="btn-secondary py-3 px-6 text-xs font-bold">Cancel</a>
-          <button type="submit" [disabled]="form.invalid || submitting()" class="btn-primary py-3 px-8 text-xs font-bold">
+          <button type="submit" [disabled]="form.invalid || submitting()" class="btn-primary py-3 px-8 text-xs font-bold flex items-center gap-2">
+            @if (submitting()) {
+              <svg class="animate-spin w-3.5 h-3.5" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+            }
             {{ editMode() ? 'Update Product' : 'Create Product' }}
           </button>
         </div>
@@ -270,13 +233,20 @@ import { environment } from '../../../../../environments/environment';
     </div>
   `,
   styles: [`
-    .drag-zone {
-      border-color: var(--color-border);
-      background: var(--color-bg-subtle);
+    .variant-label {
+      display: block;
+      font-size: 10px;
+      font-weight: 700;
+      color: #9ca3af;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 4px;
     }
-    .drag-zone:hover, .drag-active {
-      border-color: var(--color-primary) !important;
-      background: var(--color-primary-light) !important;
+    .variant-card {
+      transition: box-shadow 0.2s;
+    }
+    .variant-card:hover {
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
     }
   `]
 })
@@ -292,11 +262,12 @@ export class ProductFormComponent implements OnInit, OnDestroy {
   editMode = signal<boolean>(false);
   productId = signal<string | null>(null);
   categories = signal<any[]>([]);
+  brands = signal<any[]>([]);
+  sizes = signal<any[]>([]);
   submitting = signal<boolean>(false);
   successMessage = signal<string>('');
   errorMessage = signal<string>('');
-  uploadingImages = signal<boolean>(false);
-  isDragging = signal<boolean>(false);
+  uploadingVariantIdx = signal<number | null>(null);
 
   readonly colorHexMap: Record<string, string> = {
     red: '#dc2626',
@@ -444,44 +415,63 @@ export class ProductFormComponent implements OnInit, OnDestroy {
     });
   }
 
-  uiLogs = signal<string[]>([]);
 
-  addUiLog(msg: string) {
-    console.log(msg);
-    this.uiLogs.update((logs) => [...logs, `[${new Date().toLocaleTimeString()}] ${msg}`]);
-    this.cdr.detectChanges();
-  }
-
-  clearUiLogs() {
-    this.uiLogs.set([]);
-    this.cdr.detectChanges();
-  }
-
-  activeImageSelectorIdx = signal<number | null>(null);
-
-  get productImagesList(): string[] {
-    return (this.imagesFormArray.value || []).filter(Boolean);
-  }
-
-  toggleImageSelector(index: number) {
-    this.activeImageSelectorIdx.set(this.activeImageSelectorIdx() === index ? null : index);
-    this.cdr.detectChanges();
-  }
-
-  selectVariantImage(index: number, imgUrl: string) {
+  removeVariantImage(index: number, imgUrl: string) {
     const ctrl = this.variantsFormArray.at(index);
     if (ctrl) {
-      ctrl.get('imageUrl')?.setValue(imgUrl);
+      const current = (ctrl.get('images')?.value as string[] || []).filter((u: string) => u !== imgUrl);
+      ctrl.get('images')?.setValue(current);
+      ctrl.get('imageUrl')?.setValue(current[0] || '');
     }
-    this.activeImageSelectorIdx.set(null);
     this.cdr.detectChanges();
+  }
+
+  uploadVariantImages(index: number, event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (!input.files || input.files.length === 0) return;
+
+    this.uploadingVariantIdx.set(index);
+    this.errorMessage.set('');
+    this.cdr.detectChanges();
+
+    const formData = new FormData();
+    for (let i = 0; i < input.files.length; i++) {
+      formData.append('files', input.files[i]);
+    }
+    input.value = '';
+
+    this.http.post<any>(`${environment.apiUrl}/upload/multiple`, formData).subscribe({
+      next: (res) => {
+        const newUrls: string[] = res.urls || res.data?.urls || (Array.isArray(res.data) ? res.data : []);
+        const ctrl = this.variantsFormArray.at(index);
+        if (ctrl) {
+          const existing = (ctrl.get('images')?.value as string[] || []);
+          const merged = [...existing, ...newUrls.filter((u: string) => !existing.includes(u))];
+          ctrl.get('images')?.setValue(merged);
+          ctrl.get('imageUrl')?.setValue(merged[0] || '');
+          // Also push to global images array to keep FormArray in sync
+          newUrls.forEach((url: string) => {
+            if (!(this.imagesFormArray.value as string[]).includes(url)) {
+              this.imagesFormArray.push(this.fb.control(url));
+            }
+          });
+        }
+        this.uploadingVariantIdx.set(null);
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.errorMessage.set('Failed to upload images for this variant.');
+        this.uploadingVariantIdx.set(null);
+        this.cdr.detectChanges();
+      }
+    });
   }
 
   form = this.fb.group({
     title: ['', [Validators.required]],
     sku: [''],
     categoryId: ['', [Validators.required]],
-    price: [299, [Validators.required, Validators.min(0)]],
+    price: [null],
     discountPrice: [null],
     brand: [''],
     shortDescription: [''],
@@ -521,6 +511,8 @@ export class ProductFormComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.loadCategories();
+    this.loadBrands();
+    this.loadSizes();
     this.routeSub = this.route.params.subscribe((params) => {
       const id = params['id'];
       if (id) {
@@ -530,6 +522,16 @@ export class ProductFormComponent implements OnInit, OnDestroy {
       } else {
         // Preset default variant for creation convenience
         this.addVariant();
+      }
+    });
+
+    // Sync variants' first item price to main product price for database integrity
+    this.variantsFormArray.valueChanges.subscribe(() => {
+      const list = this.variantsFormArray.value;
+      if (list && list.length > 0) {
+        const first = list[0];
+        this.form.get('price')?.setValue(first.price || 0, { emitEvent: false });
+        this.form.get('discountPrice')?.setValue(first.discountPrice || null, { emitEvent: false });
       }
     });
 
@@ -581,16 +583,29 @@ export class ProductFormComponent implements OnInit, OnDestroy {
     });
   }
 
+  loadBrands() {
+    this.http.get<any>(`${environment.apiUrl}/brands`).subscribe({
+      next: (res) => {
+        this.brands.set(res.data || []);
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  loadSizes() {
+    this.http.get<any>(`${environment.apiUrl}/sizes`).subscribe({
+      next: (res) => {
+        this.sizes.set(res.data || []);
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
   loadProductDetails(id: string) {
-    this.addUiLog('[DEBUG] loadProductDetails starting for ID: ' + id);
     this.http.get<any>(`${environment.apiUrl}/products/${id}`).subscribe({
       next: (res) => {
         const prod = res.data;
-        this.addUiLog('[DEBUG] Load product details response data keys: ' + Object.keys(prod || {}).join(', '));
-        if (!prod) {
-          this.addUiLog('[WARN] Product data is empty.');
-          return;
-        }
+        if (!prod) return;
 
         this.form.patchValue({
           title: prod.title,
@@ -609,14 +624,11 @@ export class ProductFormComponent implements OnInit, OnDestroy {
 
         // Set Images
         this.imagesFormArray.clear();
-        this.addUiLog('[DEBUG] Cleared images form array. Current images list: ' + JSON.stringify(prod.images));
         if (prod.images?.length > 0) {
-          prod.images.forEach((img: string, idx: number) => {
+          prod.images.forEach((img: string) => {
             this.imagesFormArray.push(this.fb.control(img));
-            this.addUiLog(`[DEBUG] Pushed image index ${idx} to FormArray: ${img}`);
           });
         }
-        this.addUiLog('[DEBUG] Final images FormArray length: ' + this.imagesFormArray.length);
 
         // Set Variants
         this.variantsFormArray.clear();
@@ -628,7 +640,10 @@ export class ProductFormComponent implements OnInit, OnDestroy {
               color: [v.color || ''],
               colorHex: [v.colorHex || '#ffffff'],
               imageUrl: [v.imageUrl || ''],
+              images: [v.images || (v.imageUrl ? [v.imageUrl] : [])],
               stock: [v.stock || 0, Validators.required],
+              price: [v.price || prod.price || null],
+              discountPrice: [v.discountPrice || prod.discountPrice || null],
             });
 
             this.setupVariantControl(group);
@@ -638,12 +653,11 @@ export class ProductFormComponent implements OnInit, OnDestroy {
 
         // Handle category selection for Combo Offers
         this.checkAndSetComboOfferState(prod.categoryId);
-
         this.cdr.detectChanges();
-        this.addUiLog('[DEBUG] Completed loadProductDetails and triggered change detection.');
       },
-      error: (err) => {
-        this.addUiLog('[ERROR] Failed to load product details: ' + JSON.stringify(err));
+      error: () => {
+        this.errorMessage.set('Failed to load product details.');
+        this.cdr.detectChanges();
       }
     });
   }
@@ -655,7 +669,10 @@ export class ProductFormComponent implements OnInit, OnDestroy {
       color: ['White'],
       colorHex: ['#ffffff'],
       imageUrl: [''],
+      images: [[]],
       stock: [10, Validators.required],
+      price: [null],
+      discountPrice: [null],
     });
 
     this.setupVariantControl(group);
@@ -678,82 +695,7 @@ export class ProductFormComponent implements OnInit, OnDestroy {
     this.variantsFormArray.removeAt(index);
   }
 
-  addImageLink() {
-    this.imagesFormArray.push(this.fb.control(''));
-  }
 
-  removeImageLink(index: number) {
-    this.imagesFormArray.removeAt(index);
-  }
-
-  onFileSelected(event: Event) {
-    const input = event.target as HTMLInputElement;
-    if (input.files && input.files.length > 0) {
-      this.addUiLog(`[DEBUG] onFileSelected event fired: ${input.files.length} file(s) chosen.`);
-      this.uploadFiles(input.files);
-      input.value = ''; // Clear value to allow selecting same file again
-    } else {
-      this.addUiLog('[DEBUG] onFileSelected event fired but no files chosen.');
-    }
-  }
-
-  onDragOver(event: DragEvent) {
-    event.preventDefault();
-    event.stopPropagation();
-    this.isDragging.set(true);
-  }
-
-  onDragLeave(event: DragEvent) {
-    event.preventDefault();
-    event.stopPropagation();
-    this.isDragging.set(false);
-  }
-
-  onDrop(event: DragEvent) {
-    event.preventDefault();
-    event.stopPropagation();
-    this.isDragging.set(false);
-    if (event.dataTransfer?.files) {
-      this.uploadFiles(event.dataTransfer.files);
-    }
-  }
-
-  uploadFiles(files: FileList | File[]) {
-    if (!files || files.length === 0) {
-      this.addUiLog('[WARN] uploadFiles called with empty file list.');
-      return;
-    }
-        this.addUiLog('[DEBUG] uploadFiles started for ' + files.length + ' file(s).');
-    this.uploadingImages.set(true);
-    this.errorMessage.set('');
-    this.cdr.detectChanges();
-
-    const formData = new FormData();
-    for (let i = 0; i < files.length; i++) {
-      formData.append('files', files[i]);
-      this.addUiLog(`[DEBUG] Appending file to FormData: ${files[i].name} (${files[i].size} bytes, type: ${files[i].type})`);
-    }
-
-    this.http.post<any>(`${environment.apiUrl}/upload/multiple`, formData).subscribe({
-      next: (res) => {
-        this.addUiLog('[DEBUG] uploadFiles success. Server response: ' + JSON.stringify(res));
-        const newUrls: string[] = res.urls || res.data?.urls || (Array.isArray(res.data) ? res.data : []);
-        this.addUiLog('[DEBUG] Extracted URLs: ' + JSON.stringify(newUrls));
-        newUrls.forEach(url => {
-          this.imagesFormArray.push(this.fb.control(url));
-          this.addUiLog('[DEBUG] Pushed URL to FormArray: ' + url);
-        });
-        this.uploadingImages.set(false);
-        this.cdr.detectChanges();
-      },
-      error: (err) => {
-        this.addUiLog('[ERROR] uploadFiles failed: ' + JSON.stringify(err));
-        this.errorMessage.set('Failed to upload images.');
-        this.uploadingImages.set(false);
-        this.cdr.detectChanges();
-      }
-    });
-  }
 
   onSubmit() {
     if (this.form.invalid) return;
@@ -763,27 +705,34 @@ export class ProductFormComponent implements OnInit, OnDestroy {
 
     const formVal = this.form.getRawValue();
 
+    const variants = (formVal.variants || []).map((v: any) => ({
+      sku: v.sku,
+      size: v.size || 'One Size',
+      color: v.color || 'Natural',
+      colorHex: v.colorHex || '#ede0d4',
+      imageUrl: v.imageUrl || null,
+      images: v.images || [],
+      stock: Number(v.stock || 0),
+      price: v.price ? Number(v.price) : null,
+      discountPrice: v.discountPrice ? Number(v.discountPrice) : null
+    }));
+
+    const firstVariant = variants[0];
+
     // Build payload matching backend schemas
     const payload = {
       title: formVal.title,
       sku: formVal.sku,
       categoryId: formVal.categoryId ? Number(formVal.categoryId) : 0,
-      price: Number(formVal.price),
-      discountPrice: formVal.discountPrice ? Number(formVal.discountPrice) : undefined,
+      price: firstVariant?.price ?? Number(formVal.price ?? 0),
+      discountPrice: firstVariant?.discountPrice ?? (formVal.discountPrice ? Number(formVal.discountPrice) : undefined),
       brand: formVal.brand,
       shortDescription: formVal.shortDescription,
       description: formVal.description,
       material: formVal.material,
       careInstructions: formVal.careInstructions,
       tags: formVal.tagsInput ? formVal.tagsInput.split(',').map((t: string) => t.trim()).filter(Boolean) : [],
-      variants: (formVal.variants || []).map((v: any) => ({
-        sku: v.sku,
-        size: v.size || 'One Size',
-        color: v.color || 'Natural',
-        colorHex: v.colorHex || '#ede0d4',
-        imageUrl: v.imageUrl || null,
-        stock: Number(v.stock || 0),
-      })),
+      variants,
       images: (formVal.images as any[] || []).filter((i: any) => !!i),
       isPublished: !!formVal.isPublished,
     };

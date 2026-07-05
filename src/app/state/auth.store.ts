@@ -1,4 +1,4 @@
-import { Injectable, PLATFORM_ID, Inject, signal, computed } from '@angular/core';
+import { Injectable, PLATFORM_ID, Inject, inject, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { tap, catchError } from 'rxjs/operators';
@@ -6,12 +6,15 @@ import { of } from 'rxjs';
 import { isPlatformBrowser } from '@angular/common';
 import { environment } from '../../environments/environment';
 import { HydrationService } from '../core/services/hydration.service';
+import { PermissionStore } from './permission.store';
 
 export interface User {
   id: string;
   firstName: string;
   lastName: string;
   role: string;
+  roleId?: number | null;      // assigned via User Access Management
+  roleName?: string | null;    // display name of the assigned role
   avatar?: string;
   phone: string;
   addresses?: any[];
@@ -35,7 +38,17 @@ export class AuthStore {
 
   // ── Computed ──────────────────────────────────────────
   readonly isLoggedIn   = computed(() => !!this.user() && !!this.token());
-  readonly isAdmin      = computed(() => ['admin', 'superadmin'].includes(this.user()?.role?.toLowerCase() ?? ''));
+  // isAdmin: true for superadmin/admin roles OR for any user who has been
+  // assigned a custom role via User Access Management (roleId is set)
+  readonly isAdmin      = computed(() => {
+    const u = this.user();
+    if (!u) return false;
+    const roleStr = u.role?.toLowerCase() ?? '';
+    if (['admin', 'superadmin'].includes(roleStr)) return true;
+    // Staff user assigned a custom admin role (roleId 3 is Customer)
+    if (u.roleId != null && u.roleId !== 3) return true;
+    return false;
+  });
   readonly isSuperAdmin = computed(() => this.user()?.role?.toLowerCase() === 'superadmin');
   readonly fullName     = computed(() => {
     const u = this.user();
@@ -241,49 +254,35 @@ export class AuthStore {
   private hydrate() {
     // Skip on SSR — browser APIs not available
     if (!isPlatformBrowser(this.platformId)) {
-      console.log('[AuthStore] Hydration skipped (SSR server environment)');
       this.hydrationService.complete(false);
       return;
     }
 
     const accessToken = localStorage.getItem(this.TOKEN_KEY);
     const refreshToken = localStorage.getItem(this.REFRESH_TOKEN_KEY);
-    console.log('[AuthStore] Hydration started on browser. Tokens in localStorage:', {
-      hasAccess: !!accessToken,
-      hasRefresh: !!refreshToken,
-    });
 
     if (accessToken) {
       // Try to use the access token first to avoid redundant refresh requests
       this.token.set(accessToken);
-      console.log('[AuthStore] Access token found, calling fetchProfile...');
       this.fetchProfile().subscribe({
         next: (res) => {
-          console.log('[AuthStore] fetchProfile succeeded during hydration:', res.data);
           this.hydrationService.complete(true);
         },
         error: (err) => {
-          console.warn('[AuthStore] fetchProfile failed during hydration, triggering refresh:', err);
           // Token is invalid/expired — trigger refresh
           this.doRefreshAndProfile(refreshToken ?? undefined, accessToken);
         },
       });
     } else if (refreshToken) {
-      console.log('[AuthStore] Only refresh token found, triggering refresh...');
       // No access token in storage, but we have a refresh token
       this.doRefreshAndProfile(refreshToken, undefined);
     } else {
-      console.log('[AuthStore] No tokens found in localStorage. Hydration complete (false).');
       // No tokens at all — user needs to log in.
       this.hydrationService.complete(false);
     }
   }
 
   private doRefreshAndProfile(refreshToken?: string, fallbackAccessToken?: string) {
-    console.log('[AuthStore] doRefreshAndProfile called with:', {
-      hasRefresh: !!refreshToken,
-      hasFallbackAccess: !!fallbackAccessToken,
-    });
     // Call refresh directly with the token in the body if available.
     // If no token is provided, the backend can still accept the HttpOnly cookie.
     const body = refreshToken ? { refreshToken } : {};
@@ -297,7 +296,6 @@ export class AuthStore {
       )
       .subscribe({
         next: (res) => {
-          console.log('[AuthStore] refresh request succeeded during hydration:', res);
           if (res?.data?.accessToken) {
             const newToken = res.data.accessToken;
             this.token.set(newToken);
@@ -308,58 +306,46 @@ export class AuthStore {
               }
             }
             // Fetch profile with the new token
-            console.log('[AuthStore] Fetching profile with refreshed token...');
             this.fetchProfile().subscribe({
               next: (profileRes) => {
-                console.log('[AuthStore] Refreshed profile succeeded:', profileRes.data);
                 this.hydrationService.complete(true);
               },
               error: (err) => {
-                console.error('[AuthStore] Refreshed profile failed:', err);
                 this.clearSession();
                 this.hydrationService.complete(false);
               },
             });
           } else if (fallbackAccessToken) {
-            console.log('[AuthStore] Refresh did not return new token but fallback token exists. Trying fallback...');
             // If refresh did not return a new token but we still have a valid old one,
             // try using it before signing the user out.
             this.token.set(fallbackAccessToken);
             this.fetchProfile().subscribe({
               next: (profileRes) => {
-                console.log('[AuthStore] Fallback profile succeeded:', profileRes.data);
                 this.hydrationService.complete(true);
               },
               error: (err) => {
-                console.error('[AuthStore] Fallback profile failed:', err);
                 this.clearSession();
                 this.hydrationService.complete(false);
               },
             });
           } else {
-            console.warn('[AuthStore] Refresh succeeded but returned no token, and no fallback. Logging out.');
             this.clearSession();
             this.hydrationService.complete(false);
           }
         },
         error: (err) => {
-          console.warn('[AuthStore] Refresh request failed during hydration:', err);
           if (fallbackAccessToken) {
-            console.log('[AuthStore] Refresh failed. Trying fallback token...');
             this.token.set(fallbackAccessToken);
             this.fetchProfile().subscribe({
               next: (profileRes) => {
-                console.log('[AuthStore] Fallback profile succeeded after refresh fail:', profileRes.data);
                 this.hydrationService.complete(true);
               },
               error: (err2) => {
-                console.error('[AuthStore] Fallback profile failed after refresh fail:', err2);
                 this.clearSession();
                 this.hydrationService.complete(false);
               },
             });
           } else {
-            console.warn('[AuthStore] Refresh failed and no fallback token. Logging out.');
             // Refresh failed — session is truly expired
             this.clearSession();
             this.hydrationService.complete(false);
@@ -465,5 +451,7 @@ export class AuthStore {
       localStorage.removeItem(this.TOKEN_KEY);
       localStorage.removeItem(this.REFRESH_TOKEN_KEY);
     }
+    // Clear cached permissions so the next login gets a fresh fetch
+    try { inject(PermissionStore).clear(); } catch { /* not in injection context — skip */ }
   }
 }

@@ -35,11 +35,9 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
   // Bypass waiting if this is the profile fetch request during the hydration lifecycle
   const isHydrationMeRequest = req.url.includes('/me') && hydrationService.isHydrating();
-  console.log(`[AuthInterceptor] Request for: ${req.url}. isHydrationMeRequest: ${isHydrationMeRequest}. isHydrating: ${hydrationService.isHydrating()}`);
 
   if (isHydrationMeRequest) {
     const token = localStorage.getItem('bb_access_token');
-    console.log('[AuthInterceptor] isHydrationMeRequest matching. Token found in localStorage:', !!token);
     if (token) {
       const cloned = req.clone({
         setHeaders: { Authorization: `Bearer ${token}` },
@@ -50,19 +48,15 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   }
 
   // Otherwise, block outgoing calls until the hydration flow completes (refreshes or clears tokens)
-  console.log(`[AuthInterceptor] Request blocked waiting for hydration Complete: ${req.url}`);
   return from(hydrationService.hydrationComplete).pipe(
     switchMap((isLoggedIn) => {
-      console.log(`[AuthInterceptor] Hydration complete resolved (isLoggedIn: ${isLoggedIn}). Releasing blocked request: ${req.url}`);
       const token = localStorage.getItem('bb_access_token');
       if (token) {
-        console.log(`[AuthInterceptor] Appending access token to: ${req.url}`);
         const cloned = req.clone({
           setHeaders: { Authorization: `Bearer ${token}` },
         });
         return next(cloned);
       }
-      console.log(`[AuthInterceptor] Sending request without token: ${req.url}`);
       return next(req);
     })
   );

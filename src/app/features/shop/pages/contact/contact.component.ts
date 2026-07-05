@@ -272,23 +272,30 @@ export class ContactComponent {
   contactChannels = [
     {
       title: 'Phone Support',
-      detail: '+91 80 4567 8900',
+      detail: '+91 84389 92908',
       subtext: 'Mon - Sat: 9:00 AM - 6:00 PM IST',
-      link: 'tel:+918045678900',
+      link: 'tel:+918438992908',
       svgPath: 'M3 5a2 2 0 012-2h3.28a1 1 0 01.94.725l.548 2.2a1 1 0 01-.321.988l-1.305.98a10.582 10.582 0 004.872 4.872l.98-1.305a1 1 0 01.988-.321l2.2.548a1 1 0 01.725.94V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z',
     },
     {
       title: 'WhatsApp Support',
-      detail: '+91 80 4567 8901',
+      detail: '+91 84389 92908',
       subtext: 'We respond to messages instantly or within 2 hours.',
-      link: 'https://wa.me/918045678901',
+      link: 'https://wa.me/918438992908',
       svgPath: 'M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z',
     },
     {
+      title: 'Email Support',
+      detail: 'happyhamper11@gmail.com',
+      subtext: 'Drop us a line and we will reply within 24 hours.',
+      link: 'mailto:happyhamper11@gmail.com',
+      svgPath: 'M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z',
+    },
+    {
       title: 'Our Headquarters',
-      detail: 'Happy Hamper, Bengaluru',
-      subtext: 'No 45, Residency Road, Bengaluru, KA - 560025',
-      link: 'https://maps.google.com/?q=No+45,+Residency+Road,+Bengaluru,+KA+-+560025',
+      detail: 'Happy Hamper, Gingee',
+      subtext: 'No. 156g, Gandhi Bazar, Singavaram Salai, Gingee, Villupuram - 604202',
+      link: 'https://maps.google.com/?q=No.+156g,+Gandhi+Bazar,+Singavaram+Salai,+Gingee,+Villupuram+-+604202',
       svgPath: 'M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z M15 11a3 3 0 11-6 0 3 3 0 016 0z',
     },
   ];

@@ -3,6 +3,7 @@ import { RouterModule, Router, NavigationEnd } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { filter } from 'rxjs/operators';
 import { AuthStore } from '../../../state/auth.store';
+import { PermissionStore } from '../../../state/permission.store';
 
 @Component({
   selector: 'bb-admin-layout',
@@ -69,42 +70,90 @@ import { AuthStore } from '../../../state/auth.store';
 
 
         <!-- Nav links -->
-        <nav class="flex-1 px-2.5 py-4 space-y-0.5" aria-label="Admin navigation">
-          @for (item of navItems; track item.path) {
-            <a
-              [routerLink]="item.path"
-              routerLinkActive="sidebar-item-active"
-              [routerLinkActiveOptions]="{exact: item.exact}"
-              (click)="onNavClick()"
-              class="sidebar-item relative group"
-              [class.justify-center]="collapsed()"
-              [attr.title]="collapsed() ? item.label : null"
-              [attr.aria-label]="item.label"
-            >
-              <span class="flex-shrink-0 w-5 h-5 flex items-center justify-center">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" [attr.d]="item.svgPath"/>
-                </svg>
-              </span>
-              <span class="label-fade text-sm"
-                    [style.opacity]="collapsed() ? '0' : '1'"
-                    [style.width]="collapsed() ? '0px' : '160px'"
-                    [style.marginLeft]="collapsed() ? '0' : '10px'">
-                {{ item.label }}
-              </span>
-              @if (item.badge && !collapsed()) {
-                <span class="ml-auto text-[10px] px-1.5 py-0.5 rounded-full font-bold text-white flex-shrink-0"
-                      style="background: var(--color-orange);">{{ item.badge }}</span>
+        <nav class="flex-1 px-2.5 py-4 space-y-1" aria-label="Admin navigation">
+          @for (item of navItems(); track item.label) {
+            @if (item.isGroup) {
+              <!-- Group Parent Header Button -->
+              <div class="space-y-0.5">
+                <button
+                  (click)="toggleGroup(item.label)"
+                  class="sidebar-item w-full text-left relative group justify-between"
+                  [class.justify-center]="collapsed()"
+                  [attr.title]="collapsed() ? item.label : null"
+                >
+                  <div class="flex items-center">
+                    <span class="flex-shrink-0 w-5 h-5 flex items-center justify-center">
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" [attr.d]="item.svgPath"/>
+                      </svg>
+                    </span>
+                    <span class="label-fade text-sm"
+                          [style.opacity]="collapsed() ? '0' : '1'"
+                          [style.width]="collapsed() ? '0px' : '160px'"
+                          [style.marginLeft]="collapsed() ? '0' : '20px'">
+                      {{ item.label }}
+                    </span>
+                  </div>
+                  @if (!collapsed()) {
+                    <i class="pi pi-chevron-down text-neutral-400 text-[10px] mr-2 transition-transform duration-200"
+                       [class.rotate-180]="expandedGroup() === item.label"></i>
+                  }
+                </button>
+
+                <!-- Nested Child Sub-items -->
+                @if (expandedGroup() === item.label && !collapsed()) {
+                  <div class="pl-6 space-y-0.5 border-l border-neutral-200 ml-5 mt-1">
+                    @for (sub of item.children; track sub.path) {
+                      <a
+                        [routerLink]="sub.path"
+                        routerLinkActive="text-primary font-bold bg-primary-50/20"
+                        class="block py-1.5 px-2.5 text-xs text-neutral-500 hover:text-neutral-900 rounded-lg hover:bg-neutral-50 transition-colors"
+                      >
+                        {{ sub.label }}
+                      </a>
+                    }
+                  </div>
+                }
+              </div>
+            } @else {
+              <!-- Standard Non-Group Link -->
+              @if (isMenuAllowed(item.menu)) {
+                <a
+                  [routerLink]="item.path"
+                  routerLinkActive="sidebar-item-active"
+                  [routerLinkActiveOptions]="{exact: item.exact}"
+                  (click)="onNavClick()"
+                  class="sidebar-item relative group"
+                  [class.justify-center]="collapsed()"
+                  [attr.title]="collapsed() ? item.label : null"
+                  [attr.aria-label]="item.label"
+                >
+                  <span class="flex-shrink-0 w-5 h-5 flex items-center justify-center">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" [attr.d]="item.svgPath"/>
+                    </svg>
+                  </span>
+                  <span class="label-fade text-sm"
+                        [style.opacity]="collapsed() ? '0' : '1'"
+                        [style.width]="collapsed() ? '0px' : '160px'"
+                        [style.marginLeft]="collapsed() ? '0' : '10px'">
+                    {{ item.label }}
+                  </span>
+                  @if (item.badge && !collapsed()) {
+                    <span class="ml-auto text-[10px] px-1.5 py-0.5 rounded-full font-bold text-white flex-shrink-0"
+                          style="background: var(--color-orange);">{{ item.badge }}</span>
+                  }
+                  <!-- Tooltip when collapsed -->
+                  @if (collapsed()) {
+                    <div class="absolute left-full ml-2.5 px-2.5 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap
+                                opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-150 z-50 shadow-lg"
+                         style="background: #1F2937; color: white;">
+                      {{ item.label }}
+                    </div>
+                  }
+                </a>
               }
-              <!-- Tooltip when collapsed -->
-              @if (collapsed()) {
-                <div class="absolute left-full ml-2.5 px-2.5 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap
-                            opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-150 z-50 shadow-lg"
-                     style="background: #1F2937; color: white;">
-                  {{ item.label }}
-                </div>
-              }
-            </a>
+            }
           }
         </nav>
 
@@ -222,11 +271,12 @@ import { AuthStore } from '../../../state/auth.store';
   `,
 })
 export class AdminLayoutComponent implements OnInit {
-  private router    = inject(Router);
+  private router = inject(Router);
   readonly authStore = inject(AuthStore);
+  readonly permStore = inject(PermissionStore);
 
-  readonly collapsed   = signal(false);
-  readonly mobileOpen  = signal(false);
+  readonly collapsed = signal(false);
+  readonly mobileOpen = signal(false);
   readonly windowWidth = signal(typeof window !== 'undefined' ? window.innerWidth : 1280);
 
   readonly isMobile = computed(() => this.windowWidth() < 1024);
@@ -261,20 +311,26 @@ export class AdminLayoutComponent implements OnInit {
   });
 
   private readonly routeLabels: Record<string, string> = {
-    dashboard:  'Dashboard',
-    orders:     'Orders',
-    products:   'Products',
-    new:        'Add Product',
-    edit:       'Edit Product',
+    dashboard: 'Dashboard',
+    orders: 'Orders',
+    products: 'Products',
+    new: 'Add Product',
+    edit: 'Edit Product',
     categories: 'Categories',
-    inventory:  'Inventory',
-    customers:  'Customers',
-    coupons:    'Coupons',
-    banners:    'Banners',
-    returns:    'Returns',
+    brands: 'Brands',
+    sizes: 'Sizes',
+    inventory: 'Inventory',
+    customers: 'Customers',
+    coupons: 'Coupons',
+    banners: 'Banners',
+    returns: 'Returns',
+    'user-access': 'User Access',
   };
 
   ngOnInit() {
+    // Load permissions if not yet fetched (non-SuperAdmin)
+    this.permStore.load();
+
     this.updateBreadcrumbs(this.router.url);
     this.router.events.pipe(
       filter(e => e instanceof NavigationEnd)
@@ -291,8 +347,8 @@ export class AdminLayoutComponent implements OnInit {
   }
 
   toggleCollapsed() { this.collapsed.update(v => !v); }
-  openMobile()      { this.mobileOpen.set(true); }
-  closeMobile()     { this.mobileOpen.set(false); }
+  openMobile() { this.mobileOpen.set(true); }
+  closeMobile() { this.mobileOpen.set(false); }
 
   onNavClick() {
     if (this.isMobile()) this.mobileOpen.set(false);
@@ -304,23 +360,83 @@ export class AdminLayoutComponent implements OnInit {
   }
 
   private updateBreadcrumbs(url: string) {
-    const segments = url.split('/').filter(s => s && s !== 'admin');
-    const crumbs   = segments.map((seg, i) => ({
-      path:  '/admin/' + segments.slice(0, i + 1).join('/'),
+    const cleanUrl = url.split('?')[0];
+    const segments = cleanUrl.split('/').filter(s => s && s !== 'admin');
+    const crumbs = segments.map((seg, i) => ({
+      path: '/admin/' + segments.slice(0, i + 1).join('/'),
       label: this.routeLabels[seg] ?? (seg.charAt(0).toUpperCase() + seg.slice(1).replace(/-/g, ' ')),
     }));
     this.breadcrumbs.set(crumbs);
   }
 
-  readonly navItems = [
-    { path: '/admin/dashboard',  label: 'Dashboard',  badge: null, exact: true,  svgPath: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6' },
-    { path: '/admin/orders',     label: 'Orders',     badge: null, exact: false, svgPath: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01' },
-    { path: '/admin/products',   label: 'Products',   badge: null, exact: false, svgPath: 'M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z' },
-    { path: '/admin/categories', label: 'Categories', badge: null, exact: false, svgPath: 'M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10' },
-    { path: '/admin/inventory',  label: 'Inventory',  badge: null, exact: false, svgPath: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4' },
-    { path: '/admin/customers',  label: 'Customers',  badge: null, exact: false, svgPath: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z' },
-    { path: '/admin/coupons',    label: 'Coupons',    badge: null, exact: false, svgPath: 'M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z' },
-    { path: '/admin/banners',    label: 'Banners',    badge: null, exact: false, svgPath: 'M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z' },
-    { path: '/admin/returns',    label: 'Returns',    badge: null, exact: false, svgPath: 'M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15' },
+  readonly expandedGroup = signal<string | null>('Product Masters');
+  toggleGroup(name: string) {
+    this.expandedGroup.update(curr => curr === name ? null : name);
+  }
+
+  private readonly _allNavItems: any[] = [
+    { path: '/admin/dashboard', label: 'Dashboard', menu: 'Dashboard', badge: null, exact: true, superAdminOnly: false, svgPath: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6' },
+    { path: '/admin/orders', label: 'Orders', menu: 'Orders', badge: null, exact: false, superAdminOnly: false, svgPath: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01' },
+    { path: '/admin/products', label: 'Products', menu: 'Products', badge: null, exact: false, superAdminOnly: false, svgPath: 'M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z' },
+
+    {
+      path: '/admin/product-masters',
+      label: 'Product Masters',
+      menu: 'Product Masters',
+      badge: null,
+      exact: false,
+      superAdminOnly: false,
+      svgPath: 'M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10'
+    },
+
+    { path: '/admin/inventory', label: 'Inventory', menu: 'Inventory', badge: null, exact: false, superAdminOnly: false, svgPath: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4' },
+    { path: '/admin/customers', label: 'Customers', menu: 'Customers', badge: null, exact: false, superAdminOnly: false, svgPath: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z' },
+    { path: '/admin/coupons', label: 'Coupons', menu: 'Coupons', badge: null, exact: false, superAdminOnly: false, svgPath: 'M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z' },
+    { path: '/admin/banners', label: 'Banners', menu: 'Banners', badge: null, exact: false, superAdminOnly: false, svgPath: 'M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z' },
+    { path: '/admin/returns', label: 'Returns', menu: 'Returns', badge: null, exact: false, superAdminOnly: false, svgPath: 'M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15' },
+    { path: '/admin/user-access', label: 'User Access', menu: 'User Access', badge: null, exact: false, superAdminOnly: true, svgPath: 'M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z' },
   ];
+
+  /** Returns true if the user can view this menu item */
+  isMenuAllowed(menuName: string): boolean {
+    // SuperAdmin always has access
+    if (this.authStore.isSuperAdmin()) return true;
+    // Dashboard always accessible
+    if (menuName === 'Dashboard') return true;
+
+    // If permissions haven't loaded yet, show all (avoid flicker)
+    if (!this.permStore.loaded()) return true;
+
+    const allowed = this.permStore.allowedMenus(); // lowercase list
+
+    // 'Product Masters' — allow if any of its sub-modules are allowed
+    if (menuName === 'Product Masters') {
+      return ['categories', 'brands', 'sizes', 'product masters', 'productmasters'].some(m =>
+        allowed.some(a => a.includes(m) || m.includes(a))
+      );
+    }
+
+    const target = menuName.toLowerCase();
+
+    // Exact match first
+    if (allowed.includes(target)) return true;
+
+    // Fuzzy: check if any allowed menu name starts with or contains target, or vice versa
+    return allowed.some(a =>
+      a.startsWith(target) || target.startsWith(a) ||
+      a.includes(target)   || target.includes(a)
+    );
+  }
+
+
+  /** All nav items — filter out items the user cannot view/access */
+  readonly navItems = computed(() => {
+    const isSuperAdmin = this.authStore.isSuperAdmin();
+    return this._allNavItems.filter(item => {
+      // User Access is superadmin-only — truly hide it for non-superadmins
+      if (item.superAdminOnly && !isSuperAdmin) return false;
+      // Filter out items that are not allowed for the user
+      return this.isMenuAllowed(item.menu);
+    });
+  });
 }
