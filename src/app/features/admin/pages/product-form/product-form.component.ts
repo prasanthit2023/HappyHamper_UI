@@ -1,10 +1,31 @@
 import { Component, OnInit, OnDestroy, inject, signal, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute, Router } from '@angular/router';
-import { FormBuilder, ReactiveFormsModule, Validators, FormArray, FormGroup } from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule, Validators, FormArray, FormGroup, AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { Subscription } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
+
+export const discountLessThanPriceValidator: ValidatorFn = (control: AbstractControl): ValidationErrors | null => {
+  const price = control.get('price')?.value;
+  const discountPrice = control.get('discountPrice')?.value;
+  
+  if (price !== null && discountPrice !== null && Number(discountPrice) > Number(price)) {
+    control.get('discountPrice')?.setErrors({ discountGreaterThanPrice: true });
+    return { discountGreaterThanPrice: true };
+  }
+  
+  const errors = control.get('discountPrice')?.errors;
+  if (errors && errors['discountGreaterThanPrice']) {
+    delete errors['discountGreaterThanPrice'];
+    if (Object.keys(errors).length === 0) {
+      control.get('discountPrice')?.setErrors(null);
+    } else {
+      control.get('discountPrice')?.setErrors(errors);
+    }
+  }
+  return null;
+};
 
 @Component({
   selector: 'bb-product-form',
@@ -41,6 +62,9 @@ import { environment } from '../../../../../environments/environment';
         <div>
           <label class="block text-xs font-semibold text-neutral-400 mb-1.5">Product Title <span class="text-red-500">*</span></label>
           <input type="text" formControlName="title" class="input-field py-2" placeholder="e.g. Premium Cotton Romper" />
+          @if (form.get('title')?.touched && form.get('title')?.errors?.['required']) {
+            <span class="text-red-500 text-xs mt-1 block">Product Name is required.</span>
+          }
         </div>
 
         <!-- Category & Brand side by side -->
@@ -53,15 +77,21 @@ import { environment } from '../../../../../environments/environment';
                 <option [value]="cat.id.toString()">{{ cat.name }}</option>
               }
             </select>
+            @if (form.get('categoryId')?.touched && form.get('categoryId')?.errors?.['required']) {
+              <span class="text-red-500 text-xs mt-1 block">Category is required.</span>
+            }
           </div>
           <div>
-            <label class="block text-xs font-semibold text-neutral-400 mb-1.5">Brand</label>
+            <label class="block text-xs font-semibold text-neutral-400 mb-1.5">Brand <span class="text-red-500">*</span></label>
             <select formControlName="brand" class="input-field py-2 bg-white">
               <option value="">Select Brand...</option>
               @for (b of brands(); track b.brandId) {
                 <option [value]="b.brandName">{{ b.brandName }}</option>
               }
             </select>
+            @if (form.get('brand')?.touched && form.get('brand')?.errors?.['required']) {
+              <span class="text-red-500 text-xs mt-1 block">Brand is required.</span>
+            }
           </div>
         </div>
 
@@ -118,7 +148,7 @@ import { environment } from '../../../../../environments/environment';
                     <div class="w-3.5 h-3.5 rounded-full border border-neutral-200 flex-shrink-0" [style.background]="vCtrl.get('colorHex')?.value || '#ccc'"></div>
                     <span class="text-[11px] font-bold text-neutral-600 dark:text-neutral-300">
                       Variant #{{ $index + 1 }}
-                      @if (vCtrl.get('size')?.value) { &mdash; {{ vCtrl.get('size')?.value }} }
+                      @if (vCtrl.get('sku')?.value) { &mdash; <span class="font-mono text-[10px]">{{ vCtrl.get('sku')?.value }}</span> }
                       @if (vCtrl.get('color')?.value) { / {{ vCtrl.get('color')?.value }} }
                     </span>
                   </div>
@@ -128,35 +158,60 @@ import { environment } from '../../../../../environments/environment';
                 </div>
 
                 <div class="p-4 space-y-4">
-                  <!-- Fields row: Size | Color (picker + name) | Price | Disc. Price | Stock -->
-                  <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                  <!-- Fields row: SKU | Size | Color (picker + name) | Price | Disc. Price | Stock -->
+                  <div class="grid grid-cols-2 sm:grid-cols-6 gap-3">
                     <div>
-                      <label class="variant-label">Size</label>
-                      <select formControlName="size" class="input-field py-1.5 text-xs bg-white">
-                        <option value="">Select...</option>
-                        @for (s of sizes(); track s.sizeId) {
-                          <option [value]="s.sizeName">{{ s.sizeName }}</option>
-                        }
-                      </select>
+                      <label class="variant-label">SKU</label>
+                      <input type="text" formControlName="sku" class="input-field py-1.5 text-xs bg-neutral-50 dark:bg-neutral-800 text-neutral-500 cursor-not-allowed font-mono font-bold" readonly />
                     </div>
                     <div>
-                      <label class="variant-label">Color</label>
+                      <label class="variant-label">Size <span class="text-red-500">*</span></label>
+                      <select formControlName="sizeId" class="input-field py-1.5 text-xs bg-white">
+                        <option value="">Select...</option>
+                        @for (s of sizes(); track s.sizeId) {
+                          <option [value]="s.sizeId.toString()">{{ s.sizeName }}</option>
+                        }
+                      </select>
+                      @if (vCtrl.get('sizeId')?.touched && vCtrl.get('sizeId')?.errors?.['required']) {
+                        <span class="text-red-500 text-[10px] mt-0.5 block">Size is required.</span>
+                      }
+                    </div>
+                    <div>
+                      <label class="variant-label">Color <span class="text-red-500">*</span></label>
                       <div class="flex gap-1.5">
                         <input type="color" formControlName="colorHex" class="w-9 h-9 rounded-lg border border-neutral-200 cursor-pointer p-0.5 bg-transparent flex-shrink-0" title="Pick color" />
                         <input type="text" formControlName="color" class="input-field py-1.5 text-xs flex-1 min-w-0" placeholder="e.g. White" />
                       </div>
+                      @if (vCtrl.get('color')?.touched && vCtrl.get('color')?.errors?.['required']) {
+                        <span class="text-red-500 text-[10px] mt-0.5 block">Color is required.</span>
+                      }
                     </div>
                     <div>
                       <label class="variant-label">Price (&#8377;) <span class="text-red-500">*</span></label>
                       <input type="number" formControlName="price" class="input-field py-1.5 text-xs" placeholder="0" />
+                      @if (vCtrl.get('price')?.touched && vCtrl.get('price')?.errors?.['required']) {
+                        <span class="text-red-500 text-[10px] mt-0.5 block">Price is required.</span>
+                      }
+                      @if (vCtrl.get('price')?.touched && vCtrl.get('price')?.errors?.['min']) {
+                        <span class="text-red-500 text-[10px] mt-0.5 block">Price must be greater than zero.</span>
+                      }
                     </div>
                     <div>
                       <label class="variant-label">Disc. Price (&#8377;)</label>
                       <input type="number" formControlName="discountPrice" class="input-field py-1.5 text-xs" placeholder="None" />
+                      @if (vCtrl.get('discountPrice')?.touched && vCtrl.hasError('discountGreaterThanPrice')) {
+                        <span class="text-red-500 text-[10px] mt-0.5 block">Discount Price (₹) cannot be greater than Product Price (₹).</span>
+                      }
                     </div>
                     <div>
                       <label class="variant-label">Stock Qty <span class="text-red-500">*</span></label>
                       <input type="number" formControlName="stock" class="input-field py-1.5 text-xs" />
+                      @if (vCtrl.get('stock')?.touched && vCtrl.get('stock')?.errors?.['required']) {
+                        <span class="text-red-500 text-[10px] mt-0.5 block">Stock Quantity is required.</span>
+                      }
+                      @if (vCtrl.get('stock')?.touched && vCtrl.get('stock')?.errors?.['min']) {
+                        <span class="text-red-500 text-[10px] mt-0.5 block">Stock cannot be negative.</span>
+                      }
                     </div>
                   </div>
 
@@ -467,13 +522,38 @@ export class ProductFormComponent implements OnInit, OnDestroy {
     });
   }
 
+  baseNextSkuSerial = 1;
+  currentYear = new Date().getFullYear();
+
+  preloadNextSku() {
+    this.http.get<any>(`${environment.apiUrl}/products/next-sku`).subscribe({
+      next: (res) => {
+        if (res.success && res.nextSku) {
+          const parts = res.nextSku.split('-');
+          if (parts.length >= 3) {
+            this.currentYear = Number(parts[1]);
+            this.baseNextSkuSerial = Number(parts[2]);
+            
+            // Update any existing initial variants' SKUs
+            this.variantsFormArray.controls.forEach((ctrl, idx) => {
+              const serial = this.baseNextSkuSerial + idx;
+              const paddedSerial = String(serial).padStart(6, '0');
+              ctrl.get('sku')?.setValue(`PR-${this.currentYear}-${paddedSerial}`, { emitEvent: false });
+            });
+            this.cdr.detectChanges();
+          }
+        }
+      }
+    });
+  }
+
   form = this.fb.group({
     title: ['', [Validators.required]],
     sku: [''],
     categoryId: ['', [Validators.required]],
     price: [null],
     discountPrice: [null],
-    brand: [''],
+    brand: ['', [Validators.required]],
     shortDescription: [''],
     description: [''],
     material: [''],
@@ -510,6 +590,7 @@ export class ProductFormComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
+    this.preloadNextSku();
     this.loadCategories();
     this.loadBrands();
     this.loadSizes();
@@ -533,19 +614,6 @@ export class ProductFormComponent implements OnInit, OnDestroy {
         this.form.get('price')?.setValue(first.price || 0, { emitEvent: false });
         this.form.get('discountPrice')?.setValue(first.discountPrice || null, { emitEvent: false });
       }
-    });
-
-    // Auto-update variant SKUs when base SKU changes
-    this.form.get('sku')?.valueChanges.subscribe((baseSku) => {
-      this.variantsFormArray.controls.forEach((ctrl) => {
-        const size = ctrl.get('size')?.value || '';
-        const color = ctrl.get('color')?.value || '';
-        const genSku = this.generateVariantSku(baseSku || '', size, color);
-        if (genSku) {
-          ctrl.get('sku')?.setValue(genSku, { emitEvent: false });
-        }
-      });
-      this.cdr.detectChanges();
     });
 
     // Combo Offer value change logic
@@ -636,15 +704,15 @@ export class ProductFormComponent implements OnInit, OnDestroy {
           prod.variants.forEach((v: any) => {
             const group = this.fb.group({
               sku: [v.sku],
-              size: [v.size || ''],
-              color: [v.color || ''],
+              sizeId: [v.sizeId ? String(v.sizeId) : ''],
+              color: [v.color || '', Validators.required],
               colorHex: [v.colorHex || '#ffffff'],
               imageUrl: [v.imageUrl || ''],
               images: [v.images || (v.imageUrl ? [v.imageUrl] : [])],
-              stock: [v.stock || 0, Validators.required],
-              price: [v.price || prod.price || null],
+              stock: [v.stock || 0, [Validators.required, Validators.min(0)]],
+              price: [v.price || prod.price || null, [Validators.required, Validators.min(0.01)]],
               discountPrice: [v.discountPrice || prod.discountPrice || null],
-            });
+            }, { validators: [discountLessThanPriceValidator] });
 
             this.setupVariantControl(group);
             this.variantsFormArray.push(group);
@@ -663,42 +731,48 @@ export class ProductFormComponent implements OnInit, OnDestroy {
   }
 
   addVariant() {
+    const serial = this.baseNextSkuSerial + this.variantsFormArray.length;
+    const paddedSerial = String(serial).padStart(6, '0');
+    const sku = `PR-${this.currentYear}-${paddedSerial}`;
+
     const group = this.fb.group({
-      sku: [''],
-      size: ['M'],
-      color: ['White'],
+      sku: [sku],
+      sizeId: ['', Validators.required],
+      color: ['White', Validators.required],
       colorHex: ['#ffffff'],
       imageUrl: [''],
       images: [[]],
-      stock: [10, Validators.required],
-      price: [null],
+      stock: [10, [Validators.required, Validators.min(0)]],
+      price: [null, [Validators.required, Validators.min(0.01)]],
       discountPrice: [null],
-    });
+    }, { validators: [discountLessThanPriceValidator] });
 
     this.setupVariantControl(group);
     this.variantsFormArray.push(group);
     
     // Trigger initial values
-    const size = group.get('size')?.value || '';
     const color = group.get('color')?.value || '';
-    const baseSku = this.form.get('sku')?.value || '';
     const colorLower = color.trim().toLowerCase();
     const matchedHex = this.colorHexMap[colorLower] || '#ffffff';
     group.get('colorHex')?.setValue(matchedHex, { emitEvent: false });
-    const genSku = this.generateVariantSku(baseSku, size, color);
-    if (genSku) {
-      group.get('sku')?.setValue(genSku, { emitEvent: false });
-    }
   }
 
   removeVariant(index: number) {
     this.variantsFormArray.removeAt(index);
   }
 
-
-
   onSubmit() {
-    if (this.form.invalid) return;
+    if (this.variantsFormArray.length === 0) {
+      this.errorMessage.set('Please add at least one product variant.');
+      return;
+    }
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      this.variantsFormArray.controls.forEach(c => c.markAllAsTouched());
+      this.errorMessage.set('Please correct all validation errors.');
+      return;
+    }
+    
     this.submitting.set(true);
     this.successMessage.set('');
     this.errorMessage.set('');
@@ -707,7 +781,7 @@ export class ProductFormComponent implements OnInit, OnDestroy {
 
     const variants = (formVal.variants || []).map((v: any) => ({
       sku: v.sku,
-      size: v.size || 'One Size',
+      sizeId: v.sizeId ? Number(v.sizeId) : null,
       color: v.color || 'Natural',
       colorHex: v.colorHex || '#ede0d4',
       imageUrl: v.imageUrl || null,
