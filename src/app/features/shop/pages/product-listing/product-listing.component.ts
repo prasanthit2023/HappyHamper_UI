@@ -149,6 +149,16 @@ import { environment } from '../../../../../environments/environment';
                   <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
               }
+              @if (selectedTag()) {
+                <button
+                  (click)="clearTagFilter()"
+                  class="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold text-white transition-all hover:opacity-90 animate-fade-in"
+                  style="background: var(--gradient-primary);"
+                >
+                  Age: {{ getAgeLabel(selectedTag()) }}
+                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+              }
               <button (click)="resetFilters()" class="text-xs font-semibold underline transition-colors" style="color: var(--color-text-muted);">
                 Clear all
               </button>
@@ -307,10 +317,11 @@ import { environment } from '../../../../../environments/environment';
                 <div class="flex flex-wrap gap-2 animate-fade-in">
                   @for (age of ageGroups; track age.tag) {
                     <a
-                      routerLink="/products"
+                      [routerLink]="[]"
                       [queryParams]="{tags: age.tag}"
+                      [queryParamsHandling]="'merge'"
                       class="px-3 py-1.5 rounded-full text-xs font-semibold border transition-all duration-200 hover:scale-105"
-                      style="background: var(--color-primary-light); color: var(--color-primary); border-color: transparent;"
+                      [style]="selectedTag() === age.tag ? 'background: var(--color-primary); color: white; border-color: var(--color-primary);' : 'background: var(--color-primary-light); color: var(--color-primary); border-color: transparent;'"
                     >
                       {{ age.label }}
                     </a>
@@ -502,6 +513,25 @@ import { environment } from '../../../../../environments/environment';
                 }
               </div>
             </div>
+
+            <!-- Age Group -->
+            <div>
+              <h3 class="font-bold text-xs uppercase tracking-widest mb-3" style="color: var(--color-text-muted);">Age Group</h3>
+              <div class="flex flex-wrap gap-2">
+                @for (age of ageGroups; track age.tag) {
+                  <a
+                    [routerLink]="[]"
+                    [queryParams]="{tags: age.tag}"
+                    [queryParamsHandling]="'merge'"
+                    (click)="showMobileFilters.set(false)"
+                    class="px-3 py-1.5 rounded-full text-xs font-semibold border transition-all duration-200"
+                    [style]="selectedTag() === age.tag ? 'background: var(--color-primary); color: white; border-color: var(--color-primary);' : 'background: var(--color-primary-light); color: var(--color-primary); border-color: transparent;'"
+                  >
+                    {{ age.label }}
+                  </a>
+                }
+              </div>
+            </div>
           </div>
 
           <!-- Drawer Footer -->
@@ -551,6 +581,7 @@ export class ProductListingComponent implements OnInit, OnDestroy {
   loading = signal<boolean>(true);
   showMobileFilters = signal<boolean>(false);
   activeCategorySlug = signal<string | null>(null);
+  selectedTag = signal<string | null>(null);
   viewMode = signal<'grid' | 'list'>('grid');
 
   // Collapse states for filter sections
@@ -615,6 +646,11 @@ export class ProductListingComponent implements OnInit, OnDestroy {
         if (queryParams['bestSeller']) { this.bestSellerOnly = true; this.filterValues['bestSeller'] = true; }
         if (queryParams['newArrival']) { this.newArrivalOnly = true; this.filterValues['newArrival'] = true; }
         if (queryParams['featured']) { this.featuredOnly = true; this.filterValues['featured'] = true; }
+        const tag = queryParams['tags'];
+        this.selectedTag.set(tag || null);
+        if (tag) {
+          this.ageExpanded.set(true);
+        }
 
         // Title
         if (slug) {
@@ -675,6 +711,10 @@ export class ProductListingComponent implements OnInit, OnDestroy {
     if (this.bestSellerOnly || this.filterValues['bestSeller']) params.bestSeller = true;
     if (this.newArrivalOnly || this.filterValues['newArrival']) params.newArrival = true;
     if (this.featuredOnly || this.filterValues['featured']) params.featured = true;
+    
+    const tag = this.selectedTag();
+    if (tag) params.tags = tag;
+    params.limit = 24;
 
     const searchQuery = this.route.snapshot.queryParams['q'];
     if (searchQuery) params.search = searchQuery;
@@ -720,10 +760,15 @@ export class ProductListingComponent implements OnInit, OnDestroy {
     this.newArrivalOnly = false;
     this.featuredOnly = false;
     this.filterValues = { bestSeller: false, newArrival: false, featured: false };
+    this.selectedTag.set(null);
     this.selectedSort = '-createdAt';
     this.currentPage = 1;
     this.activeFilterCount.set(0);
-    this.fetchProducts();
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { tags: null },
+      queryParamsHandling: 'merge'
+    });
   }
 
   changePage(page: number) {
@@ -752,7 +797,23 @@ export class ProductListingComponent implements OnInit, OnDestroy {
     if (this.newArrivalOnly || this.filterValues['newArrival']) count++;
     if (this.featuredOnly || this.filterValues['featured']) count++;
     if (this.minPrice !== null || this.maxPrice !== null) count++;
+    if (this.selectedTag()) count++;
     this.activeFilterCount.set(count);
+  }
+
+  clearTagFilter() {
+    this.selectedTag.set(null);
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { tags: null },
+      queryParamsHandling: 'merge'
+    });
+  }
+
+  getAgeLabel(tag: string | null): string {
+    if (!tag) return '';
+    const found = this.ageGroups.find(a => a.tag === tag);
+    return found ? found.label : tag;
   }
 
   onQuickAdd(product: any) {

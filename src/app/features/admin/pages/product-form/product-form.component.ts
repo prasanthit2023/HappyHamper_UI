@@ -421,37 +421,11 @@ export class ProductFormComponent implements OnInit, OnDestroy {
   }
 
   setupVariantControl(group: FormGroup) {
-    const updateSkuAndHex = () => {
-      const size = group.get('size')?.value || '';
-      const color = group.get('color')?.value || '';
-      const baseSku = this.form.get('sku')?.value || '';
-      
-      const colorLower = color.trim().toLowerCase();
-      const matchedHex = this.colorHexMap[colorLower] || this.colorHexMap[colorLower.split(/\s+/)[0]];
-      if (matchedHex) {
-        group.get('colorHex')?.setValue(matchedHex, { emitEvent: false });
-      }
-      
-      const genSku = this.generateVariantSku(baseSku, size, color);
-      if (genSku) {
-        group.get('sku')?.setValue(genSku, { emitEvent: false });
-      }
-    };
-
-    group.get('size')?.valueChanges.subscribe(() => updateSkuAndHex());
-    
     group.get('color')?.valueChanges.subscribe((colorName) => {
       const colorLower = (colorName || '').trim().toLowerCase();
       const matchedHex = this.colorHexMap[colorLower] || this.colorHexMap[colorLower.split(/\s+/)[0]];
       if (matchedHex) {
         group.get('colorHex')?.setValue(matchedHex, { emitEvent: false });
-      }
-      
-      const size = group.get('size')?.value || '';
-      const baseSku = this.form.get('sku')?.value || '';
-      const genSku = this.generateVariantSku(baseSku, size, colorName);
-      if (genSku) {
-        group.get('sku')?.setValue(genSku, { emitEvent: false });
       }
     });
 
@@ -459,13 +433,6 @@ export class ProductFormComponent implements OnInit, OnDestroy {
       if (hex) {
         const colorName = this.getColorNameFromHex(hex);
         group.get('color')?.setValue(colorName, { emitEvent: false });
-        
-        const size = group.get('size')?.value || '';
-        const baseSku = this.form.get('sku')?.value || '';
-        const genSku = this.generateVariantSku(baseSku, size, colorName);
-        if (genSku) {
-          group.get('sku')?.setValue(genSku, { emitEvent: false });
-        }
       }
     });
   }
@@ -680,7 +647,7 @@ export class ProductFormComponent implements OnInit, OnDestroy {
           sku: prod.sku,
           categoryId: String(prod.categoryId?._id || prod.categoryId?.id || prod.categoryId || ''),
           price: prod.price,
-          discountPrice: prod.discountPrice || null,
+          discountPrice: prod.discountAmount || null,
           brand: prod.brand || '',
           shortDescription: prod.shortDescription || '',
           description: prod.description || '',
@@ -711,7 +678,7 @@ export class ProductFormComponent implements OnInit, OnDestroy {
               images: [v.images || (v.imageUrl ? [v.imageUrl] : [])],
               stock: [v.stock || 0, [Validators.required, Validators.min(0)]],
               price: [v.price || prod.price || null, [Validators.required, Validators.min(0.01)]],
-              discountPrice: [v.discountPrice || prod.discountPrice || null],
+              discountPrice: [v.discountAmount || prod.discountAmount || null],
             }, { validators: [discountLessThanPriceValidator] });
 
             this.setupVariantControl(group);
