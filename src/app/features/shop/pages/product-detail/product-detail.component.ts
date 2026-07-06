@@ -219,10 +219,10 @@ import { environment } from '../../../../../environments/environment';
                   class="w-full h-full object-cover animate-fade-in product-image-zoom"
                 />
                 <!-- Discount badge overlay -->
-                @if (p.discountPrice && p.discountPrice < p.price && !selectedVariant()?.price) {
+                @if (selectedVariant() ? selectedVariant()?.discountPrice : p.discountPrice) {
                   <div class="absolute top-4 left-4">
                     <span class="badge badge-discount">
-                      {{ Math.round(((p.price - p.discountPrice) / p.price) * 100) }}% OFF
+                      {{ Math.round((((selectedVariant() ? selectedVariant()?.price : p.price) - (selectedVariant() ? selectedVariant()?.discountPrice : p.discountPrice)!) / (selectedVariant() ? selectedVariant()?.price : p.price)) * 100) }}% OFF
                     </span>
                   </div>
                 }
@@ -266,14 +266,14 @@ import { environment } from '../../../../../environments/environment';
                    style="border-color:var(--color-border)">
                 <div class="flex items-baseline gap-2">
                   <span class="text-3xl font-extrabold" style="color:var(--color-text)">
-                    <i class="bi bi-currency-rupee"></i>{{ (selectedVariant()?.price || p.discountPrice || p.price) | number:'1.0-0' }}
+                    <i class="bi bi-currency-rupee"></i>{{ (selectedVariant() ? (selectedVariant()?.discountPrice || selectedVariant()?.price) : (p.discountPrice || p.price)) | number:'1.0-0' }}
                   </span>
-                  @if (p.discountPrice && p.discountPrice < p.price && !selectedVariant()?.price) {
+                  @if (selectedVariant() ? selectedVariant()?.discountPrice : p.discountPrice) {
                     <span class="line-through text-lg" style="color:var(--color-text-muted)">
-                      <i class="bi bi-currency-rupee"></i>{{ p.price | number:'1.0-0' }}
+                      <i class="bi bi-currency-rupee"></i>{{ (selectedVariant() ? selectedVariant()?.price : p.price) | number:'1.0-0' }}
                     </span>
                     <span class="text-sm font-bold" style="color:var(--color-primary)">
-                      ({{ Math.round(((p.price - p.discountPrice) / p.price) * 100) }}% OFF)
+                      ({{ Math.round((((selectedVariant() ? selectedVariant()?.price : p.price) - (selectedVariant() ? selectedVariant()?.discountPrice : p.discountPrice)!) / (selectedVariant() ? selectedVariant()?.price : p.price)) * 100) }}% OFF)
                     </span>
                   }
                 </div>
@@ -826,7 +826,7 @@ import { environment } from '../../../../../environments/environment';
           <div class="flex-1 min-w-0">
             <p class="font-bold text-sm truncate" style="color:var(--color-text)">{{ p.title }}</p>
             <p class="text-sm font-extrabold" style="color:var(--color-primary)">
-              <i class="bi bi-currency-rupee"></i>{{ (selectedVariant()?.price || p.discountPrice || p.price) | number:'1.0-0' }}
+              <i class="bi bi-currency-rupee"></i>{{ (selectedVariant() ? (selectedVariant()?.discountPrice || selectedVariant()?.price) : (p.discountPrice || p.price)) | number:'1.0-0' }}
             </p>
           </div>
           <!-- CTA -->
