@@ -209,29 +209,60 @@ import { environment } from '../../../../../environments/environment';
 
             <!-- ─────────────── LEFT: Product Images ─────────────── -->
             <div class="space-y-4">
-              <!-- Main image with zoom -->
+              <!-- Main image with zoom & swipe gesture -->
               <div #mainImageWrapper
-                   class="relative overflow-hidden rounded-3xl border bg-neutral-50 aspect-square"
+                   (touchstart)="onTouchStart($event)"
+                   (touchend)="onTouchEnd($event)"
+                   class="relative overflow-hidden rounded-3xl border bg-neutral-50 aspect-square group select-none cursor-grab active:cursor-grabbing"
                    style="border-color:var(--color-border); aspect-ratio: 1/1;">
                 <img
                   [src]="activeImage() || '/assets/placeholder-product.jpg'"
                   [alt]="p.title"
-                  class="w-full h-full object-cover animate-fade-in product-image-zoom"
+                  class="w-full h-full object-cover animate-fade-in product-image-zoom pointer-events-none"
                 />
                 <!-- Discount badge overlay -->
                 @if (selectedVariant() ? selectedVariant()?.discountPrice : p.discountPrice) {
-                  <div class="absolute top-4 left-4">
+                  <div class="absolute top-4 left-4 z-10 pointer-events-none">
                     <span class="badge badge-discount">
                       {{ Math.round((((selectedVariant() ? selectedVariant()?.price : p.price) - (selectedVariant() ? selectedVariant()?.discountPrice : p.discountPrice)!) / (selectedVariant() ? selectedVariant()?.price : p.price)) * 100) }}% OFF
                     </span>
                   </div>
                 }
+
+                <!-- Prev / Next Swipe Navigation Arrows -->
+                @if (displayedImages().length > 1) {
+                  <button
+                    (click)="prevImage($event)"
+                    class="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/80 hover:bg-white text-neutral-800 flex items-center justify-center shadow-md backdrop-blur-sm transition-all opacity-80 hover:opacity-100 focus:outline-none z-10"
+                    aria-label="Previous image"
+                  >
+                    <i class="pi pi-chevron-left text-sm"></i>
+                  </button>
+                  <button
+                    (click)="nextImage($event)"
+                    class="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/80 hover:bg-white text-neutral-800 flex items-center justify-center shadow-md backdrop-blur-sm transition-all opacity-80 hover:opacity-100 focus:outline-none z-10"
+                    aria-label="Next image"
+                  >
+                    <i class="pi pi-chevron-right text-sm"></i>
+                  </button>
+
+                  <!-- Image Pagination Dots -->
+                  <div class="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 z-10 bg-black/30 backdrop-blur-md px-3 py-1.5 rounded-full">
+                    @for (img of displayedImages(); track img; let idx = $index) {
+                      <div
+                        class="w-2 h-2 rounded-full transition-all duration-200"
+                        [style.background]="activeImage() === img ? '#ffffff' : 'rgba(255,255,255,0.4)'"
+                        [style.transform]="activeImage() === img ? 'scale(1.3)' : 'scale(1)'"
+                      ></div>
+                    }
+                  </div>
+                }
               </div>
 
-              <!-- Thumbnail strip -->
-              @if (p.images?.length > 1) {
+              <!-- Thumbnail strip for active variant images -->
+              @if (displayedImages().length > 1) {
                 <div class="flex gap-3 overflow-x-auto pb-2">
-                  @for (img of p.images; track img) {
+                  @for (img of displayedImages(); track img) {
                     <button
                       (click)="setActiveImage(img)"
                       [class.thumb-active]="activeImage() === img"
@@ -932,9 +963,106 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
     return this.recentlyViewedService.items().filter((p: any) => p._id !== currentId);
   });
 
+  // ── Variant-specific filtered images ─────────────────────────
+  displayedImages = computed(() => {
+    const prod = this.product();
+    if (!prod) return [];
+
+    const variant = this.selectedVariant();
+    const color = this.selectedColor();
+
+    // 1. If active variant has specific images array with items
+    if (variant?.images && Array.isArray(variant.images) && variant.images.length > 0) {
+      return variant.images;
+    }
+    // 2. If active variant has imageUrl or image
+    if (variant?.imageUrl) {
+      return [variant.imageUrl];
+    }
+    if (variant?.image) {
+      return [variant.image];
+    }
+    // 3. If a color is selected, collect images from variants matching that color
+    if (color && prod.variants) {
+      const colorVariants = prod.variants.filter((v: any) => v.color === color);
+      const colorImages: string[] = [];
+      colorVariants.forEach((v: any) => {
+        if (v.images && Array.isArray(v.images)) {
+          v.images.forEach((img: string) => {
+            if (img && !colorImages.includes(img)) colorImages.push(img);
+          });
+        }
+        if (v.imageUrl && !colorImages.includes(v.imageUrl)) {
+          colorImages.push(v.imageUrl);
+        }
+        if (v.image && !colorImages.includes(v.image)) {
+          colorImages.push(v.image);
+        }
+      });
+      if (colorImages.length > 0) {
+        return colorImages;
+      }
+    }
+    // 4. Fallback to root product images
+    return prod.images || [];
+  });
+
   // ── Image & quantity ─────────────────────────────────────────────────
   activeImage = signal<string>('');
   quantity = signal<number>(1);
+
+  // ── Touch swipe navigation state ─────────────────────────────────────
+  private touchStartX = 0;
+  private touchEndX = 0;
+
+  onTouchStart(event: TouchEvent) {
+    if (event.touches.length > 0) {
+      this.touchStartX = event.touches[0].clientX;
+    }
+  }
+
+  onTouchEnd(event: TouchEvent) {
+    if (event.changedTouches.length > 0) {
+      this.touchEndX = event.changedTouches[0].clientX;
+      this.handleSwipe();
+    }
+  }
+
+  private handleSwipe() {
+    const swipeThreshold = 40;
+    const diffX = this.touchEndX - this.touchStartX;
+    if (Math.abs(diffX) > swipeThreshold) {
+      if (diffX < 0) {
+        this.nextImage();
+      } else {
+        this.prevImage();
+      }
+    }
+  }
+
+  prevImage(event?: Event) {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    const images = this.displayedImages();
+    if (!images || images.length === 0) return;
+    const currentIdx = images.indexOf(this.activeImage());
+    const prevIdx = currentIdx > 0 ? currentIdx - 1 : images.length - 1;
+    this.activeImage.set(images[prevIdx]);
+  }
+
+  nextImage(event?: Event) {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    const images = this.displayedImages();
+    if (!images || images.length === 0) return;
+    const currentIdx = images.indexOf(this.activeImage());
+    const nextIdx = (currentIdx + 1) % images.length;
+    this.activeImage.set(images[nextIdx]);
+  }
 
   // ── Variant selectors ────────────────────────────────────────────────
   availableSizes = signal<string[]>([]);
@@ -1273,6 +1401,11 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
           this.syncImageForSelectedColor(color);
         }
       }
+    }
+
+    const currentImgs = this.displayedImages();
+    if (currentImgs.length > 0 && !currentImgs.includes(this.activeImage())) {
+      this.activeImage.set(currentImgs[0]);
     }
   }
 

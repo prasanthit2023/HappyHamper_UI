@@ -24,8 +24,11 @@ import { environment } from '../../../../../environments/environment';
         </div>
 
         <div class="flex items-center gap-2">
+          <button (click)="printInvoice()" class="btn-secondary px-4 py-2 text-xs font-bold flex items-center gap-1.5 cursor-pointer">
+            <i class="pi pi-print"></i> Print Invoice
+          </button>
           @if (order()?.invoiceUrl) {
-            <a [href]="order()?.invoiceUrl" target="_blank" class="btn-secondary px-4 py-2 text-xs font-bold">Download Invoice</a>
+            <a [href]="order()?.invoiceUrl" target="_blank" class="btn-secondary px-4 py-2 text-xs font-bold">Download PDF</a>
           }
           <!-- Cancel Order Action (only if placed) -->
           @if (order()?.orderStatus === 'placed') {
@@ -442,5 +445,9 @@ export class OrderDetailComponent implements OnInit, OnDestroy {
         this.cdr.markForCheck();
       },
     });
+  }
+
+  printInvoice() {
+    window.print();
   }
 }

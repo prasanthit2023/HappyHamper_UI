@@ -152,18 +152,28 @@ import { environment } from '../../../../../environments/environment';
       to   { opacity: 1; transform: translateY(0); }
     }
 
-    /* ── Order number chip ───────────────────────────────────── */
-    .order-chip {
-      display: inline-block;
-      font-family: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, monospace;
-      font-size: 1.0625rem;
-      font-weight: 700;
-      color: var(--color-primary);
-      background: #F0F1FA;
-      border: 1.5px dashed #c3c7e8;
-      border-radius: 8px;
-      padding: 0.35rem 1rem;
-      letter-spacing: 0.04em;
+    /* ── Print styles for Tax Invoice ───────────────────────── */
+    @media print {
+      body * {
+        visibility: hidden !important;
+      }
+      .printable-invoice, .printable-invoice * {
+        visibility: visible !important;
+      }
+      .printable-invoice {
+        position: absolute !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 20px !important;
+        background: #fff !important;
+        border: none !important;
+        box-shadow: none !important;
+      }
+      .no-print {
+        display: none !important;
+      }
     }
   `],
   template: `
@@ -231,9 +241,9 @@ import { environment } from '../../../../../environments/environment';
           </div>
         }
 
-        <!-- ── Detailed Order Summary Card ── -->
+        <!-- ── Detailed Order Summary Card (Printable Tax Invoice) ── -->
         @if (order(); as o) {
-          <div class="card p-6 mb-6 text-left bg-white border border-[var(--color-border)] shadow-sm rounded-2xl animate-fade-in">
+          <div class="card p-6 mb-6 text-left bg-white border border-[var(--color-border)] shadow-sm rounded-2xl animate-fade-in printable-invoice">
             <div class="flex justify-between items-center border-b border-[var(--color-border)] pb-3 mb-4">
               <div>
                 <span class="text-[10px] font-bold text-[var(--color-text-muted)] uppercase tracking-wider">Order Reference</span>
@@ -346,7 +356,7 @@ import { environment } from '../../../../../environments/environment';
           <!-- Track Order -->
           <a
             [routerLink]="order() ? '/account/orders/' + order().id : '/account/orders'"
-            class="action-card shadow-sm"
+            class="action-card shadow-sm no-print"
             role="listitem"
             aria-label="Track your order"
           >
@@ -359,10 +369,28 @@ import { environment } from '../../../../../environments/environment';
             <span class="action-card-label">Track<br>Order</span>
           </a>
 
+          <!-- Print / Download Invoice -->
+          <button
+            (click)="printInvoice()"
+            class="action-card shadow-sm no-print text-left"
+            role="listitem"
+            aria-label="Download or print invoice"
+          >
+            <div class="action-card-icon" aria-hidden="true">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+                <line x1="16" y1="13" x2="8" y2="13"/>
+                <line x1="16" y1="17" x2="8" y2="17"/>
+              </svg>
+            </div>
+            <span class="action-card-label">Print<br>Invoice</span>
+          </button>
+
           <!-- Continue Shopping -->
           <a
             routerLink="/products"
-            class="action-card shadow-sm"
+            class="action-card shadow-sm no-print"
             role="listitem"
             aria-label="Continue shopping"
           >
@@ -480,5 +508,9 @@ export class OrderSuccessComponent implements OnInit {
         this.cdr.markForCheck();
       },
     });
+  }
+
+  printInvoice() {
+    window.print();
   }
 }
