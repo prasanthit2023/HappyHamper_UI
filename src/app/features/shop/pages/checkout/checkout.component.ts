@@ -100,7 +100,7 @@ import { environment } from '../../../../../environments/environment';
 
       <!-- Step Progress Bar -->
       <div style="margin-bottom:32px" role="navigation" aria-label="Checkout steps">
-        <div style="display:flex;align-items:center;position:relative;max-width:500px">
+        <div style="display:flex;align-items:center;position:relative;width:100%;max-width:500px;margin:0 auto">
           <!-- Track -->
           <div style="position:absolute;left:16.67%;right:16.67%;top:35%;transform:translateY(-50%);height:3px;background:#e5e7eb;border-radius:4px;z-index:0"></div>
           <!-- Active track -->
@@ -147,7 +147,7 @@ import { environment } from '../../../../../environments/environment';
           <div style="display:flex;flex-direction:column;gap:20px">
 
             <!-- SECTION 1: SHIPPING ADDRESS -->
-            <div style="background:#fff;border-radius:20px;padding:24px;box-shadow:0 2px 16px rgba(0,0,0,.07);border:2px solid transparent;transition:border-color .3s"
+            <div class="p-4 sm:p-6" style="background:#fff;border-radius:20px;box-shadow:0 2px 16px rgba(0,0,0,.07);border:2px solid transparent;transition:border-color .3s"
                  [style.borderColor]="currentStep()===1?'#7c3aed':'transparent'">
               <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid #f3f4f6">
                 <div style="display:flex;align-items:center;gap:12px">
@@ -273,7 +273,7 @@ import { environment } from '../../../../../environments/environment';
             </div>
 
             <!-- SECTION 2: PAYMENT METHOD -->
-            <div style="background:#fff;border-radius:20px;padding:24px;box-shadow:0 2px 16px rgba(0,0,0,.07);border:2px solid transparent;transition:border-color .3s"
+            <div class="p-4 sm:p-6" style="background:#fff;border-radius:20px;box-shadow:0 2px 16px rgba(0,0,0,.07);border:2px solid transparent;transition:border-color .3s"
                  [style.borderColor]="currentStep()===2?'#7c3aed':'transparent'">
 
               <!-- Header -->
@@ -290,7 +290,8 @@ import { environment } from '../../../../../environments/environment';
               <!-- Razorpay option card -->
               <div (click)="selectedPayment.set('razorpay'); currentStep.set(2);"
                    (keydown.enter)="selectedPayment.set('razorpay'); currentStep.set(2);"
-                   style="border:2px solid;border-radius:16px;padding:20px;cursor:pointer;transition:all .3s;position:relative;overflow:hidden"
+                   class="p-4 sm:p-5"
+                   style="border:2px solid;border-radius:16px;cursor:pointer;transition:all .3s;position:relative;overflow:hidden"
                    [style.borderColor]="selectedPayment()==='razorpay'?'#7c3aed':'#e5e7eb'"
                    [style.background]="selectedPayment()==='razorpay'?'linear-gradient(135deg,rgba(124,58,237,.05),rgba(99,102,241,.03))':'#fafafa'"
                    role="radio" [attr.aria-checked]="selectedPayment()==='razorpay'" tabindex="0">
@@ -300,20 +301,20 @@ import { environment } from '../../../../../environments/environment';
                   <div style="position:absolute;top:0;right:0;width:80px;height:80px;background:radial-gradient(circle,rgba(124,58,237,.12) 0%,transparent 70%);pointer-events:none"></div>
                 }
 
-                <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
-                  <div style="display:flex;align-items:center;gap:14px;flex:1">
+                <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap">
+                  <div style="display:flex;align-items:center;gap:12px;flex:1;min-width:0">
                     <!-- Razorpay icon -->
-                    <div style="width:52px;height:52px;background:linear-gradient(135deg,#072654,#1a56db);border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 12px rgba(7,38,84,.3)">
-                      <svg style="width:26px;height:26px;color:#fff" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div style="width:46px;height:46px;background:linear-gradient(135deg,#072654,#1a56db);border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 12px rgba(7,38,84,.3)">
+                      <svg style="width:24px;height:24px;color:#fff" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
                       </svg>
                     </div>
-                    <div>
-                      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
-                        <p style="font-size:15px;font-weight:800;color:#1a1a2e;margin:0">Online Payment</p>
-                        <span style="font-size:10px;font-weight:700;background:#dcfce7;color:#15803d;padding:2px 8px;border-radius:6px">RECOMMENDED</span>
+                    <div style="min-width:0">
+                      <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;flex-wrap:wrap">
+                        <p style="font-size:14px;font-weight:800;color:#1a1a2e;margin:0">Online Payment</p>
+                        <span style="font-size:9px;font-weight:700;background:#dcfce7;color:#15803d;padding:2px 6px;border-radius:6px">RECOMMENDED</span>
                       </div>
-                      <p style="font-size:12px;color:#6b7280;margin:0">Pay via UPI, Debit/Credit Card, Net Banking, Wallet</p>
+                      <p style="font-size:11px;color:#6b7280;margin:0;line-height:1.4">Pay via UPI, Debit/Credit Card, Net Banking, Wallet</p>
                     </div>
                   </div>
                   <!-- Radio indicator -->
@@ -327,18 +328,18 @@ import { environment } from '../../../../../environments/environment';
                 </div>
 
                 <!-- Payment method badges -->
-                <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:16px">
+                <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:14px">
                   @for (m of [
                     {label:'UPI', sub:'GPay | PhonePe', color:'#1a73e8'},
                     {label:'VISA / MC', sub:'Debit | Credit', color:'#c62828'},
                     {label:'Net Banking', sub:'All banks', color:'#1b5e20'},
                     {label:'Wallets', sub:'Paytm | Amazon', color:'#e65100'}
                   ]; track m.label) {
-                    <div style="display:flex;align-items:center;gap:6px;background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:6px 10px;box-shadow:0 1px 4px rgba(0,0,0,.06)">
-                      <div style="width:8px;height:8px;border-radius:50%;flex-shrink:0" [style.background]="m.color"></div>
+                    <div style="display:flex;align-items:center;gap:6px;background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:4px 8px;box-shadow:0 1px 4px rgba(0,0,0,.06)">
+                      <div style="width:7px;height:7px;border-radius:50%;flex-shrink:0" [style.background]="m.color"></div>
                       <div>
-                        <p style="font-size:11px;font-weight:700;color:#1a1a2e;margin:0">{{ m.label }}</p>
-                        <p style="font-size:10px;color:#9ca3af;margin:0">{{ m.sub }}</p>
+                        <p style="font-size:10px;font-weight:700;color:#1a1a2e;margin:0">{{ m.label }}</p>
+                        <p style="font-size:9px;color:#9ca3af;margin:0">{{ m.sub }}</p>
                       </div>
                     </div>
                   }
@@ -346,9 +347,9 @@ import { environment } from '../../../../../environments/environment';
 
                 <!-- Security row -->
                 @if (selectedPayment()==='razorpay') {
-                  <div style="margin-top:14px;padding:10px 14px;background:rgba(5,150,105,.06);border:1px solid rgba(5,150,105,.15);border-radius:10px;display:flex;align-items:center;gap:8px">
+                  <div style="margin-top:14px;padding:8px 12px;background:rgba(5,150,105,.06);border:1px solid rgba(5,150,105,.15);border-radius:10px;display:flex;align-items:center;gap:6px;flex-wrap:wrap">
                     <svg style="width:14px;height:14px;color:#059669;flex-shrink:0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-                    <span style="font-size:12px;color:#047857;font-weight:600">Secured by Razorpay | 256-bit SSL | PCI DSS Level 1 Certified</span>
+                    <span style="font-size:11px;color:#047857;font-weight:600;word-break:break-word">Secured by Razorpay | 256-bit SSL | PCI DSS Level 1 Certified</span>
                   </div>
                 }
               </div>
