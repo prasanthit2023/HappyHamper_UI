@@ -455,16 +455,27 @@ import { environment } from '../../../../../environments/environment';
                       #ctaButton
                       [disabled]="selectedVariantStock() === 0"
                       (click)="addToCart()"
-                      class="btn-primary flex-1 py-3 px-6 shadow-md justify-center font-bold"
+                      class="btn-primary flex-1 py-3 px-4 shadow-md justify-center font-bold flex items-center gap-1"
                       aria-label="Add to cart"
                     >
                       @if (selectedVariantStock() === 0) { Out of Stock }
                       @else { 🛒 Add to Cart }
                     </button>
 
+                    @if (selectedVariantStock() > 0) {
+                      <button
+                        (click)="buyNow()"
+                        class="btn-primary flex-1 py-3 px-4 shadow-md justify-center font-bold flex items-center gap-1"
+                        style="background: linear-gradient(135deg, #f59e0b, #d97706); border-color: #d97706;"
+                        aria-label="Buy now"
+                      >
+                        ⚡ Buy Now
+                      </button>
+                    }
+
                     <button
                       (click)="toggleWishlist()"
-                      class="btn-icon transition-all duration-200 flex items-center justify-center"
+                      class="btn-icon transition-all duration-200 flex items-center justify-center flex-shrink-0"
                       [style.color]="isWishlisted() ? '#ef4444' : 'var(--color-text-muted)'"
                       [style.background]="isWishlisted() ? '#fef2f2' : 'white'"
                       [style.border-color]="isWishlisted() ? '#fecaca' : 'var(--color-border)'"
@@ -1444,6 +1455,23 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
     const variant = this.selectedVariant();
     const sku = variant ? variant.sku : prod.sku;
     this.cartStore.addItem(prod._id || prod.id, sku, this.quantity()).subscribe();
+  }
+
+  buyNow() {
+    const prod = this.product();
+    if (!prod) return;
+    const variant = this.selectedVariant();
+    const sku = variant ? variant.sku : prod.sku;
+    
+    // Add to cart first, then redirect to checkout
+    this.cartStore.addItem(prod._id || prod.id, sku, this.quantity()).subscribe({
+      next: () => {
+        this.router.navigate(['/checkout']);
+      },
+      error: (err) => {
+        this.toastService.error('Failed to prepare checkout. Please try again.');
+      }
+    });
   }
 
   // ── Submit Review ─────────────────────────────────────────────────────

@@ -58,233 +58,7 @@ export const discountLessThanPriceValidator: ValidatorFn = (control: AbstractCon
         </div>
       }
 
-      <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-4">
-        <div>
-          <label class="block text-xs font-semibold text-neutral-400 mb-1.5">Product Title <span class="text-red-500">*</span></label>
-          <input type="text" formControlName="title" class="input-field py-2" placeholder="e.g. Premium Cotton Romper" />
-          @if (form.get('title')?.touched && form.get('title')?.errors?.['required']) {
-            <span class="text-red-500 text-xs mt-1 block">Product Name is required.</span>
-          }
-        </div>
 
-        <!-- Category & Brand side by side -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label class="block text-xs font-semibold text-neutral-400 mb-1.5">Category <span class="text-red-500">*</span></label>
-            <select formControlName="categoryId" class="input-field py-2">
-              <option value="">Select Category</option>
-              @for (cat of categories(); track cat.id) {
-                <option [value]="cat.id.toString()">{{ cat.name }}</option>
-              }
-            </select>
-            @if (form.get('categoryId')?.touched && form.get('categoryId')?.errors?.['required']) {
-              <span class="text-red-500 text-xs mt-1 block">Category is required.</span>
-            }
-          </div>
-          <div>
-            <label class="block text-xs font-semibold text-neutral-400 mb-1.5">Brand <span class="text-red-500">*</span></label>
-            <select formControlName="brand" class="input-field py-2 bg-white">
-              <option value="">Select Brand...</option>
-              @for (b of brands(); track b.brandId) {
-                <option [value]="b.brandName">{{ b.brandName }}</option>
-              }
-            </select>
-            @if (form.get('brand')?.touched && form.get('brand')?.errors?.['required']) {
-              <span class="text-red-500 text-xs mt-1 block">Brand is required.</span>
-            }
-          </div>
-        </div>
-
-        @if (editMode() && form.get('sku')?.value) {
-          <div>
-            <label class="block text-xs font-semibold text-neutral-400 mb-1.5">SKU (Auto-Generated)</label>
-            <div class="py-2.5 px-3.5 bg-neutral-50 dark:bg-neutral-800/40 border border-neutral-200 dark:border-neutral-700/60 rounded-xl text-xs font-mono font-bold text-neutral-600 dark:text-neutral-300">
-              {{ form.get('sku')?.value }}
-            </div>
-          </div>
-        }
-
-        <div class="flex flex-wrap gap-6 py-2">
-          <div class="flex items-center gap-2">
-            <input type="checkbox" id="isPublished" formControlName="isPublished" class="rounded text-primary-500 focus:ring-primary-500 w-4 h-4 cursor-pointer" />
-            <label for="isPublished" class="text-xs font-semibold text-neutral-700 dark:text-neutral-300 cursor-pointer select-none">Publish immediately (visible in shop)</label>
-          </div>
-        </div>
-
-        <div>
-          <label class="block text-xs font-semibold text-neutral-400 mb-1.5">Detailed Description</label>
-          <textarea formControlName="description" rows="4" class="input-field"></textarea>
-        </div>
-
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label class="block text-xs font-semibold text-neutral-400 mb-1.5">Material Composition</label>
-            <input type="text" formControlName="material" class="input-field py-2" placeholder="e.g. 100% Organic Cotton" />
-          </div>
-          <div>
-            <label class="block text-xs font-semibold text-neutral-400 mb-1.5">Care Instructions</label>
-            <input type="text" formControlName="careInstructions" class="input-field py-2" placeholder="e.g. Machine wash cold" />
-          </div>
-        </div>
-
-        <!-- Product Variants Section -->
-        <div class="border-t pt-5 space-y-4">
-          <div class="flex items-center justify-between">
-            <div>
-              <h3 class="font-bold text-sm text-neutral-700 dark:text-white">Product Variants</h3>
-              <p class="text-neutral-400 text-[11px] mt-0.5">Each variant has its own size, color, pricing, stock and images</p>
-            </div>
-            <button type="button" (click)="addVariant()" class="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-xl transition-all hover:opacity-80" style="background: var(--color-primary-light); color: var(--color-primary);">
-              <i class="pi pi-plus text-[10px]"></i> Add Variant
-            </button>
-          </div>
-
-          <div formArrayName="variants" class="space-y-4">
-            @for (vCtrl of variantsFormArray.controls; track $index) {
-              <div [formGroupName]="$index" class="variant-card rounded-2xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800/30 overflow-hidden shadow-sm">
-                <!-- Card Header -->
-                <div class="flex items-center justify-between px-4 py-2.5 bg-neutral-50 dark:bg-neutral-800/60 border-b border-neutral-100 dark:border-neutral-700">
-                  <div class="flex items-center gap-2">
-                    <div class="w-3.5 h-3.5 rounded-full border border-neutral-200 flex-shrink-0" [style.background]="vCtrl.get('colorHex')?.value || '#ccc'"></div>
-                    <span class="text-[11px] font-bold text-neutral-600 dark:text-neutral-300">
-                      Variant #{{ $index + 1 }}
-                      @if (vCtrl.get('sku')?.value) { &mdash; <span class="font-mono text-[10px]">{{ vCtrl.get('sku')?.value }}</span> }
-                      @if (vCtrl.get('color')?.value) { / {{ vCtrl.get('color')?.value }} }
-                    </span>
-                  </div>
-                  <button type="button" (click)="removeVariant($index)" class="w-6 h-6 rounded-full bg-red-50 hover:bg-red-100 text-red-500 flex items-center justify-center transition-colors" aria-label="Remove variant">
-                    <i class="pi pi-times text-[10px]"></i>
-                  </button>
-                </div>
-
-                <div class="p-4 space-y-4">
-                  <!-- Fields row: SKU | Size | Color (picker + name) | Price | Disc. Price | Stock -->
-                  <div class="grid grid-cols-2 sm:grid-cols-6 gap-3">
-                    <div>
-                      <label class="variant-label">SKU</label>
-                      <input type="text" formControlName="sku" class="input-field py-1.5 text-xs bg-neutral-50 dark:bg-neutral-800 text-neutral-500 cursor-not-allowed font-mono font-bold" readonly />
-                    </div>
-                    <div>
-                      <label class="variant-label">Size <span class="text-red-500">*</span></label>
-                      <select formControlName="sizeId" class="input-field py-1.5 text-xs bg-white">
-                        <option value="">Select...</option>
-                        @for (s of sizes(); track s.sizeId) {
-                          <option [value]="s.sizeId.toString()">{{ s.sizeName }}</option>
-                        }
-                      </select>
-                      @if (vCtrl.get('sizeId')?.touched && vCtrl.get('sizeId')?.errors?.['required']) {
-                        <span class="text-red-500 text-[10px] mt-0.5 block">Size is required.</span>
-                      }
-                    </div>
-                    <div>
-                      <label class="variant-label">Color <span class="text-red-500">*</span></label>
-                      <div class="flex gap-1.5">
-                        <input type="color" formControlName="colorHex" class="w-9 h-9 rounded-lg border border-neutral-200 cursor-pointer p-0.5 bg-transparent flex-shrink-0" title="Pick color" />
-                        <input type="text" formControlName="color" class="input-field py-1.5 text-xs flex-1 min-w-0" placeholder="e.g. White" />
-                      </div>
-                      @if (vCtrl.get('color')?.touched && vCtrl.get('color')?.errors?.['required']) {
-                        <span class="text-red-500 text-[10px] mt-0.5 block">Color is required.</span>
-                      }
-                    </div>
-                    <div>
-                      <label class="variant-label">Price (&#8377;) <span class="text-red-500">*</span></label>
-                      <input type="number" formControlName="price" class="input-field py-1.5 text-xs" placeholder="0" />
-                      @if (vCtrl.get('price')?.touched && vCtrl.get('price')?.errors?.['required']) {
-                        <span class="text-red-500 text-[10px] mt-0.5 block">Price is required.</span>
-                      }
-                      @if (vCtrl.get('price')?.touched && vCtrl.get('price')?.errors?.['min']) {
-                        <span class="text-red-500 text-[10px] mt-0.5 block">Price must be greater than zero.</span>
-                      }
-                    </div>
-                    <div>
-                      <label class="variant-label">Disc. Price (&#8377;)</label>
-                      <input type="number" formControlName="discountPrice" class="input-field py-1.5 text-xs" placeholder="None" />
-                      @if (vCtrl.get('discountPrice')?.touched && vCtrl.hasError('discountGreaterThanPrice')) {
-                        <span class="text-red-500 text-[10px] mt-0.5 block">Discount Price (₹) cannot be greater than Product Price (₹).</span>
-                      }
-                    </div>
-                    <div>
-                      <label class="variant-label">Stock Qty <span class="text-red-500">*</span></label>
-                      <input type="number" formControlName="stock" class="input-field py-1.5 text-xs" />
-                      @if (vCtrl.get('stock')?.touched && vCtrl.get('stock')?.errors?.['required']) {
-                        <span class="text-red-500 text-[10px] mt-0.5 block">Stock Quantity is required.</span>
-                      }
-                      @if (vCtrl.get('stock')?.touched && vCtrl.get('stock')?.errors?.['min']) {
-                        <span class="text-red-500 text-[10px] mt-0.5 block">Stock cannot be negative.</span>
-                      }
-                    </div>
-                  </div>
-
-                  <!-- Images upload row -->
-                  <div>
-                    <label class="variant-label mb-2">Variant Images</label>
-                    <div class="flex flex-wrap items-start gap-3">
-                      <!-- Uploaded thumbnails -->
-                      @for (imgUrl of (vCtrl.get('images')?.value || []); track imgUrl) {
-                        <div class="relative group flex-shrink-0">
-                          <div class="w-16 h-16 rounded-xl overflow-hidden border-2 border-neutral-200 shadow-sm bg-neutral-100">
-                            <img [src]="imgUrl" class="w-full h-full object-cover" alt="Variant image" />
-                          </div>
-                          <button type="button"
-                                  (click)="removeVariantImage($index, imgUrl)"
-                                  class="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-red-500 text-white flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 transition-all duration-150 hover:scale-110">
-                            <i class="pi pi-times text-[9px]"></i>
-                          </button>
-                        </div>
-                      }
-
-                      <!-- Per-variant upload trigger -->
-                      <label class="flex-shrink-0 cursor-pointer">
-                        <input type="file" multiple accept="image/*" class="hidden"
-                               (change)="uploadVariantImages($index, $event)" />
-                        @if (uploadingVariantIdx() === $index) {
-                          <div class="w-16 h-16 rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-1" style="border-color: var(--color-primary); background: var(--color-primary-light);">
-                            <svg class="animate-spin w-4 h-4" style="color: var(--color-primary);" fill="none" viewBox="0 0 24 24">
-                              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
-                            <span class="text-[9px] font-bold" style="color: var(--color-primary);">Uploading</span>
-                          </div>
-                        } @else {
-                          <div class="w-16 h-16 rounded-xl border-2 border-dashed border-neutral-200 hover:border-primary bg-neutral-50 hover:bg-neutral-100 flex flex-col items-center justify-center gap-1 transition-all duration-200">
-                            <i class="pi pi-cloud-upload text-neutral-400 text-base"></i>
-                            <span class="text-[9px] font-bold text-neutral-400">Upload</span>
-                          </div>
-                        }
-                      </label>
-                    </div>
-                    @if ((vCtrl.get('images')?.value || []).length === 0 && uploadingVariantIdx() !== $index) {
-                      <p class="text-[10px] text-neutral-400 mt-1.5 italic">Click the upload box to add images for this variant</p>
-                    }
-                  </div>
-                </div>
-              </div>
-            }
-
-            @if (variantsFormArray.controls.length === 0) {
-              <div class="text-center py-10 rounded-2xl border-2 border-dashed border-neutral-200 dark:border-neutral-700">
-                <i class="pi pi-box text-4xl text-neutral-300"></i>
-                <p class="text-sm font-bold text-neutral-400 mt-2">No variants added yet</p>
-                <p class="text-xs text-neutral-300 mt-0.5">Click "Add Variant" above to get started</p>
-              </div>
-            }
-          </div>
-        </div>
-
-        <!-- Form actions -->
-        <div class="pt-6 border-t border-neutral-100 dark:border-neutral-700 flex justify-end gap-3">
-          <a routerLink="/admin/products" class="btn-secondary py-3 px-6 text-xs font-bold">Cancel</a>
-          <button type="submit" [disabled]="form.invalid || submitting()" class="btn-primary py-3 px-8 text-xs font-bold flex items-center gap-2">
-            @if (submitting()) {
-              <svg class="animate-spin w-3.5 h-3.5" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-            }
-            {{ editMode() ? 'Update Product' : 'Create Product' }}
-          </button>
-        </div>
-      </form>
     </div>
   `,
   styles: [`
@@ -320,6 +94,7 @@ export class ProductFormComponent implements OnInit, OnDestroy {
   brands = signal<any[]>([]);
   sizes = signal<any[]>([]);
   submitting = signal<boolean>(false);
+  loadingProduct = signal<boolean>(false);
   successMessage = signal<string>('');
   errorMessage = signal<string>('');
   uploadingVariantIdx = signal<number | null>(null);
@@ -516,16 +291,11 @@ export class ProductFormComponent implements OnInit, OnDestroy {
 
   form = this.fb.group({
     title: ['', [Validators.required]],
-    sku: [''],
     categoryId: ['', [Validators.required]],
-    price: [null],
-    discountPrice: [null],
     brand: ['', [Validators.required]],
-    shortDescription: [''],
-    description: [''],
-    material: [''],
-    careInstructions: [''],
-    tagsInput: [''],
+    description: ['', [Validators.required]],
+    material: ['', [Validators.required]],
+    careInstructions: ['', [Validators.required]],
     isPublished: [true],
     isComboOffer: [false],
     variants: this.fb.array([]),
@@ -573,15 +343,7 @@ export class ProductFormComponent implements OnInit, OnDestroy {
       }
     });
 
-    // Sync variants' first item price to main product price for database integrity
-    this.variantsFormArray.valueChanges.subscribe(() => {
-      const list = this.variantsFormArray.value;
-      if (list && list.length > 0) {
-        const first = list[0];
-        this.form.get('price')?.setValue(first.price || 0, { emitEvent: false });
-        this.form.get('discountPrice')?.setValue(first.discountPrice || null, { emitEvent: false });
-      }
-    });
+
 
     // Combo Offer value change logic
     this.form.get('isComboOffer')?.valueChanges.subscribe((isCombo) => {
@@ -637,23 +399,22 @@ export class ProductFormComponent implements OnInit, OnDestroy {
   }
 
   loadProductDetails(id: string) {
+    this.loadingProduct.set(true);
+    this.cdr.detectChanges();
+
     this.http.get<any>(`${environment.apiUrl}/products/${id}`).subscribe({
       next: (res) => {
+        this.loadingProduct.set(false);
         const prod = res.data;
         if (!prod) return;
 
         this.form.patchValue({
           title: prod.title,
-          sku: prod.sku,
           categoryId: String(prod.categoryId?._id || prod.categoryId?.id || prod.categoryId || ''),
-          price: prod.price,
-          discountPrice: prod.discountAmount || null,
           brand: prod.brand || '',
-          shortDescription: prod.shortDescription || '',
           description: prod.description || '',
           material: prod.material || '',
           careInstructions: prod.careInstructions || '',
-          tagsInput: (prod.tags || []).join(', '),
           isPublished: prod.isPublished,
         });
 
@@ -671,14 +432,14 @@ export class ProductFormComponent implements OnInit, OnDestroy {
           prod.variants.forEach((v: any) => {
             const group = this.fb.group({
               sku: [v.sku],
-              sizeId: [v.sizeId ? String(v.sizeId) : ''],
+              sizeId: [v.sizeId ? String(v.sizeId) : '', Validators.required],
               color: [v.color || '', Validators.required],
               colorHex: [v.colorHex || '#ffffff'],
               imageUrl: [v.imageUrl || ''],
               images: [v.images || (v.imageUrl ? [v.imageUrl] : [])],
               stock: [v.stock || 0, [Validators.required, Validators.min(0)]],
-              price: [v.price || prod.price || null, [Validators.required, Validators.min(0.01)]],
-              discountPrice: [v.discountAmount || prod.discountAmount || null],
+              price: [v.price || null, [Validators.required, Validators.min(0.01)]],
+              discountPrice: [v.discountAmount || null],
             }, { validators: [discountLessThanPriceValidator] });
 
             this.setupVariantControl(group);
@@ -691,6 +452,7 @@ export class ProductFormComponent implements OnInit, OnDestroy {
         this.cdr.detectChanges();
       },
       error: () => {
+        this.loadingProduct.set(false);
         this.errorMessage.set('Failed to load product details.');
         this.cdr.detectChanges();
       }
@@ -754,25 +516,18 @@ export class ProductFormComponent implements OnInit, OnDestroy {
       imageUrl: v.imageUrl || null,
       images: v.images || [],
       stock: Number(v.stock || 0),
-      price: v.price ? Number(v.price) : null,
-      discountPrice: v.discountPrice ? Number(v.discountPrice) : null
+      price: v.price ? Number(v.price) : 0,
+      discountPrice: v.discountPrice ? Number(v.discountPrice) : 0
     }));
-
-    const firstVariant = variants[0];
 
     // Build payload matching backend schemas
     const payload = {
       title: formVal.title,
-      sku: formVal.sku,
       categoryId: formVal.categoryId ? Number(formVal.categoryId) : 0,
-      price: firstVariant?.price ?? Number(formVal.price ?? 0),
-      discountPrice: firstVariant?.discountPrice ?? (formVal.discountPrice ? Number(formVal.discountPrice) : undefined),
       brand: formVal.brand,
-      shortDescription: formVal.shortDescription,
       description: formVal.description,
       material: formVal.material,
       careInstructions: formVal.careInstructions,
-      tags: formVal.tagsInput ? formVal.tagsInput.split(',').map((t: string) => t.trim()).filter(Boolean) : [],
       variants,
       images: (formVal.images as any[] || []).filter((i: any) => !!i),
       isPublished: !!formVal.isPublished,
