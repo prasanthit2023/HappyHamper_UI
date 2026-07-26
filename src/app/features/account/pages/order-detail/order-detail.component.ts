@@ -449,6 +449,134 @@ import { AuthStore } from '../../../../state/auth.store';
         </div>
       </div>
     }
+
+    <!-- Return Policy Confirmation Modal -->
+    @if (showReturnPolicyModal()) {
+      <div class="fixed inset-0 z-[10000] animate-fade-in flex items-center justify-center p-4" style="background: rgba(45,45,45,0.4); backdrop-filter: blur(2px);">
+        <div class="bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl border border-neutral-100 dark:border-neutral-800 max-w-2xl w-full overflow-hidden transform scale-100 animate-scale-in flex flex-col max-h-[85vh]">
+          
+          <!-- Modal Header -->
+          <div class="p-6 border-b border-neutral-100 dark:border-neutral-800 flex items-center justify-between">
+            <h3 class="font-display font-bold text-lg text-neutral-900 dark:text-white flex items-center gap-2">
+              <svg class="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+              Confirm Return Policy & Terms
+            </h3>
+            <button (click)="showReturnPolicyModal.set(false)" class="text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 transition-colors">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+          </div>
+
+          <!-- Modal Body (Scrollable Policy Text) -->
+          <div class="p-6 overflow-y-auto space-y-5 text-sm text-neutral-600 dark:text-neutral-300 leading-relaxed max-h-[50vh]">
+            <p class="font-bold text-neutral-950 dark:text-white">
+              Please review our Return Policy before confirming your return request:
+            </p>
+            
+            <div style="background: #f9fafb; border: 1px solid #f3f4f6;" class="dark:bg-neutral-800/40 dark:border-neutral-700/60 p-4 rounded-2xl text-xs space-y-4">
+              <div>
+                <h4 class="font-bold text-neutral-950 dark:text-white mb-1">1. Eligibility for Return</h4>
+                <p>A return may be requested if:</p>
+                <ul class="list-disc pl-4 mt-1 space-y-1">
+                  <li>The product received is damaged or defective.</li>
+                  <li>The wrong product, size, colour, or design was delivered.</li>
+                  <li>The product received is different from the product ordered.</li>
+                </ul>
+              </div>
+
+              <div>
+                <h4 class="font-bold text-neutral-950 dark:text-white mb-1">2. Time Limit</h4>
+                <p>Return requests must be raised within 7 days of delivery. Requests made after this period may not be accepted.</p>
+              </div>
+
+              <div>
+                <h4 class="font-bold text-neutral-950 dark:text-white mb-1">3. Product Condition</h4>
+                <p>To be eligible for return:</p>
+                <ul class="list-disc pl-4 mt-1 space-y-1">
+                  <li>The product must be unused, unworn, and unwashed.</li>
+                  <li>All original tags, labels, and packaging should be intact.</li>
+                  <li>The product must be returned in its original condition.</li>
+                  <li>The product must not have any stains, odour, damage, or signs of use.</li>
+                </ul>
+              </div>
+
+              <div>
+                <h4 class="font-bold text-neutral-950 dark:text-white mb-1">4. Proof Required</h4>
+                <p>For damaged, defective, or incorrect products, customers may be required to provide:</p>
+                <ul class="list-disc pl-4 mt-1 space-y-1">
+                  <li>Clear photographs of the product.</li>
+                  <li>A video of the package opening, where applicable.</li>
+                  <li>The order details or order number.</li>
+                </ul>
+                <p class="mt-1.5 italic text-neutral-450">This information may be required to verify the return request.</p>
+              </div>
+
+              <div>
+                <h4 class="font-bold text-neutral-950 dark:text-white mb-1">5. Wrong Size</h4>
+                <p>Return for a wrong size ordered by the customer will be accepted only if the product is unused, unworn, unwashed, and available in the required size. Return is subject to stock availability.</p>
+              </div>
+
+              <div>
+                <h4 class="font-bold text-neutral-950 dark:text-white mb-1">6. Product Availability</h4>
+                <p>If the requested return product is unavailable, we may offer:</p>
+                <ul class="list-disc pl-4 mt-1 space-y-1">
+                  <li>An alternative product of similar value; or</li>
+                  <li>Another suitable resolution at our discretion.</li>
+                </ul>
+              </div>
+
+              <div>
+                <h4 class="font-bold text-neutral-950 dark:text-white mb-1">7. Shipping Charges</h4>
+                <p>If the return is due to an error on our part, such as receiving a damaged, defective, or incorrect product, we will arrange the return according to our applicable shipping process.</p>
+                <p class="mt-1">For a customer-requested size or product change, additional shipping charges may apply.</p>
+              </div>
+
+              <div>
+                <h4 class="font-bold text-neutral-950 dark:text-white mb-1">8. Non-Returnable Products</h4>
+                <p>Products may not be eligible for return if:</p>
+                <ul class="list-disc pl-4 mt-1 space-y-1">
+                  <li>They have been used, worn, washed, or altered.</li>
+                  <li>They are damaged due to improper use or care.</li>
+                  <li>They have stains, odour, or other signs of use.</li>
+                  <li>The product is damaged after delivery due to customer handling.</li>
+                  <li>The return request is made after the applicable time period (7 days).</li>
+                </ul>
+              </div>
+
+              <div>
+                <h4 class="font-bold text-neutral-950 dark:text-white mb-1">9. Inspection and Approval</h4>
+                <p>All return requests are subject to inspection and approval by Happy Hamper. We reserve the right to reject a return request if the product does not meet the conditions stated in this policy.</p>
+              </div>
+
+              <div>
+                <h4 class="font-bold text-neutral-950 dark:text-white mb-1">10. How to Request a Return</h4>
+                <p>To request a return, please contact our customer support team through the official contact channel and provide: Order number, Reason for return, and Clear photographs/videos if required.</p>
+              </div>
+            </div>
+
+            <p class="text-xs text-neutral-500 dark:text-neutral-400">
+              By clicking "Confirm Return", you agree to the Return Terms & Conditions of Happy Hamper.
+            </p>
+          </div>
+
+          <!-- Modal Footer -->
+          <div class="p-6 border-t border-neutral-100 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900 flex items-center justify-end gap-3">
+            <button
+              (click)="showReturnPolicyModal.set(false)"
+              class="px-5 py-2.5 rounded-xl border border-neutral-200 dark:border-neutral-700 text-xs font-bold text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-all active:scale-95 cursor-pointer"
+            >
+              Cancel
+            </button>
+            <button
+              (click)="executeReturnFromModal()"
+              class="px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-red-650 hover:bg-red-700 shadow-md shadow-red-100 dark:shadow-none transition-all active:scale-95 cursor-pointer"
+            >
+              Confirm Return
+            </button>
+          </div>
+
+        </div>
+      </div>
+    }
   `,
 })
 export class OrderDetailComponent implements OnInit, OnDestroy {
@@ -468,6 +596,7 @@ export class OrderDetailComponent implements OnInit, OnDestroy {
   error = signal<string | null>(null);
   actionLoading = signal<boolean>(false);
   returnRequested = signal<boolean>(false);
+  showReturnPolicyModal = signal<boolean>(false);
 
   ngOnInit() {
     this.routeSub = this.route.params.subscribe((params) => {
@@ -616,17 +745,13 @@ export class OrderDetailComponent implements OnInit, OnDestroy {
   }
 
   confirmReturn() {
-    this.confirmService.confirm({
-      title: 'Confirm Return',
-      message: 'Are you sure you want to return this order?',
-      confirmLabel: 'Confirm Return',
-      cancelLabel: 'Cancel',
-      type: 'danger'
-    }).subscribe(confirmed => {
-      if (confirmed) {
-        this.executeReturn();
-      }
-    });
+    this.showReturnPolicyModal.set(true);
+    this.cdr.markForCheck();
+  }
+
+  executeReturnFromModal() {
+    this.showReturnPolicyModal.set(false);
+    this.executeReturn();
   }
 
   executeReturn() {
