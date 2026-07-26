@@ -41,6 +41,7 @@ import { AuthStore } from '../../../../state/auth.store';
       .printable-invoice.hidden-on-screen {
         display: block !important;
       }
+      /* Format print invoice beautifully */
       .printable-invoice {
         display: block !important;
         width: 100% !important;
@@ -51,6 +52,29 @@ import { AuthStore } from '../../../../state/auth.store';
         background: #fff !important;
         color: #000 !important;
       }
+    }
+
+    .return-modal-list ul {
+      list-style-type: none !important;
+      padding-left: 0 !important;
+      margin: 4px 0 !important;
+    }
+    .return-modal-list li {
+      position: relative !important;
+      padding-left: 14px !important;
+      margin-bottom: 4px !important;
+    }
+    .return-modal-list li::before {
+      content: "•" !important;
+      position: absolute !important;
+      left: 0 !important;
+      top: -2px !important;
+      color: #3b82f6 !important;
+      font-size: 1.25rem !important;
+      line-height: 1 !important;
+    }
+    .return-modal-list li::after {
+      display: none !important;
     }
   `],
   template: `
@@ -472,7 +496,7 @@ import { AuthStore } from '../../../../state/auth.store';
               Please review our Return Policy before confirming your return request:
             </p>
             
-            <div style="background: #f9fafb; border: 1px solid #f3f4f6;" class="dark:bg-neutral-800/40 dark:border-neutral-700/60 p-4 rounded-2xl text-xs space-y-4">
+            <div style="background: #f9fafb; border: 1px solid #f3f4f6;" class="dark:bg-neutral-800/40 dark:border-neutral-700/60 p-4 rounded-2xl text-xs space-y-4 return-modal-list">
               <div>
                 <h4 class="font-bold text-neutral-950 dark:text-white mb-1">1. Eligibility for Return</h4>
                 <p>A return may be requested if:</p>
@@ -568,7 +592,8 @@ import { AuthStore } from '../../../../state/auth.store';
             </button>
             <button
               (click)="executeReturnFromModal()"
-              class="px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-red-650 hover:bg-red-700 shadow-md shadow-red-100 dark:shadow-none transition-all active:scale-95 cursor-pointer"
+              class="px-5 py-2.5 rounded-xl text-xs font-bold text-white shadow-md transition-all active:scale-95 cursor-pointer animate-pulse"
+              style="background-color: #dc2626 !important; color: #ffffff !important;"
             >
               Confirm Return
             </button>
