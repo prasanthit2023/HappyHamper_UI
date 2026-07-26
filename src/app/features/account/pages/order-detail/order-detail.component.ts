@@ -1,10 +1,12 @@
-import { Component, OnInit, OnDestroy, inject, signal, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, OnDestroy, inject, signal, ChangeDetectionStrategy, ChangeDetectorRef, PLATFORM_ID } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { RouterModule, ActivatedRoute } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
+import { ConfirmService } from '../../../../core/services/confirm.service';
+import { ToastService } from '../../../../core/services/toast.service';
 
 @Component({
   selector: 'bb-order-detail',
@@ -63,12 +65,10 @@ import { environment } from '../../../../../environments/environment';
         </div>
 
         <div class="flex items-center gap-2">
-          <button (click)="printInvoice()" class="btn-secondary px-4 py-2 text-xs font-bold flex items-center gap-1.5 cursor-pointer">
-            <i class="pi pi-print"></i> Print Invoice
+          <button (click)="downloadInvoice()" class="btn-secondary px-4 py-2 text-xs font-bold flex items-center gap-1.5 cursor-pointer">
+            <svg style="width:14px;height:14px" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            Download Invoice (PDF)
           </button>
-          @if (order()?.invoiceUrl) {
-            <a [href]="order()?.invoiceUrl" target="_blank" class="btn-secondary px-4 py-2 text-xs font-bold">Download PDF</a>
-          }
           <!-- Cancel Order Action (only if placed) -->
           @if (order()?.orderStatus === 'placed') {
             <button (click)="cancelOrder()" [disabled]="actionLoading()" class="bg-red-50 text-red-650 border border-red-200 px-4 py-2 rounded-xl text-xs font-bold hover:bg-red-100 transition-colors">
@@ -163,7 +163,7 @@ import { environment } from '../../../../../environments/environment';
               <div class="divide-y divide-[var(--color-border)] border border-[var(--color-border)] rounded-2xl p-4 bg-white">
                 @for (item of o.items; track item.variantSku) {
                   <div class="flex items-center gap-4 py-4 first:pt-0 last:pb-0">
-                    <img [src]="item.image || '/assets/placeholder-product.jpg'" class="w-16 h-16 object-cover rounded-xl bg-[var(--color-bg-subtle)] border border-[var(--color-border)] flex-shrink-0" />
+                    <img [src]="item.image || 'assets/placeholder-product.svg'" (error)="$any($event.target).src = 'assets/placeholder-product.svg'" class="w-16 h-16 object-cover rounded-xl bg-[var(--color-bg-subtle)] border border-[var(--color-border)] flex-shrink-0" />
                     <div class="flex-1 min-w-0">
                       <h4 class="text-sm font-bold text-[var(--color-text)] truncate">{{ item.title }}</h4>
                       <p class="text-xs text-[var(--color-text-muted)] mt-0.5 font-medium">SKU: {{ item.variantSku }}</p>
@@ -276,16 +276,13 @@ import { environment } from '../../../../../environments/environment';
             </div>
 
             <!-- Return request triggering (if delivered) -->
-            @if (o.orderStatus === 'delivered' && !returnRequested()) {
+            @if (o.orderStatus === 'delivered' && !returnRequested() && o.orderStatus !== 'return_requested') {
               <div class="card p-4 space-y-3 border-amber-200 bg-amber-50/20 rounded-2xl">
-                <h4 class="font-bold text-xs uppercase tracking-wider text-amber-700">Request Return / Refund</h4>
+                <h4 class="font-bold text-xs uppercase tracking-wider text-amber-700">Request Return</h4>
                 <p class="text-xs text-[var(--color-text-muted)] leading-relaxed">Delivered items can be returned within 7 days of arrival.</p>
-                <form [formGroup]="returnForm" (ngSubmit)="submitReturnRequest()" class="space-y-2">
-                  <input type="text" formControlName="reason" placeholder="Reason for return (size, damage, etc.)" class="input-field py-1.5 text-xs focus:ring-2 focus:ring-[var(--color-primary)]" />
-                  <button type="submit" [disabled]="returnForm.invalid || actionLoading()" class="btn-primary w-full py-2 text-xs">Submit Return</button>
-                </form>
+                <button type="button" (click)="confirmReturn()" [disabled]="actionLoading()" class="btn-primary w-full py-2.5 text-xs font-bold uppercase tracking-wider">Return Order</button>
               </div>
-            } @else if (returnRequested()) {
+            } @else if (returnRequested() || o.orderStatus === 'return_requested') {
               <div class="bg-[var(--color-primary-light)] text-[var(--color-primary)] p-4 rounded-2xl text-xs font-bold flex items-center gap-2">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 Return Request Submitted. We are reviewing your case.
@@ -318,7 +315,8 @@ import { environment } from '../../../../../environments/environment';
           @for (item of o.items; track item.variantSku) {
             <div class="flex items-center gap-3 py-3">
               <img
-                [src]="item.image || '/assets/placeholder-product.jpg'"
+                [src]="item.image || 'assets/placeholder-product.svg'"
+                (error)="$any($event.target).src = 'assets/placeholder-product.svg'"
                 [alt]="item.title"
                 class="w-12 h-12 object-cover rounded-xl bg-neutral-50 border border-neutral-100 flex-shrink-0"
               />
@@ -400,6 +398,9 @@ export class OrderDetailComponent implements OnInit, OnDestroy {
   private http = inject(HttpClient);
   private fb = inject(FormBuilder);
   private cdr = inject(ChangeDetectorRef);
+  private platformId = inject(PLATFORM_ID);
+  readonly confirmService = inject(ConfirmService);
+  private toastService = inject(ToastService);
 
   private routeSub!: Subscription;
 
@@ -408,10 +409,6 @@ export class OrderDetailComponent implements OnInit, OnDestroy {
   error = signal<string | null>(null);
   actionLoading = signal<boolean>(false);
   returnRequested = signal<boolean>(false);
-
-  returnForm = this.fb.group({
-    reason: ['', [Validators.required, Validators.minLength(5)]],
-  });
 
   ngOnInit() {
     this.routeSub = this.route.params.subscribe((params) => {
@@ -441,6 +438,7 @@ export class OrderDetailComponent implements OnInit, OnDestroy {
 
   formatStatus(status: string): string {
     if (!status) return 'Placed';
+    if (status === 'return_requested') return 'Return Requested';
     return status.replace(/_/g, ' ');
   }
 
@@ -558,32 +556,102 @@ export class OrderDetailComponent implements OnInit, OnDestroy {
     });
   }
 
-  submitReturnRequest() {
-    if (this.returnForm.invalid) return;
+  confirmReturn() {
+    this.confirmService.confirm({
+      title: 'Confirm Return',
+      message: 'Are you sure you want to return this order?',
+      confirmLabel: 'Confirm Return',
+      cancelLabel: 'Cancel',
+      type: 'danger'
+    }).subscribe(confirmed => {
+      if (confirmed) {
+        this.executeReturn();
+      }
+    });
+  }
+
+  executeReturn() {
     const o = this.order();
     if (!o) return;
 
     this.actionLoading.set(true);
+    this.cdr.markForCheck();
+
     const payload = {
       orderId: o._id || o.id,
       items: o.items.map((i: any) => ({ variantSku: i.variantSku, quantity: i.quantity })),
-      reason: this.returnForm.value.reason,
+      reason: 'Customer Return Request',
     };
 
     this.http.post<any>(`${environment.apiUrl}/returns`, payload).subscribe({
       next: () => {
         this.actionLoading.set(false);
         this.returnRequested.set(true);
+        if (this.order()) {
+          this.order.set({
+            ...this.order(),
+            orderStatus: 'return_requested'
+          });
+        }
+        this.toastService.success('Your return request has been submitted successfully.');
         this.cdr.markForCheck();
       },
-      error: () => {
+      error: (err) => {
         this.actionLoading.set(false);
+        this.toastService.error(err.error?.message || 'Failed to submit return request.');
         this.cdr.markForCheck();
       },
     });
   }
 
-  printInvoice() {
-    window.print();
+  async downloadInvoice() {
+    const o = this.order();
+    if (!o) return;
+
+    const { isPlatformBrowser } = await import('@angular/common');
+    if (!isPlatformBrowser(this.platformId)) return;
+
+    try {
+      const html2canvas = (await import('html2canvas')).default;
+      const { jsPDF } = await import('jspdf');
+
+      const invoiceElement = document.querySelector('.printable-invoice') as HTMLElement;
+      if (!invoiceElement) {
+        console.error('Invoice element not found');
+        return;
+      }
+
+      const originalStyle = invoiceElement.style.cssText;
+      invoiceElement.style.cssText = `
+        background: #ffffff !important;
+        color: #000000 !important;
+        width: 790px !important;
+        padding: 30px !important;
+        margin: 0 !important;
+        box-shadow: none !important;
+        border: none !important;
+      `;
+
+      const canvas = await html2canvas(invoiceElement, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff'
+      });
+
+      invoiceElement.style.cssText = originalStyle;
+
+      const imgData = canvas.toDataURL('image/jpeg', 1.0);
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'px',
+        format: [canvas.width / 2, canvas.height / 2]
+      });
+
+      pdf.addImage(imgData, 'JPEG', 0, 0, canvas.width / 2, canvas.height / 2);
+      pdf.save(`Invoice-${o.orderNumber}.pdf`);
+    } catch (err) {
+      console.error('PDF generation failed:', err);
+    }
   }
 }

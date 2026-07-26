@@ -85,7 +85,7 @@ export const routes: Routes = [
       },
       {
         path: 'returns',
-        title: 'Replacement Policy – Happy Hamper',
+        title: 'Return Policy – Happy Hamper',
         loadComponent: () =>
           import('./features/shop/pages/returns/returns.component').then(
             (m) => m.ReturnsComponent,

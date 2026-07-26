@@ -5,6 +5,7 @@ import {
   signal,
   ChangeDetectionStrategy,
   ChangeDetectorRef,
+  PLATFORM_ID,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
@@ -278,7 +279,8 @@ import { environment } from '../../../../../environments/environment';
               @for (item of o.items; track item.variantSku) {
                 <div class="flex items-center gap-3 py-3">
                   <img
-                    [src]="item.image || '/assets/placeholder-product.jpg'"
+                    [src]="item.image || 'assets/placeholder-product.svg'"
+                    (error)="$any($event.target).src = 'assets/placeholder-product.svg'"
                     [alt]="item.title"
                     class="w-12 h-12 object-cover rounded-xl bg-[var(--color-bg-subtle)] border border-[var(--color-border)] flex-shrink-0"
                   />
@@ -385,12 +387,12 @@ import { environment } from '../../../../../environments/environment';
             <span class="action-card-label">Track<br>Order</span>
           </a>
 
-          <!-- Print / Download Invoice -->
+          <!-- Download Invoice (PDF) -->
           <button
-            (click)="printInvoice()"
+            (click)="downloadInvoice()"
             class="action-card shadow-sm no-print text-left"
             role="listitem"
-            aria-label="Download or print invoice"
+            aria-label="Download tax invoice as PDF"
           >
             <div class="action-card-icon" aria-hidden="true">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -400,7 +402,7 @@ import { environment } from '../../../../../environments/environment';
                 <line x1="16" y1="17" x2="8" y2="17"/>
               </svg>
             </div>
-            <span class="action-card-label">Print<br>Invoice</span>
+            <span class="action-card-label">Download<br>Invoice</span>
           </button>
 
           <!-- Continue Shopping -->
@@ -489,6 +491,7 @@ export class OrderSuccessComponent implements OnInit {
   private http = inject(HttpClient);
   private toastService = inject(ToastService);
   private cdr = inject(ChangeDetectorRef);
+  private platformId = inject(PLATFORM_ID);
 
   readonly orderNumber = signal<string>('');
   readonly order = signal<any | null>(null);
@@ -526,7 +529,54 @@ export class OrderSuccessComponent implements OnInit {
     });
   }
 
-  printInvoice() {
-    window.print();
+  async downloadInvoice() {
+    const o = this.order();
+    if (!o) return;
+
+    const { isPlatformBrowser } = await import('@angular/common');
+    if (!isPlatformBrowser(this.platformId)) return;
+
+    try {
+      const html2canvas = (await import('html2canvas')).default;
+      const { jsPDF } = await import('jspdf');
+
+      const invoiceElement = document.querySelector('.printable-invoice') as HTMLElement;
+      if (!invoiceElement) {
+        console.error('Invoice element not found');
+        return;
+      }
+
+      const originalStyle = invoiceElement.style.cssText;
+      invoiceElement.style.cssText = `
+        background: #ffffff !important;
+        color: #000000 !important;
+        width: 790px !important;
+        padding: 30px !important;
+        margin: 0 !important;
+        box-shadow: none !important;
+        border: none !important;
+      `;
+
+      const canvas = await html2canvas(invoiceElement, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff'
+      });
+
+      invoiceElement.style.cssText = originalStyle;
+
+      const imgData = canvas.toDataURL('image/jpeg', 1.0);
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'px',
+        format: [canvas.width / 2, canvas.height / 2]
+      });
+
+      pdf.addImage(imgData, 'JPEG', 0, 0, canvas.width / 2, canvas.height / 2);
+      pdf.save(`Invoice-${o.orderNumber}.pdf`);
+    } catch (err) {
+      console.error('PDF generation failed:', err);
+    }
   }
 }
