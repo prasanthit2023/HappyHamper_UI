@@ -83,6 +83,14 @@ export const routes: Routes = [
             (m) => m.ContactComponent,
           ),
       },
+      {
+        path: 'returns',
+        title: 'Replacement Policy – Happy Hamper',
+        loadComponent: () =>
+          import('./features/shop/pages/returns/returns.component').then(
+            (m) => m.ReturnsComponent,
+          ),
+      },
       // ─── Customer Account Routes ───────────────────────────
       {
         path: 'account',

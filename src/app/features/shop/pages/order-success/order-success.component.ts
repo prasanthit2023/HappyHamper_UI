@@ -154,25 +154,41 @@ import { environment } from '../../../../../environments/environment';
 
     /* ── Print styles for Tax Invoice ───────────────────────── */
     @media print {
-      body * {
-        visibility: hidden !important;
+      /* Hide regular web page layouts entirely */
+      .no-print, bb-navbar, bb-footer, bb-cart-drawer, bb-toast {
+        display: none !important;
       }
-      .printable-invoice, .printable-invoice * {
-        visibility: visible !important;
+      /* Hide other sibling elements on the page */
+      .bb-container > :not(.printable-invoice) {
+        display: none !important;
       }
-      .printable-invoice {
-        position: absolute !important;
-        left: 0 !important;
-        top: 0 !important;
+      .max-w-lg > :not(.printable-invoice) {
+        display: none !important;
+      }
+      /* Clean page defaults for printing */
+      body, html {
+        background: #fff !important;
+        color: #000 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+      }
+      /* Expand wrappers to full page */
+      .bb-container, .max-w-lg, main, .page-enter {
+        max-width: 100% !important;
         width: 100% !important;
         margin: 0 !important;
-        padding: 20px !important;
-        background: #fff !important;
-        border: none !important;
-        box-shadow: none !important;
+        padding: 0 !important;
       }
-      .no-print {
-        display: none !important;
+      /* Format print invoice beautifully */
+      .printable-invoice {
+        display: block !important;
+        width: 100% !important;
+        border: 1px solid #e5e7eb !important;
+        border-radius: 12px !important;
+        padding: 24px !important;
+        box-shadow: none !important;
+        background: #fff !important;
+        color: #000 !important;
       }
     }
   `],

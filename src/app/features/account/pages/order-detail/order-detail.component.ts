@@ -11,8 +11,47 @@ import { environment } from '../../../../../environments/environment';
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule, RouterModule, ReactiveFormsModule],
+  styles: [`
+    .hidden-on-screen {
+      display: none !important;
+    }
+    @media print {
+      /* Hide regular web page layouts entirely */
+      .no-print, bb-navbar, bb-footer, bb-cart-drawer, bb-toast {
+        display: none !important;
+      }
+      /* Clean page defaults for printing */
+      body, html {
+        background: #fff !important;
+        color: #000 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+      }
+      /* Expand wrappers to full page */
+      .bb-container, main, .page-enter {
+        max-width: 100% !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+      }
+      /* Show and format print invoice beautifully */
+      .printable-invoice.hidden-on-screen {
+        display: block !important;
+      }
+      .printable-invoice {
+        display: block !important;
+        width: 100% !important;
+        border: 1px solid #e5e7eb !important;
+        border-radius: 12px !important;
+        padding: 24px !important;
+        box-shadow: none !important;
+        background: #fff !important;
+        color: #000 !important;
+      }
+    }
+  `],
   template: `
-    <div class="card p-6 space-y-6 bg-white border border-[var(--color-border)] rounded-2xl shadow-sm page-enter animate-fade-in">
+    <div class="card p-6 space-y-6 bg-white border border-[var(--color-border)] rounded-2xl shadow-sm page-enter animate-fade-in no-print">
       <!-- Header -->
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[var(--color-border)] pb-5">
         <div>
@@ -257,6 +296,103 @@ import { environment } from '../../../../../environments/environment';
         }
       }
     </div>
+
+    @if (order(); as o) {
+      <!-- Dedicated Printable Tax Invoice (hidden on screen, visible on print) -->
+      <div class="printable-invoice hidden-on-screen text-left">
+        <div class="flex justify-between items-center border-b border-neutral-200 pb-3 mb-4">
+          <div>
+            <span class="text-[10px] font-bold text-neutral-400 uppercase tracking-wider">Order Reference</span>
+            <p class="text-sm font-bold text-[var(--color-primary)] font-mono">{{ o.orderNumber }}</p>
+          </div>
+          <div class="text-right">
+            <span class="text-[10px] font-bold text-neutral-400 uppercase tracking-wider">Date</span>
+            <p class="text-xs font-semibold text-neutral-800">{{ o.createdAt | date:'mediumDate' }}</p>
+          </div>
+        </div>
+        
+        <h3 class="text-xs font-bold text-neutral-800 uppercase tracking-wider mb-2">Items Ordered</h3>
+        
+        <!-- Items list -->
+        <div class="divide-y divide-neutral-100 border-t border-b border-neutral-100 py-2 mb-4">
+          @for (item of o.items; track item.variantSku) {
+            <div class="flex items-center gap-3 py-3">
+              <img
+                [src]="item.image || '/assets/placeholder-product.jpg'"
+                [alt]="item.title"
+                class="w-12 h-12 object-cover rounded-xl bg-neutral-50 border border-neutral-100 flex-shrink-0"
+              />
+              <div class="flex-1 min-w-0">
+                <p class="text-xs font-bold text-neutral-800 truncate">{{ item.title }}</p>
+                <p class="text-[10px] text-neutral-400 mt-0.5 font-medium">
+                  Qty: {{ item.quantity }} @if (item.size) { &bull; Size: {{ item.size }} } @if (item.color) { &bull; {{ item.color }} }
+                </p>
+              </div>
+              <span class="text-xs font-bold text-neutral-800 whitespace-nowrap"><i class="bi bi-currency-rupee"></i>{{ (item.price * item.quantity) | number:'1.0-0' }}</span>
+            </div>
+          }
+        </div>
+        
+        <!-- Totals breakdown -->
+        <div class="space-y-2 text-xs text-neutral-500 mb-4">
+          <div class="flex justify-between">
+            <span>Subtotal</span>
+            <span class="font-semibold text-neutral-800"><i class="bi bi-currency-rupee"></i>{{ o.subTotal | number:'1.0-0' }}</span>
+          </div>
+          @if (o.discountAmount > 0) {
+            <div class="flex justify-between text-green-600 font-semibold">
+              <span>Discount</span>
+              <span>-<i class="bi bi-currency-rupee"></i>{{ o.discountAmount | number:'1.0-0' }}</span>
+            </div>
+          }
+          <div class="flex justify-between">
+            <span>Shipping</span>
+            <span class="font-semibold text-neutral-800"><i class="bi bi-currency-rupee"></i>{{ o.shippingFee | number:'1.0-0' }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span>GST (5%)</span>
+            <span class="font-semibold text-neutral-800"><i class="bi bi-currency-rupee"></i>{{ (o.subTotal * 0.05) | number:'1.0-0' }}</span>
+          </div>
+          <div class="border-t border-neutral-200 pt-2.5 flex justify-between items-baseline text-sm font-bold text-neutral-800">
+            <span>Total Paid</span>
+            <span class="text-base font-extrabold text-[var(--color-primary)]"><i class="bi bi-currency-rupee"></i>{{ o.totalAmount | number:'1.0-0' }}</span>
+          </div>
+        </div>
+        
+        <!-- Shipping Details & Payment -->
+        <div class="border-t border-neutral-200 pt-4 grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+          <div class="bg-neutral-50 p-3 rounded-xl">
+            <p class="font-bold text-neutral-400 mb-1 uppercase tracking-wider text-[10px]">Shipping Address</p>
+            @if (o.shippingAddress) {
+              <p class="font-bold text-neutral-800">
+                {{ o.shippingAddress.fullName || (o.shippingAddress.firstName + ' ' + o.shippingAddress.lastName) | titlecase }}
+              </p>
+              <p class="text-neutral-500 mt-0.5 leading-relaxed text-[11px]">
+                {{ o.shippingAddress.street }}, {{ o.shippingAddress.city }}, {{ o.shippingAddress.state }} - {{ o.shippingAddress.zipCode }}
+              </p>
+              <p class="text-neutral-500 mt-1.5 font-semibold text-[11px]">📞 {{ o.shippingAddress.phone }}</p>
+            }
+          </div>
+          <div class="bg-neutral-50 p-3 rounded-xl flex flex-col justify-between">
+            <div>
+              <p class="font-bold text-neutral-400 mb-1 uppercase tracking-wider text-[10px]">Payment Method</p>
+              <p class="font-bold text-neutral-800 uppercase text-[11px]">{{ o.paymentMethod }}</p>
+            </div>
+            <div class="mt-2 pt-2 border-t border-neutral-200 border-dashed">
+              <p class="font-bold text-neutral-400 uppercase tracking-wider text-[10px] mb-0.5">Status</p>
+              <span class="inline-flex items-center gap-1 font-bold uppercase text-[11px]" 
+                    [class.text-green-600]="o.paymentStatus === 'paid'" 
+                    [class.text-amber-500]="o.paymentStatus === 'pending'">
+                <span class="w-1.5 h-1.5 rounded-full" 
+                      [class.bg-green-600]="o.paymentStatus === 'paid'" 
+                      [class.bg-amber-500]="o.paymentStatus === 'pending'"></span>
+                {{ o.paymentStatus }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
   `,
 })
 export class OrderDetailComponent implements OnInit, OnDestroy {
