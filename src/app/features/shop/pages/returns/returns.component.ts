@@ -12,16 +12,16 @@ import { RouterModule } from '@angular/router';
       <!-- Header -->
       <div class="text-center mb-12">
         <h1 class="font-display font-black text-3xl sm:text-4xl mb-3 text-neutral-900 dark:text-white">
-          Return & Replacement Policy
+          Return Policy – Newborn Baby & Kids Clothing
         </h1>
         <p class="text-neutral-500 text-sm sm:text-base max-w-xl mx-auto">
-          Newborn Baby & Kids Clothing Policy — soft, safe, and hassle-free returns.
+          At Happy Hamper, we want you to be happy with your purchase.
         </p>
       </div>
 
       <!-- Intro Card -->
       <div class="card p-6 sm:p-8 mb-8 bg-white dark:bg-neutral-800/40 border border-neutral-100 dark:border-neutral-700/60 rounded-3xl shadow-sm leading-relaxed text-sm text-neutral-700 dark:text-neutral-300">
-        At <strong class="text-primary font-bold">Happy Hamper</strong>, we want you to be happy with your purchase. If you receive a product that is damaged, defective, or incorrect, you may request a return or replacement subject to the terms below.
+        If you receive a product that is damaged, defective, or incorrect, you may request a return subject to the terms below.
       </div>
 
       <!-- Policy Grid -->
@@ -30,9 +30,9 @@ import { RouterModule } from '@angular/router';
         <div class="card p-6 bg-white dark:bg-neutral-800/40 border border-neutral-100 dark:border-neutral-700/60 rounded-3xl shadow-sm">
           <h2 class="font-display font-bold text-lg mb-4 text-neutral-900 dark:text-white flex items-center gap-2">
             <span class="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold bg-primary-light text-primary">1</span>
-            Eligibility for Return or Replacement
+            Eligibility for Return
           </h2>
-          <p class="text-sm text-neutral-600 dark:text-neutral-400 mb-3">A return or replacement may be requested if:</p>
+          <p class="text-sm text-neutral-600 dark:text-neutral-400 mb-3">A return may be requested if:</p>
           <ul class="list-disc pl-5 space-y-2 text-sm text-neutral-700 dark:text-neutral-300">
             <li>The product received is damaged or defective.</li>
             <li>The wrong product, size, colour, or design was delivered.</li>
@@ -57,7 +57,7 @@ import { RouterModule } from '@angular/router';
             <span class="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold bg-primary-light text-primary">3</span>
             Product Condition
           </h2>
-          <p class="text-sm text-neutral-600 dark:text-neutral-400 mb-3">To be eligible for return, the items must meet the following criteria:</p>
+          <p class="text-sm text-neutral-600 dark:text-neutral-400 mb-3">To be eligible for return:</p>
           <ul class="list-disc pl-5 space-y-2 text-sm text-neutral-700 dark:text-neutral-300">
             <li>The product must be unused, unworn, and unwashed.</li>
             <li>All original tags, labels, and packaging should be intact.</li>
@@ -77,8 +77,8 @@ import { RouterModule } from '@angular/router';
             <li>Clear photographs of the product.</li>
             <li>A video of the package opening, where applicable.</li>
             <li>The order details or order number.</li>
-            <li class="list-none text-xs text-neutral-450 italic mt-1">(This information may be required to verify the return request.)</li>
           </ul>
+          <p class="text-xs text-neutral-400 mt-3 italic">This information may be required to verify the return request.</p>
         </div>
 
         <!-- 5. Wrong Size -->
@@ -98,7 +98,7 @@ import { RouterModule } from '@angular/router';
             <span class="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold bg-primary-light text-primary">6</span>
             Product Availability
           </h2>
-          <p class="text-sm text-neutral-600 dark:text-neutral-400 mb-3">If the requested return replacement product is unavailable, we may offer:</p>
+          <p class="text-sm text-neutral-600 dark:text-neutral-400 mb-3">If the requested return product is unavailable, we may offer:</p>
           <ul class="list-disc pl-5 space-y-2 text-sm text-neutral-700 dark:text-neutral-300">
             <li>An alternative product of similar value; or</li>
             <li>Another suitable resolution at our discretion.</li>
@@ -111,8 +111,8 @@ import { RouterModule } from '@angular/router';
             <span class="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold bg-primary-light text-primary">7</span>
             Shipping Charges
           </h2>
-          <p class="text-sm leading-relaxed text-neutral-700 dark:text-neutral-300 space-y-2">
-            <span>If the return is due to an error on our part, such as receiving a damaged, defective, or incorrect product, we will arrange the return collection according to our applicable shipping process.</span>
+          <p class="text-sm leading-relaxed text-neutral-700 dark:text-neutral-300 space-y-3">
+            <span>If the return is due to an error on our part, such as receiving a damaged, defective, or incorrect product, we will arrange the return according to our applicable shipping process.</span>
             <br/><br/>
             <span>For a customer-requested size or product change, <strong class="text-neutral-900 dark:text-white font-bold">additional shipping charges may apply</strong>.</span>
           </p>
@@ -120,7 +120,7 @@ import { RouterModule } from '@angular/router';
 
         <!-- 8. Non-Returnable Products -->
         <div class="card p-6 bg-white dark:bg-neutral-800/40 border border-neutral-100 dark:border-neutral-700/60 rounded-3xl shadow-sm">
-          <h2 class="font-display font-bold text-lg mb-4 text-neutral-900 dark:text-white flex items-center gap-2 text-red-650">
+          <h2 class="font-display font-bold text-lg mb-4 text-red-650 flex items-center gap-2">
             <span class="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold bg-red-50 text-red-500">8</span>
             Non-Returnable Products
           </h2>
@@ -130,7 +130,7 @@ import { RouterModule } from '@angular/router';
             <li>They are damaged due to improper use or care.</li>
             <li>They have stains, odour, or other signs of use.</li>
             <li>The product is damaged after delivery due to customer handling.</li>
-            <li>The return request is made after the applicable time period (7 days).</li>
+            <li>The return request is made after the applicable time period.</li>
           </ul>
         </div>
 
