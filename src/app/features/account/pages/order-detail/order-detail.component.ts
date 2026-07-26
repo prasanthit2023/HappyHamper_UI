@@ -7,6 +7,7 @@ import { Subscription } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
 import { ConfirmService } from '../../../../core/services/confirm.service';
 import { ToastService } from '../../../../core/services/toast.service';
+import { AuthStore } from '../../../../state/auth.store';
 
 @Component({
   selector: 'bb-order-detail',
@@ -296,98 +297,155 @@ import { ToastService } from '../../../../core/services/toast.service';
 
     @if (order(); as o) {
       <!-- Dedicated Printable Tax Invoice (hidden on screen, visible on print) -->
-      <div class="printable-invoice hidden-on-screen text-left">
-        <div class="flex justify-between items-center border-b border-neutral-200 pb-3 mb-4">
+      <div class="printable-invoice hidden-on-screen border border-neutral-200 shadow-sm rounded-3xl p-6 sm:p-8 bg-white mb-6 text-left" style="color: #1f2937 !important;">
+        <!-- Invoice Header -->
+        <div class="flex flex-col sm:flex-row justify-between items-start gap-4 border-b border-neutral-100 pb-5 mb-6">
           <div>
-            <span class="text-[10px] font-bold text-neutral-400 uppercase tracking-wider">Order Reference</span>
-            <p class="text-sm font-bold text-[var(--color-primary)] font-mono">{{ o.orderNumber }}</p>
+            <h2 style="font-size: 1.5rem; font-weight: 850; color: var(--color-primary, #2eafb0); margin: 0 0 6px 0; text-transform: uppercase; letter-spacing: 0.5px;">Happy Hamper</h2>
+            <p style="font-size: 11px; color: #6b7280; margin: 2px 0;">123 Luxury Lane, Fashion District</p>
+            <p style="font-size: 11px; color: #6b7280; margin: 2px 0;">New Delhi, Delhi, 110001</p>
+            <p style="font-size: 11px; color: #6b7280; margin: 2px 0;">Email: care&#64;happyhamper.com | Phone: +91 98765 43210</p>
+            <p style="font-size: 11px; color: #6b7280; margin: 2px 0; font-weight: 600;">GSTIN: 07AAAAA1111A1Z1</p>
           </div>
-          <div class="text-right">
-            <span class="text-[10px] font-bold text-neutral-400 uppercase tracking-wider">Date</span>
-            <p class="text-xs font-semibold text-neutral-800">{{ o.createdAt | date:'mediumDate' }}</p>
-          </div>
-        </div>
-        
-        <h3 class="text-xs font-bold text-neutral-800 uppercase tracking-wider mb-2">Items Ordered</h3>
-        
-        <!-- Items list -->
-        <div class="divide-y divide-neutral-100 border-t border-b border-neutral-100 py-2 mb-4">
-          @for (item of o.items; track item.variantSku) {
-            <div class="flex items-center gap-3 py-3">
-              <img
-                [src]="item.image || 'assets/placeholder-product.svg'"
-                (error)="$any($event.target).src = 'assets/placeholder-product.svg'"
-                [alt]="item.title"
-                class="w-12 h-12 object-cover rounded-xl bg-neutral-50 border border-neutral-100 flex-shrink-0"
-              />
-              <div class="flex-1 min-w-0">
-                <p class="text-xs font-bold text-neutral-800 truncate">{{ item.title }}</p>
-                <p class="text-[10px] text-neutral-400 mt-0.5 font-medium">
-                  Qty: {{ item.quantity }} @if (item.size) { &bull; Size: {{ item.size }} } @if (item.color) { &bull; {{ item.color }} }
-                </p>
-              </div>
-              <span class="text-xs font-bold text-neutral-800 whitespace-nowrap"><i class="bi bi-currency-rupee"></i>{{ (item.price * item.quantity) | number:'1.0-0' }}</span>
-            </div>
-          }
-        </div>
-        
-        <!-- Totals breakdown -->
-        <div class="space-y-2 text-xs text-neutral-500 mb-4">
-          <div class="flex justify-between">
-            <span>Subtotal</span>
-            <span class="font-semibold text-neutral-800"><i class="bi bi-currency-rupee"></i>{{ o.subTotal | number:'1.0-0' }}</span>
-          </div>
-          @if (o.discountAmount > 0) {
-            <div class="flex justify-between text-green-600 font-semibold">
-              <span>Discount</span>
-              <span>-<i class="bi bi-currency-rupee"></i>{{ o.discountAmount | number:'1.0-0' }}</span>
-            </div>
-          }
-          <div class="flex justify-between">
-            <span>Shipping</span>
-            <span class="font-semibold text-neutral-800"><i class="bi bi-currency-rupee"></i>{{ o.shippingFee | number:'1.0-0' }}</span>
-          </div>
-          <div class="flex justify-between">
-            <span>GST (5%)</span>
-            <span class="font-semibold text-neutral-800"><i class="bi bi-currency-rupee"></i>{{ (o.subTotal * 0.05) | number:'1.0-0' }}</span>
-          </div>
-          <div class="border-t border-neutral-200 pt-2.5 flex justify-between items-baseline text-sm font-bold text-neutral-800">
-            <span>Total Paid</span>
-            <span class="text-base font-extrabold text-[var(--color-primary)]"><i class="bi bi-currency-rupee"></i>{{ o.totalAmount | number:'1.0-0' }}</span>
+          <div class="text-left sm:text-right w-full sm:w-auto">
+            <h3 style="font-size: 1.75rem; font-weight: 900; color: #111827; margin: 0 0 8px 0; text-transform: uppercase; letter-spacing: 0.5px;">TAX INVOICE</h3>
+            <p style="font-size: 11px; color: #6b7280; margin: 2px 0;"><strong>Invoice No:</strong> <span style="font-family: monospace; font-weight: 700; color: #111827;">{{ o.orderNumber }}</span></p>
+            <p style="font-size: 11px; color: #6b7280; margin: 2px 0;"><strong>Date:</strong> {{ o.createdAt | date:'mediumDate' }}</p>
+            <p style="font-size: 11px; color: #6b7280; margin: 2px 0;"><strong>Order Status:</strong> <span style="text-transform: uppercase; font-weight: 700; color: #111827;">{{ formatStatus(o.orderStatus) }}</span></p>
           </div>
         </div>
-        
-        <!-- Shipping Details & Payment -->
-        <div class="border-t border-neutral-200 pt-4 grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-          <div class="bg-neutral-50 p-3 rounded-xl">
-            <p class="font-bold text-neutral-400 mb-1 uppercase tracking-wider text-[10px]">Shipping Address</p>
+
+        <!-- Customer Details Block -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+          <div style="background: #f9fafb; border: 1px solid #f3f4f6; border-radius: 16px; padding: 16px;">
+            <h4 style="font-size: 10px; font-weight: 700; text-transform: uppercase; color: #9ca3af; margin: 0 0 8px 0; letter-spacing: 0.5px;">Bill To / Ship To</h4>
             @if (o.shippingAddress) {
-              <p class="font-bold text-neutral-800">
-                {{ o.shippingAddress.fullName || (o.shippingAddress.firstName + ' ' + o.shippingAddress.lastName) | titlecase }}
-              </p>
-              <p class="text-neutral-500 mt-0.5 leading-relaxed text-[11px]">
-                {{ o.shippingAddress.street }}, {{ o.shippingAddress.city }}, {{ o.shippingAddress.state }} - {{ o.shippingAddress.zipCode }}
-              </p>
-              <p class="text-neutral-500 mt-1.5 font-semibold text-[11px]">📞 {{ o.shippingAddress.phone }}</p>
+              <p style="font-size: 12px; font-weight: 750; color: #111827; margin: 2px 0;">{{ o.shippingAddress.fullName || (o.shippingAddress.firstName + ' ' + o.shippingAddress.lastName) | titlecase }}</p>
+              <p style="font-size: 11px; color: #4b5563; margin: 2px 0; line-height: 1.4;">{{ o.shippingAddress.street }}, {{ o.shippingAddress.city }}, {{ o.shippingAddress.state }} - {{ o.shippingAddress.zipCode }}</p>
+              <p style="font-size: 11px; color: #4b5563; margin: 4px 0 0 0; font-weight: 600;">📞 {{ o.shippingAddress.phone }}</p>
+            } @else {
+              <p style="font-size: 11px; color: #9ca3af; font-style: italic;">Address not available</p>
             }
           </div>
-          <div class="bg-neutral-50 p-3 rounded-xl flex flex-col justify-between">
-            <div>
-              <p class="font-bold text-neutral-400 mb-1 uppercase tracking-wider text-[10px]">Payment Method</p>
-              <p class="font-bold text-neutral-800 uppercase text-[11px]">{{ o.paymentMethod }}</p>
-            </div>
-            <div class="mt-2 pt-2 border-t border-neutral-200 border-dashed">
-              <p class="font-bold text-neutral-400 uppercase tracking-wider text-[10px] mb-0.5">Status</p>
-              <span class="inline-flex items-center gap-1 font-bold uppercase text-[11px]" 
-                    [class.text-green-600]="o.paymentStatus === 'paid'" 
+          <div style="background: #f9fafb; border: 1px solid #f3f4f6; border-radius: 16px; padding: 16px;">
+            <h4 style="font-size: 10px; font-weight: 700; text-transform: uppercase; color: #9ca3af; margin: 0 0 8px 0; letter-spacing: 0.5px;">Customer Account</h4>
+            <p style="font-size: 12px; font-weight: 750; color: #111827; margin: 2px 0;">
+              {{ o.shippingAddress?.fullName || authStore.user()?.firstName + ' ' + authStore.user()?.lastName || 'Customer Profile' | titlecase }}
+            </p>
+            <p style="font-size: 11px; color: #4b5563; margin: 2px 0;">
+              <strong>Email:</strong> {{ $any(authStore.user())?.email || (o.shippingAddress?.fullName ? (o.shippingAddress.fullName.toLowerCase().replace(' ', '') + '@gmail.com') : 'customer@happyhamper.com') }}
+            </p>
+            <p style="font-size: 11px; color: #4b5563; margin: 2px 0;">
+              <strong>Phone:</strong> {{ o.shippingAddress?.phone || authStore.user()?.phone || 'N/A' }}
+            </p>
+          </div>
+        </div>
+
+        <!-- Product Table -->
+        <div style="overflow-x: auto; margin-bottom: 24px;">
+          <table style="width: 100%; border-collapse: collapse; min-width: 500px;">
+            <thead>
+              <tr style="background: #f3f4f6;">
+                <th style="font-size: 10px; font-weight: 700; text-transform: uppercase; color: #374151; padding: 10px 12px; text-align: left;">Product</th>
+                <th style="font-size: 10px; font-weight: 700; text-transform: uppercase; color: #374151; padding: 10px 12px; text-align: left;">SKU</th>
+                <th style="font-size: 10px; font-weight: 700; text-transform: uppercase; color: #374151; padding: 10px 12px; text-align: center;">Qty</th>
+                <th style="font-size: 10px; font-weight: 700; text-transform: uppercase; color: #374151; padding: 10px 12px; text-align: right;">Unit Price</th>
+                <th style="font-size: 10px; font-weight: 700; text-transform: uppercase; color: #374151; padding: 10px 12px; text-align: right;">Total Price</th>
+              </tr>
+            </thead>
+            <tbody style="border-bottom: 1px solid #e5e7eb;">
+              @for (item of o.items; track item.variantSku) {
+                <tr style="border-bottom: 1px solid #f3f4f6;">
+                  <td style="padding: 12px; display: flex; align-items: center; gap: 12px; border: none;">
+                    <img
+                      [src]="item.image || 'assets/placeholder-product.svg'"
+                      (error)="$any($event.target).src = 'assets/placeholder-product.svg'"
+                      [alt]="item.title"
+                      style="width: 38px; height: 38px; object-fit: cover; border-radius: 8px; flex-shrink: 0; background: #f9fafb; border: 1px solid #e5e7eb;"
+                    />
+                    <div>
+                      <p style="font-size: 12px; font-weight: 700; color: #111827; margin: 0;">{{ item.title }}</p>
+                      <div style="font-size: 10px; color: #6b7280; margin-top: 2px;">
+                        @if (item.size) { <span>Size: {{ item.size }}</span> }
+                        @if (item.color) { <span style="margin-left: 6px;">Color: {{ item.color }}</span> }
+                      </div>
+                    </div>
+                  </td>
+                  <td style="padding: 12px; font-size: 11px; font-family: monospace; color: #4b5563; border: none;">
+                    {{ item.variantSku || 'N/A' }}
+                  </td>
+                  <td style="padding: 12px; font-size: 12px; color: #111827; text-align: center; border: none;">
+                    {{ item.quantity }}
+                  </td>
+                  <td style="padding: 12px; font-size: 12px; color: #111827; text-align: right; border: none; font-weight: 600;">
+                    ₹{{ item.price | number:'1.0-0' }}
+                  </td>
+                  <td style="padding: 12px; font-size: 12px; color: #111827; text-align: right; border: none; font-weight: 700;">
+                    ₹{{ (item.price * item.quantity) | number:'1.0-0' }}
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Totals & Payment summary section -->
+        <div class="flex flex-col md:flex-row justify-between items-start gap-6 border-b border-neutral-100 pb-5 mb-6">
+          <div style="flex: 1; width: 100%; background: #f9fafb; border: 1px solid #f3f4f6; border-radius: 16px; padding: 16px;">
+            <h4 style="font-size: 10px; font-weight: 700; text-transform: uppercase; color: #9ca3af; margin: 0 0 8px 0; letter-spacing: 0.5px;">Payment Details</h4>
+            <p style="font-size: 11px; color: #4b5563; margin: 4px 0;"><strong>Method:</strong> <span style="text-transform: uppercase; font-weight: 600;">{{ o.paymentMethod || 'Razorpay' }}</span></p>
+            <p style="font-size: 11px; color: #4b5563; margin: 4px 0;">
+              <strong>Status:</strong> 
+              <span style="font-weight: 700; text-transform: uppercase; margin-left: 2px;"
+                    [class.text-green-600]="o.paymentStatus === 'paid'"
                     [class.text-amber-500]="o.paymentStatus === 'pending'">
-                <span class="w-1.5 h-1.5 rounded-full" 
-                      [class.bg-green-600]="o.paymentStatus === 'paid'" 
-                      [class.bg-amber-500]="o.paymentStatus === 'pending'"></span>
                 {{ o.paymentStatus }}
               </span>
-            </div>
+            </p>
           </div>
+          <div class="w-full md:w-80 ml-auto">
+            <table style="width: 100%; border-collapse: collapse;">
+              <tbody>
+                <tr style="border: none;">
+                  <td style="padding: 6px 0; font-size: 12px; color: #6b7280; text-align: left; border: none;">Subtotal</td>
+                  <td style="padding: 6px 0; font-size: 12px; font-weight: 600; color: #111827; text-align: right; border: none;">₹{{ o.subTotal | number:'1.0-0' }}</td>
+                </tr>
+                @if (o.discountAmount > 0) {
+                  <tr style="border: none;">
+                    <td style="padding: 6px 0; font-size: 12px; color: #10b981; text-align: left; border: none; font-weight: 600;">Coupon Discount</td>
+                    <td style="padding: 6px 0; font-size: 12px; font-weight: 700; color: #10b981; text-align: right; border: none;">-₹{{ o.discountAmount | number:'1.0-0' }}</td>
+                  </tr>
+                }
+                <tr style="border: none;">
+                  <td style="padding: 6px 0; font-size: 12px; color: #6b7280; text-align: left; border: none;">Shipping Charge</td>
+                  <td style="padding: 6px 0; font-size: 12px; font-weight: 600; color: #111827; text-align: right; border: none;">
+                    @if (o.shippingFee > 0) { ₹{{ o.shippingFee | number:'1.0-0' }} } @else { Free }
+                  </td>
+                </tr>
+                <tr style="border: none;">
+                  <td style="padding: 6px 0; font-size: 12px; color: #6b7280; text-align: left; border: none;">GST (5%)</td>
+                  <td style="padding: 6px 0; font-size: 12px; font-weight: 600; color: #111827; text-align: right; border: none;">₹{{ (o.subTotal * 0.05) | number:'1.0-0' }}</td>
+                </tr>
+                <tr style="border-top: 1.5px solid #e5e7eb;">
+                  <td style="padding: 10px 0 0 0; font-size: 13px; font-weight: 800; color: #111827; text-align: left; border: none;">Total Amount</td>
+                  <td style="padding: 10px 0 0 0; font-size: 15px; font-weight: 850; color: var(--color-primary, #2eafb0); text-align: right; border: none;">₹{{ o.totalAmount | number:'1.0-0' }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Return Policy Section -->
+        <div style="background: #fffdfa; border: 1px solid #fef3c7; border-radius: 16px; padding: 16px;">
+          <h4 style="font-size: 10px; font-weight: 700; text-transform: uppercase; color: #b45309; margin: 0 0 8px 0; letter-spacing: 0.5px; display: flex; align-items: center; gap: 4px;">
+            ⚠️ Return Policy & Terms
+          </h4>
+          <ul style="list-style-type: disc; padding-left: 16px; margin: 0; display: grid; gap: 4px;">
+            <li style="font-size: 11px; color: #d97706; line-height: 1.4;">Returns are accepted within 7 days of delivery.</li>
+            <li style="font-size: 11px; color: #d97706; line-height: 1.4;">Products must be unused, unwashed, and in their original packaging.</li>
+            <li style="font-size: 11px; color: #d97706; line-height: 1.4;">Refunds are processed to the original payment source after inspection.</li>
+            <li style="font-size: 11px; color: #d97706; line-height: 1.4;">Shipping charges are non-refundable unless the product is defective.</li>
+          </ul>
         </div>
       </div>
     }
@@ -401,6 +459,7 @@ export class OrderDetailComponent implements OnInit, OnDestroy {
   private platformId = inject(PLATFORM_ID);
   readonly confirmService = inject(ConfirmService);
   private toastService = inject(ToastService);
+  readonly authStore = inject(AuthStore);
 
   private routeSub!: Subscription;
 
