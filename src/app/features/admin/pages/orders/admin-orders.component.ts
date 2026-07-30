@@ -359,11 +359,11 @@ import { environment } from '../../../../../environments/environment';
                       <div class="font-black text-[9px] uppercase mb-0.5">Ship To:</div>
                       <div class="font-bold text-[11px]">{{ selectedOrderForLabel()?.shippingAddress?.firstName }} {{ selectedOrderForLabel()?.shippingAddress?.lastName }}</div>
                       <div class="text-[9px] leading-tight font-semibold mt-0.5 text-neutral-800">
-                        {{ selectedOrderForLabel()?.shippingAddress?.addressLine1 }}<br/>
+                        {{ selectedOrderForLabel()?.shippingAddress?.addressLine1 || selectedOrderForLabel()?.shippingAddress?.street }}<br/>
                         @if (selectedOrderForLabel()?.shippingAddress?.addressLine2) {
                           {{ selectedOrderForLabel()?.shippingAddress?.addressLine2 }}<br/>
                         }
-                        {{ selectedOrderForLabel()?.shippingAddress?.city }}, {{ selectedOrderForLabel()?.shippingAddress?.state }} - {{ selectedOrderForLabel()?.shippingAddress?.postalCode }}
+                        {{ selectedOrderForLabel()?.shippingAddress?.city }}, {{ selectedOrderForLabel()?.shippingAddress?.state }} - {{ selectedOrderForLabel()?.shippingAddress?.postalCode || selectedOrderForLabel()?.shippingAddress?.zipCode }}
                       </div>
                       <div class="font-black text-[9px] mt-1">Phone: {{ selectedOrderForLabel()?.shippingAddress?.phone }}</div>
                     </div>
@@ -771,9 +771,9 @@ export class AdminOrdersComponent implements OnInit {
             <div class="font-black text-xs uppercase" style="margin-bottom: 1mm;">Ship To:</div>
             <div class="font-bold text-sm">${shipTo.firstName || ''} ${shipTo.lastName || ''}</div>
             <div style="font-size: 11px; line-height: 1.3; margin-top: 1mm; font-weight: 600;">
-              ${shipTo.addressLine1 || ''}<br/>
+              ${shipTo.addressLine1 || shipTo.street || ''}<br/>
               ${shipTo.addressLine2 ? shipTo.addressLine2 + '<br/>' : ''}
-              ${shipTo.city || ''}, ${shipTo.state || ''} - ${shipTo.postalCode || ''}<br/>
+              ${shipTo.city || ''}, ${shipTo.state || ''} - ${shipTo.postalCode || shipTo.zipCode || ''}<br/>
               ${shipTo.country || 'India'}
             </div>
             <div class="font-black text-xs" style="margin-top: 2mm;">Phone: ${shipTo.phone || ''}</div>
