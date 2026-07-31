@@ -463,7 +463,7 @@ export class AdminOrdersComponent implements OnInit {
   selectedOrderForLabel = signal<any | null>(null);
 
   // Label configuration inputs
-  courierName = signal<string>('Delhivery');
+  courierName = signal<string>('Delivery');
   awbNumber = signal<string>('');
   parcelWeight = signal<string>('0.35');
   routingCode = signal<string>('SUR-DEL');
@@ -618,7 +618,7 @@ export class AdminOrdersComponent implements OnInit {
 
   openLabelModal(order: any) {
     this.selectedOrderForLabel.set(order);
-    this.courierName.set('Delhivery');
+    this.courierName.set('Delivery');
     this.awbNumber.set(order.trackingNumber || 'AWB' + Math.floor(100000000000 + Math.random() * 900000000000));
     this.parcelWeight.set('0.35');
     const pin = order.shippingAddress?.postalCode || '110001';
