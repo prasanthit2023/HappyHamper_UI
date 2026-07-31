@@ -385,7 +385,7 @@ import { environment } from '../../../../../environments/environment';
                     <!-- Ship From Section -->
                     <div class="p-1 border-b-2 border-black text-[8px] leading-tight">
                       <div class="font-bold uppercase text-[8px]">Ship From:</div>
-                      <div><strong>Happy Hamper</strong>, 123 Luxury Lane, New Delhi, Delhi, 110001</div>
+                      <div><strong>Happy Hamper</strong>, No 156g, Gandhi Bazar, Gingee, Villupuram, 604202</div>
                     </div>
 
                     <!-- Customer Self Declaration Table -->
@@ -795,7 +795,7 @@ export class AdminOrdersComponent implements OnInit {
           <div class="p-2 border-b-2 text-xs" style="font-size: 8px; line-height: 1.2;">
             <div class="font-bold uppercase" style="font-size: 9px;">Ship From (Return Address):</div>
             <div class="font-bold">Happy Hamper</div>
-            <div>123 Luxury Lane, Fashion District, New Delhi, Delhi, 110001</div>
+             <div>No 156g, Gandhi Bazar, Gingee, Villupuram, 604202</div>
             <div>Email: care@happyhamper.com | Phone: +91 98765 43210</div>
           </div>
 

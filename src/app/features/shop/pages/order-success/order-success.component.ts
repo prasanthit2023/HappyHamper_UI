@@ -266,8 +266,8 @@ import { AuthStore } from '../../../../state/auth.store';
             <div class="flex flex-col sm:flex-row justify-between items-start gap-4 border-b border-neutral-100 pb-5 mb-6">
               <div>
                 <h2 style="font-size: 1.5rem; font-weight: 850; color: var(--color-primary, #2eafb0); margin: 0 0 6px 0; text-transform: uppercase; letter-spacing: 0.5px;">Happy Hamper</h2>
-                <p style="font-size: 11px; color: #6b7280; margin: 2px 0;">123 Luxury Lane, Fashion District</p>
-                <p style="font-size: 11px; color: #6b7280; margin: 2px 0;">New Delhi, Delhi, 110001</p>
+                <p style="font-size: 11px; color: #6b7280; margin: 2px 0;">No 156g, Gandhi Bazar, Gingee</p>
+                <p style="font-size: 11px; color: #6b7280; margin: 2px 0;">Villupuram, Tamil Nadu, 604202</p>
                 <p style="font-size: 11px; color: #6b7280; margin: 2px 0;">Email: care&#64;happyhamper.com | Phone: +91 98765 43210</p>
                 <p style="font-size: 11px; color: #6b7280; margin: 2px 0; font-weight: 600;">GSTIN: 07AAAAA1111A1Z1</p>
               </div>
