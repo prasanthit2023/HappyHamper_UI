@@ -323,8 +323,8 @@ export class AdminLayoutComponent implements OnInit {
     customers: 'Customers',
     coupons: 'Coupons',
     banners: 'Banners',
-    returns: 'Returns',
     'user-access': 'User Access',
+    'scan-label': 'Scan Label',
   };
 
   ngOnInit() {
@@ -377,6 +377,7 @@ export class AdminLayoutComponent implements OnInit {
   private readonly _allNavItems: any[] = [
     { path: '/admin/dashboard', label: 'Dashboard', menu: 'Dashboard', badge: null, exact: true, superAdminOnly: false, svgPath: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6' },
     { path: '/admin/orders', label: 'Orders', menu: 'Orders', badge: null, exact: false, superAdminOnly: false, svgPath: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01' },
+    { path: '/admin/scan-label', label: 'Scan Label', menu: 'Orders', badge: null, exact: false, superAdminOnly: false, svgPath: 'M4 8V6a2 2 0 012-2h2 M16 4h2a2 2 0 012 2v2 M4 16v2a2 2 0 002 2h2 M16 20h2a2 2 0 002-2v-2 M7 12h10' },
     { path: '/admin/products', label: 'Products', menu: 'Products', badge: null, exact: false, superAdminOnly: false, svgPath: 'M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z' },
 
     {

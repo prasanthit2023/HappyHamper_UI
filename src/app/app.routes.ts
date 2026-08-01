@@ -299,6 +299,15 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'scan-label',
+        title: 'Scan Label – Admin',
+        canActivate: [permissionGuard('Orders', 'view')],
+        loadComponent: () =>
+          import('./features/admin/pages/scan-label/scan-label.component').then(
+            (m) => m.ScanLabelComponent,
+          ),
+      },
+      {
         path: 'inventory',
         title: 'Inventory – Admin',
         canActivate: [permissionGuard('Inventory', 'view')],
