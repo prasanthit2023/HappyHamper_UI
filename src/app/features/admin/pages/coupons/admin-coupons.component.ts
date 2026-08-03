@@ -51,6 +51,13 @@ import { ConfirmService } from '../../../../core/services/confirm.service';
               <label class="block text-xs font-semibold text-neutral-400 mb-1.5">Expiry Date</label>
               <input type="date" formControlName="expiryDate" class="input-field py-2" />
             </div>
+
+            <div class="flex items-center pt-5">
+              <label class="flex items-center gap-2 text-xs font-semibold text-neutral-600 cursor-pointer">
+                <input type="checkbox" formControlName="isNewUserOnly" class="w-4.5 h-4.5 rounded border-neutral-300 text-[var(--color-primary)] focus:ring-[var(--color-primary)] cursor-pointer" />
+                New Users Only
+              </label>
+            </div>
           </div>
 
           <div class="flex justify-end pt-2">
@@ -98,10 +105,17 @@ import { ConfirmService } from '../../../../core/services/confirm.service';
                 @for (cop of coupons(); track cop._id || cop.id) {
                   <tr>
                     <td>
-                      <span class="font-mono font-bold text-xs px-2.5 py-1.5 rounded-lg"
-                            style="background: var(--color-primary-light); color: var(--color-primary-dark);">
-                        {{ cop.code }}
-                      </span>
+                      <div class="flex flex-col gap-1 items-start">
+                        <span class="font-mono font-bold text-xs px-2.5 py-1.5 rounded-lg"
+                              style="background: var(--color-primary-light); color: var(--color-primary-dark);">
+                          {{ cop.code }}
+                        </span>
+                        @if (cop.isNewUserOnly) {
+                          <span class="px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider bg-purple-100 text-purple-700 border border-purple-200">
+                            New Users Only
+                          </span>
+                        }
+                      </div>
                     </td>
                     <td class="font-semibold text-sm" style="color: var(--color-text);">
                       {{ cop.discountValue }}@if (cop.discountType === 'percentage') { % } @else { <i class="bi bi-currency-rupee"></i> }
@@ -172,6 +186,7 @@ export class AdminCouponsComponent implements OnInit {
     minOrderAmount: [0, [Validators.required, Validators.min(0)]],
     usageLimit: [null as number | null],
     expiryDate: ['', [Validators.required]],
+    isNewUserOnly: [false],
   });
 
   ngOnInit() {
@@ -253,6 +268,7 @@ export class AdminCouponsComponent implements OnInit {
       expiryDate: new Date(this.form.value.expiryDate!),
       endDate: new Date(this.form.value.expiryDate!), // Support backend mapping
       startDate: new Date(), // Support backend non-null mapping
+      isNewUserOnly: !!this.form.value.isNewUserOnly,
     };
 
     this.http.post<any>(`${environment.apiUrl}/coupons`, payload).subscribe({
@@ -265,6 +281,7 @@ export class AdminCouponsComponent implements OnInit {
           minOrderAmount: 0,
           usageLimit: null,
           expiryDate: '',
+          isNewUserOnly: false,
         });
         this.fetchCoupons();
       },
